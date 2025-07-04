@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@layer utilities {
+  /* Custom Transparent Scrollbar */
+  .transparent-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .transparent-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .transparent-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .transparent-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+  }
+}
+
+@layer utilities{
+  hello::placeholder{
+    color:red;
+    font-weight: bold;
+    
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* :root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+} */
