@@ -14,6 +14,7 @@ export default function ChemistryChapterList() {
     const fetchChemistryChapters = async () => {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admintest/chemistry-questions`);
+        console.log("Chemistry questions response:", response.data);
         const { questions } = response.data;
 
         // Group questions by chapter name
