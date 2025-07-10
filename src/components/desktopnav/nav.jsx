@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaSignOutAlt, FaUserAlt } from "react-icons/fa";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 const DesktopNavbar = () => {
@@ -36,17 +36,28 @@ const DesktopNavbar = () => {
 
         if (!adminId) return;
 
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/colors`, {
-          id: adminId,
-        });
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/colors`,
+          {
+            id: adminId,
+          }
+        );
 
         if (response.data.success) {
           const color = response.data.colors.navbarColor;
           if (color) {
-            setNavbarColor(""); // Remove gradient if solid color is set
-            document.documentElement.style.setProperty('--admin-navbar-color', color);
+            if (color.startsWith("from-")) {
+              setNavbarColor(color); // gradient classes
+            } else {
+              setNavbarColor(color); // solid color
+            }
           }
         }
+        console.log(
+          "Navbar color fetched successfully:",
+          response.data.colors.navbarColor,
+          navbarColor
+        );
       } catch (error) {
         console.error("Error fetching navbar color:", error);
       }
@@ -66,11 +77,28 @@ const DesktopNavbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Convert Tailwind gradient classes to hex colors
+  const tailwindToHex = {
+    "from-blue-200": "#bfdbfe",
+    "to-yellow-100": "#fef08a",
+    // add more as needed
+  };
+  let style = {};
+  if (navbarColor && navbarColor.startsWith("from-")) {
+    const [from, to] = navbarColor.split(" ");
+    style.background = `linear-gradient(to right, ${
+      tailwindToHex[from] || from
+    }, ${tailwindToHex[to] || to})`;
+  } else if (navbarColor && /^#([0-9A-F]{3}){1,2}$/i.test(navbarColor)) {
+    style.backgroundColor = navbarColor;
+  } else {
+    style.backgroundColor = "#ffffff";
+  }
+
   return (
     <div
-      className={`hidden md:flex h-[90px] p-4 items-center justify-end relative ${
-        navbarColor ? `bg-gradient-to-r ${navbarColor}` : `bg-[var(--admin-navbar-color)]`
-      }`}
+      className="hidden md:flex h-[80px] p-4 items-center justify-end"
+      style={style}
     >
       <div className="flex items-center space-x-4 mr-4">
         <img

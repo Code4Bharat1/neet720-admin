@@ -102,7 +102,7 @@ const StudentActivityCard = () => {
   const remainingProfiles = studentData.studentProfiles.length - 10;
 
   return (
-    <div className="relative p-6 shadow-lg w-full sm:w-[30rem] max-w-4xl mx-auto mt-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl overflow-hidden min-h-[20rem]">
+    <div className="relative p-6 shadow-lg w-full sm:w-[30rem] max-w-4xl mx-auto mt-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl overflow-hidden min-h-[20rem] z-50">
       <div className="absolute inset-0 opacity-10 z-0"
         style={{ backgroundImage: `url('/Vector 1.svg')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       </div>
@@ -167,7 +167,7 @@ const StudentActivityCard = () => {
         <div className="mt-6 flex justify-center z-10 relative">
           <button
             onClick={() => setShowMore(!showMore)}
-            className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-full transition-all shadow-md"
+            className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-black cursor-pointer px-4 py-2 rounded-full transition-all shadow-md"
           >
             {showMore ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
             <span>{showMore ? "Show Less" : "View All Students"}</span>

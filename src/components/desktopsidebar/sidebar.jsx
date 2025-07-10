@@ -65,14 +65,14 @@ const Sidebar = () => {
 
   return (
     <div
-      className="hidden w-60 md:block h-screen fixed top-0 left-0 z-50 shadow-md"
+      className="hidden w-70 md:block h-screen fixed top-0 left-0 z-50 shadow-md"
       style={{ backgroundColor: sidebarColor }}
     >
       <div className="my-10 flex justify-center items-center">
         <img
           src="/nexcore-logo-pc.png"
           alt="Nexcore Logo"
-          className="w-40 h-22"
+          className="w-40 h-22 rounded-lg"
         />
       </div>
 

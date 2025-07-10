@@ -200,7 +200,7 @@ const Desktop_student = () => {
         toast.success("Student added successfully and email sent!",{
           duration: 5000
         });
-        
+        window.location.reload(); // Reload the page to reflect changes
         closeAddStudentModal();
       }
     } catch (error) {
@@ -211,7 +211,26 @@ const Desktop_student = () => {
       });
     }
   };
-  
+
+  const deleteStudent = async (student) => {
+    try {
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/delete`, {
+        data: { id: student.id }
+      });
+
+      if (response.status === 200) {
+        setStudents((prevStudents) => prevStudents.filter((s) => s.id !== student.id));
+        toast.success("Student deleted successfully", {
+          duration: 5000
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Error deleting student", {
+        duration: 5000
+      });
+    }
+  };
 
   const sendEmail = async (email, password) => {
     try {
@@ -423,7 +442,8 @@ const Desktop_student = () => {
                   <th className="py-4 px-6 text-left border-r border-gray-200">Phone Number</th>
                   <th className="py-4 px-6 text-left border-r border-gray-200">Gender</th>
                   <th className="py-4 px-6 text-left border-r border-gray-200">DOB</th>
-                  <th className="py-4 px-6 text-left">Status</th>
+                  <th className="py-4 px-6 text-left border-r border-gray-200">Status</th>
+                  <th className="py-4 px-6 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-gray-700 text-sm">
@@ -449,13 +469,21 @@ const Desktop_student = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 border-r border-gray-200 whitespace-nowrap">{student.dateOfBirth || "N/A"}</td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 border-r border-gray-200">
                         <span className={`inline-block px-3 py-1 rounded-full text-xs ${
                           student.status === 'Active' ? 'bg-green-100 text-green-800' : 
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {student.status || "N/A"}
                         </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <button
+                          onClick={() => deleteStudent(student)}
+                          className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 rounded-full"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
