@@ -19,6 +19,9 @@ export default function QrGenerator() {
   const [invalidStudentIds, setInvalidStudentIds] = useState([]);
   const [evaluated, setEvaluated] = useState(false);
 
+  /* ------------------------------------------------------------------
+     1. FETCH TEST ID & QUESTION COUNT ON MOUNT
+  ------------------------------------------------------------------ */
   useEffect(() => {
     const fetchTestIdAndCount = async () => {
       const storedTestId = localStorage.getItem("testid");
@@ -27,7 +30,6 @@ export default function QrGenerator() {
         return;
       }
       setTestId(storedTestId);
-
       try {
         const res = await axios.post(
           "http://localhost:3085/api/qr/question-count",
@@ -39,10 +41,12 @@ export default function QrGenerator() {
         console.error("Failed to fetch question count", err);
       }
     };
-
     fetchTestIdAndCount();
   }, []);
 
+  /* ------------------------------------------------------------------
+     2. HELPER FUNCTIONS
+  ------------------------------------------------------------------ */
   const handleBatchChange = (index, field, value) => {
     const newData = [...batchData];
     newData[index][field] = value;
@@ -68,7 +72,9 @@ export default function QrGenerator() {
     }
   };
 
-  // Evaluate student IDs (for Student Mode)
+  /* ------------------------------------------------------------------
+     3. STUDENT‑MODE : VERIFY IDS
+  ------------------------------------------------------------------ */
   const handleEvaluate = async () => {
     setEvaluated(false);
     setValidStudents([]);
@@ -108,18 +114,21 @@ export default function QrGenerator() {
     }
   };
 
-  // Modified handleSubmit for student/batch mode
+  /* ------------------------------------------------------------------
+     4. GENERATE QR CODES (batch‑mode & student‑mode)
+  ------------------------------------------------------------------ */
   const handleSubmit = async () => {
     const admin_id = getAdminIdFromToken();
     if (!admin_id) return alert("Admin not authenticated");
 
     try {
       if (mode === "batch") {
+        /* PAYLOAD → /api/batch */
         const payload = {
           test_id: testId,
           batch_data: batchData.map((b) => ({
             batch_id: b.batch_id,
-            student_ids: b.students.map((s) => s.id), // Always use the correct list!
+            student_ids: b.students.map((s) => s.id),
           })),
         };
 
@@ -129,15 +138,17 @@ export default function QrGenerator() {
           { headers: { "Content-Type": "application/json" } }
         );
 
-        // Match names for every QR using all students from all batches
+        // enrich with names
         const allStudents = batchData.flatMap((b) => b.students);
         const qrImagesWithName = res.data.qr_images.map((img) => ({
           ...img,
-          fullName: allStudents.find((s) => String(s.id) === String(img.label))?.fullName || "",
+          fullName:
+            allStudents.find((s) => String(s.id) === String(img.label))?.fullName || "",
         }));
         setQrImages(qrImagesWithName);
         return qrImagesWithName;
       } else {
+        /* STUDENT MODE → /api/student */
         if (!evaluated || validStudents.length === 0) {
           alert("Please evaluate and check student IDs first.");
           return [];
@@ -153,7 +164,6 @@ export default function QrGenerator() {
           { headers: { "Content-Type": "application/json" } }
         );
 
-        // Map names back into the qrImages for printing OMR
         const qrImagesWithName = res.data.qr_images.map((img) => ({
           ...img,
           fullName: validStudents.find((s) => s.id === img.label)?.fullName || "",
@@ -176,6 +186,9 @@ export default function QrGenerator() {
     }
   };
 
+  /* ------------------------------------------------------------------
+     5. PRINT OMR (added black alignment square)
+  ------------------------------------------------------------------ */
   const handlePrintOMR = () => {
     if (!qrImages || qrImages.length === 0) {
       alert("Please generate QR codes first.");
@@ -185,203 +198,104 @@ export default function QrGenerator() {
       alert("Invalid or missing question count.");
       return;
     }
+
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       alert("Please allow pop-ups to print OMR sheets.");
       return;
     }
+
+    // Build question list
     const allQuestions = Array.from({ length: questionCount }, (_, i) => ({
       number: i + 1,
     }));
+
+    // Column renderer
     const renderOMRColumn = (columnQuestions) =>
       columnQuestions
-        .map(
-          (q) => `
+        .map((q) => `
           <div class="question-row">
             <div class="question-number">${q.number}.</div>
             <div class="options-bubbles">
               ${["A", "B", "C", "D"]
-                .map((opt) => `<div class="bubble-option">${opt}</div>`)
-                .join("")}
+            .map((opt) => `<div class="bubble-option">${opt}</div>`)
+            .join("")}
             </div>
-          </div>`
-        )
+          </div>`)
         .join("");
 
-    // --- get name for each QR ---
+    /* -------------------------------
+       HTML TEMPLATE (with marker)
+    --------------------------------*/
     const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>OMR Sheets</title>
   <style>
-    @page {
-      size: A4;
-      margin: 1.5cm;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 10pt;
-      margin: 0;
-      padding: 0;
-      background: white;
-      color: #000;
-    }
+    @page { size: A4; margin: 1.5cm; }
+    body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; background: #fff; color: #000; }
 
-    .omr-page {
-      page-break-after: always;
-      padding: 0;
-    }
-    .omr-page:first-child {
-      break-before: avoid !important;
-      page-break-before: avoid !important;
-    }
+    .omr-page       { page-break-after: always; }
+    .omr-flex-header{ display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:2px 10px;border:1px solid #000; }
+    .omr-left-info  { display:flex;flex-direction:column;min-width:180px;font-size:10pt;gap:6px }
+    .omr-center-title{ text-align:center;flex:1 }
+    .omr-title      { font-size:16pt;font-weight:bold;margin-bottom:4px }
+    .omr-subtitle   { font-size:11pt;color:#444 }
+    .omr-right-qr   { display:flex;justify-content:flex-end;min-width:100px }
+    .qr-img         { width:80px;height:80px;object-fit:contain;margin-left:10px }
 
-    .omr-flex-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding: 2px 10px;
-      border: 1px solid black;
-    }
+    .alignment-marker{ width:10px;height:10px;background:#000;margin:6px 0 10px 32px; }
 
-    .omr-left-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      font-size: 10pt;
-      min-width: 180px;
-      gap: 6px;
-    }
-
-    .omr-center-title {
-      text-align: center;
-      flex: 1;
-    }
-
-    .omr-title {
-      font-size: 16pt;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .omr-subtitle {
-      font-size: 11pt;
-      color: #444;
-      margin-bottom: 0;
-    }
-
-    .omr-right-qr {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      min-width: 100px;
-    }
-
-    .qr-img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      margin-left: 10px;
-    }
-
-    .omr-table {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .column {
-      flex: 1;
-    }
-
-    .question-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 3px;
-      font-size: 7pt;
-      gap: 2px;
-    }
-
-    .question-number {
-      min-width: 20px;
-      font-weight: bold;
-    }
-
-    .options-bubbles {
-      display: flex;
-      gap: 10px;
-      margin-left: 10px;
-    }
-
-    .bubble-option {
-      width: 14px;
-      height: 14px;
-      border: 1px solid #000;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 6pt;
-      font-weight: bold;
-    }
-
-    .info-line {
-      display: inline-block;
-      width: 100px;
-      margin-left: 5px;
-    }
+    .omr-table      { display:flex;justify-content:space-between;gap:12px }
+    .column         { flex:1 }
+    .question-row   { display:flex;align-items:center;margin-bottom:3px;font-size:7pt;gap:2px }
+    .question-number{ min-width:20px;font-weight:bold }
+    .options-bubbles{ display:flex;gap:10px;margin-left:10px }
+    .bubble-option  { width:14px;height:14px;border:1px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6pt;font-weight:bold }
+    .info-line      { display:inline-block;width:100px;margin-left:5px }
   </style>
 </head>
 <body>
 ${qrImages
-  .map((qr) => {
-    // Find the full name by label, in either batch or student mode:
-    let fullName = qr.fullName || "";
-    if (!fullName && mode === "batch") {
-      // fallback: search in batchData
-      const batchEntry = batchData.find((b) => b.students.some((s) => String(s.id) === String(qr.label)));
-      const student = batchEntry?.students?.find((s) => String(s.id) === String(qr.label));
-      fullName = student?.fullName || "";
-    }
-    const col1 = allQuestions.slice(0, 45);
-    const col2 = allQuestions.slice(45, 90);
-    const col3 = allQuestions.slice(90, 135);
-    const col4 = allQuestions.slice(135, 180);
+        .map((qr) => {
+          const fullName = qr.fullName || "";
+          const col1 = allQuestions.slice(0, 45);
+          const col2 = allQuestions.slice(45, 90);
+          const col3 = allQuestions.slice(90, 135);
+          const col4 = allQuestions.slice(135, 180);
 
-    return `
-      <div class="omr-page">
-        <div class="omr-flex-header">
-          <div class="omr-left-info">
-            <div>Name: <span class="info-line">${fullName}</span></div>
-            <div>Roll No: <span class="info-line">${qr.label}</span></div>
-            <div>Date: <span class="info-line"></span></div>
-          </div>
-          <div class="omr-center-title">
-            <div class="omr-title">OMR Question SHEET</div>
-            <div class="omr-subtitle">**Do not write anything on the QR**</div>
-          </div>
-          <div class="omr-right-qr">
-            <img src="${qr.img}" class="qr-img" />
-          </div>
-        </div>
-        <div class="omr-table">
-          <div class="column">${renderOMRColumn(col1)}</div>
-          <div class="column">${renderOMRColumn(col2)}</div>
-          <div class="column">${renderOMRColumn(col3)}</div>
-          <div class="column">${renderOMRColumn(col4)}</div>
-        </div>
+          return `
+  <div class="omr-page">
+    <div class="omr-flex-header">
+      <div class="omr-left-info">
+        <div>Name: <span class="info-line">${fullName}</span></div>
+        <div>Roll No: <span class="info-line">${qr.label}</span></div>
+        <div>Date: <span class="info-line"></span></div>
       </div>
-    `;
-  })
-  .join("")}
+      <div class="omr-center-title">
+        <div class="omr-title">OMR Question SHEET</div>
+        <div class="omr-subtitle">**Do not write anything on the QR**</div>
+      </div>
+      <div class="omr-right-qr"><img src="${qr.img}" class="qr-img" /></div>
+    </div>
+
+    <!-- alignment square -->
+    <div class="alignment-marker"></div>
+
+    <div class="omr-table">
+      <div class="column">${renderOMRColumn(col1)}</div>
+      <div class="column">${renderOMRColumn(col2)}</div>
+      <div class="column">${renderOMRColumn(col3)}</div>
+      <div class="column">${renderOMRColumn(col4)}</div>
+    </div>
+  </div>`;
+        })
+        .join("")}
 </body>
-</html>
-`;
+</html>`;
 
     printWindow.document.write(html);
     printWindow.document.close();
-
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
@@ -389,7 +303,9 @@ ${qrImages
     }, 600);
   };
 
-  // --- UI rendering below ---
+  /* ------------------------------------------------------------------
+     6. JSX UI (UNCHANGED)
+  ------------------------------------------------------------------ */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -417,11 +333,10 @@ ${qrImages
           {/* Mode Toggle */}
           <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
             <button
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                mode === "batch"
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${mode === "batch"
                   ? "bg-white text-blue-600 shadow-md transform scale-105"
                   : "text-gray-600 hover:text-gray-800"
-              }`}
+                }`}
               onClick={() => {
                 setMode("batch");
                 setValidStudents([]);
@@ -437,11 +352,10 @@ ${qrImages
               </div>
             </button>
             <button
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                mode === "student"
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${mode === "student"
                   ? "bg-white text-blue-600 shadow-md transform scale-105"
                   : "text-gray-600 hover:text-gray-800"
-              }`}
+                }`}
               onClick={() => {
                 setMode("student");
                 setValidStudents([]);
@@ -491,12 +405,13 @@ ${qrImages
                             try {
                               const admin_id = getAdminIdFromToken();
                               if (!admin_id) return alert("Admin not authenticated");
-
+                              console.log("Fetching student IDs for batch:", entry.batch_name);
+                              console.log("Admin ID:", admin_id);
                               const res = await axios.post(
                                 "http://localhost:3085/api/qr/students",
                                 {
                                   batchName: entry.batch_name,
-                                  admin_id,
+                                  admin_id : admin_id,
                                 },
                                 {
                                   headers: {
@@ -670,13 +585,12 @@ ${qrImages
             <button
               type="button"
               onClick={handleGenerateQR}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                mode === "student"
+              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${mode === "student"
                   ? evaluated && validStudents.length > 0
                     ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 shadow-lg"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 shadow-lg"
-              }`}
+                }`}
               disabled={mode === "student" && (!evaluated || validStudents.length === 0)}
             >
               <div className="flex items-center justify-center gap-2">
