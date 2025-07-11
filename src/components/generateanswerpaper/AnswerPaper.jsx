@@ -187,67 +187,6 @@ export default function AnswerPaper() {
       .options-block {
         margin: 5px 0 8px 15px;
       }
-      .qr-code-box{
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 80px;
-        height: 80px;
-        position: absolute;            /* pinned inside .omr-header   */
-        top: 6px;                      /* tweak as you like           */
-        right: 6px;
-        width: 48px;                   /* final visible size          */
-        height: 48px;
-        border: 2px solid #000;
-        box-sizing: border-box;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color-adjust: exact;
-       overflow: hidden;              /* never let the img escape    */
-      }
-
-      .alignment-marker-1{
-        width:14px;
-        height:14px;
-        background:#000;
-        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
-        margin:6px 0 10px 42px;   /* ← top / right / bottom / LEFT (32 px) */
-        
-  /* make sure browsers keep the fill in print/PDF */
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color-adjust: exact;
-      }
-      .alignment-marker-2{
-        width:14px;
-        height:14px;
-        background:#000;
-        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
-        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color-adjust: exact;
-      }
-      .alignment-marker-3{
-        width:14px;
-        height:14px;
-        background:#000;
-        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
-        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color-adjust: exact;
-      }
-      .alignment-marker-4{
-        width:14px;
-        height:14px;
-        background:#000;
-        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
-        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color-adjust: exact;
-      }
       .option-row {
         display: flex;
         align-items: start;
@@ -332,12 +271,6 @@ export default function AnswerPaper() {
     <div class="page">
       <div class="header">
         <div class="title">${paperTitle}</div>
-      </div>
-      <div style="display: flex;">
-        <div class="alignment-marker-1"></div>
-        <div class="alignment-marker-2"></div>
-        <div class="alignment-marker-3"></div>
-        <div class="alignment-marker-4"></div>
       </div>
 
       <div class="question-columns">
