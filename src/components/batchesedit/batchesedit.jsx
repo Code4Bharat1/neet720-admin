@@ -59,12 +59,6 @@ const UpdateBatchForm = () => {
       return;
     }
 
-    if (!file) {
-      setError("Please select a CSV file");
-      setIsLoading(false);
-      return;
-    }
-
     // Read the CSV file
     Papa.parse(file, {
       complete: async (result) => {

@@ -70,9 +70,9 @@ const Sidebar = () => {
     >
       <div className="my-10 flex justify-center items-center">
         <img
-          src="/nexcore-logo-pc.png"
-          alt="Nexcore Logo"
-          className="w-40 h-22 rounded-lg"
+          src="/neet720_logo.jpg"
+          alt="neet720 logo"
+          className="w-40 h-22 rounded-lg object-cover"
         />
       </div>
 
