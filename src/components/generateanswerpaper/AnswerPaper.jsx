@@ -47,26 +47,26 @@ export default function AnswerPaper() {
     }, 100);
   };
 
-const handlePrint = () => {
-  const printWindow = window.open("", "_blank");
-  let currentSubject = null;
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    let currentSubject = null;
 
-  const renderQuestions = (questions, showSubjects) => {
-    let output = "";
-    let lastSubject = null;
+    const renderQuestions = (questions, showSubjects) => {
+      let output = "";
+      let lastSubject = null;
 
-    questions.forEach((q, idx) => {
-      // Group by subject if needed
-      if (showSubjects && q.subject !== lastSubject) {
-        output += `
+      questions.forEach((q, idx) => {
+        // Group by subject if needed
+        if (showSubjects && q.subject !== lastSubject) {
+          output += `
           <div class="subject-header">
             ${q.subject}
           </div>
         `;
-        lastSubject = q.subject;
-      }
+          lastSubject = q.subject;
+        }
 
-      output += `
+        output += `
         <div class="question-block">
           <div class="question-number">${idx + 1}.</div>
           <div class="question-main">
@@ -74,13 +74,13 @@ const handlePrint = () => {
             ${q.options ? `
               <div class="options-block">
                 ${Object.entries(q.options).map(
-                  ([key, value]) => `
+          ([key, value]) => `
                     <div class="option-row${q.correctanswer && q.correctanswer.toLowerCase() === key.toLowerCase() ? ' correct' : ''}">
                       <span class="option-letter">${key.toUpperCase()})</span>
                       <span>${value}</span>
                     </div>
                   `
-                ).join("")}
+        ).join("")}
               </div>
             ` : ""}
             ${showMarks ? `<div class="marks-label">[${q.marks || 4} Mark${(q.marks || 4) > 1 ? "s" : ""}]</div>` : ""}
@@ -94,11 +94,11 @@ const handlePrint = () => {
           </div>
         </div>
       `;
-    });
-    return output;
-  };
+      });
+      return output;
+    };
 
-  const printContent = `
+    const printContent = `
   <!DOCTYPE html>
   <html>
   <head>
@@ -272,6 +272,7 @@ const handlePrint = () => {
       <div class="header">
         <div class="title">${paperTitle}</div>
       </div>
+
       <div class="question-columns">
         ${renderQuestions(questions, showSubjects)}
       </div>
@@ -281,35 +282,35 @@ const handlePrint = () => {
   </html>
   `;
 
-  printWindow.document.write(printContent);
-  printWindow.document.close();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
 
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
   };
-};
 
 
-  
-const handleOMRSheet = () => {
-  const printWindow = window.open("", "_blank");
 
-  const allQuestions = questions.map((q, index) => ({
-    ...q,
-    number: index + 1,
-  }));
+  const handleOMRSheet = () => {
+    const printWindow = window.open("", "_blank");
 
-  const questionsPerPage = 180;
-  const questionsPerColumn = 45;
-  const pages = [];
-for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
-  pages.push(allQuestions.slice(i, i + questionsPerPage));
-}
+    const allQuestions = questions.map((q, index) => ({
+      ...q,
+      number: index + 1,
+    }));
+
+    const questionsPerPage = 180;
+    const questionsPerColumn = 45;
+    const pages = [];
+    for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
+      pages.push(allQuestions.slice(i, i + questionsPerPage));
+    }
 
 
-  const omrContent = `
+    const omrContent = `
   <!DOCTYPE html>
   <html>
   <head>
@@ -331,6 +332,68 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
       .omr-page {
         page-break-after: always;
         padding: 0;
+      }
+
+      .qr-code-box{
+       position: absolute;
+       top: 12px;
+       right: 12px;
+       width: 80px;
+       height: 80px;
+       position: absolute;            /* pinned inside .omr-header   */
+       top: 6px;                      /* tweak as you like           */
+       right: 6px;
+       width: 48px;                   /* final visible size          */
+       height: 48px;
+        border: 2px solid #000;
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+       overflow: hidden;              /* never let the img escape    */
+      }
+
+      .alignment-marker-1{
+        width:14px;
+        height:14px;
+        background:#000;
+        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
+        margin:6px 0 10px 42px;   /* ← top / right / bottom / LEFT (32 px) */
+        
+  /* make sure browsers keep the fill in print/PDF */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+      }
+      .alignment-marker-2{
+        width:14px;
+        height:14px;
+        background:#000;
+        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
+        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+      }
+      .alignment-marker-3{
+        width:14px;
+        height:14px;
+        background:#000;
+        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
+        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+      }
+      .alignment-marker-4{
+        width:14px;
+        height:14px;
+        background:#000;
+        border: 1px solid #000;   /* 5 px all round gives a 10×10 square */
+        margin:6px 0 10px 10px;   /* ← top / right / bottom / LEFT (32 px) */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
       }
 
       .omr-header {
@@ -477,21 +540,21 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
   </head>
 <body>
   ${(() => {
-    const renderColumn = (columnQuestions) =>
-      columnQuestions
-        .map((q) => {
-          const correctText = q.correctanswer?.trim().toLowerCase();
-          const options = q.options || {};
-          const correctKey = Object.keys(options).find(
-            (key) => options[key]?.trim().toLowerCase() === correctText
-          );
+        const renderColumn = (columnQuestions) =>
+          columnQuestions
+            .map((q) => {
+              const correctText = q.correctanswer?.trim().toLowerCase();
+              const options = q.options || {};
+              const correctKey = Object.keys(options).find(
+                (key) => options[key]?.trim().toLowerCase() === correctText
+              );
 
-          return `
+              return `
             <div class="question-row">
               <div class="question-number">${q.number}.</div>
               <div class="options-bubbles">
                 ${["0", "1", "2", "3"]
-  .map((opt) => `
+                  .map((opt) => `
     <div class="bubble-option ${correctKey?.toUpperCase() === opt ? "filled" : ""}">
       ${opt}
     </div>
@@ -501,18 +564,25 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
               </div>
             </div>
           `;
-        })
-        .join("");
+            })
+            .join("");
 
-    return pages
-      .map((pageQuestions) => {
-        const col1 = pageQuestions.slice(0, 45);
-        const col2 = pageQuestions.slice(45, 90);
-        const col3 = pageQuestions.slice(90, 135);
-        const col4 = pageQuestions.slice(135, 180);
+        return pages
+          .map((pageQuestions) => {
+            const col1 = pageQuestions.slice(0, 45);
+            const col2 = pageQuestions.slice(45, 90);
+            const col3 = pageQuestions.slice(90, 135);
+            const col4 = pageQuestions.slice(135, 180);
 
-        return `
+            return `
           <div class="omr-page">
+            <div class="qr-code-box">
+              <img
++     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASIAAAEiAQAAAAB1xeIbAAABfUlEQVR4nO2aS26EMBBEXwekLBkpB5ijwA1ypCg3MzeC5UhGlQV2Qsgi2fCLuxfItp7kkl00psHE79E//QECp5xyyimnzk5ZihrrRjMY80h3qK4iqFaSNIAClayjkiTpO7W/riKoMXnc7B5RAMysPl5XSZTCWGPdjjM6tYjJ9p6xUCqnlUbACNZqmseWL11nVX9tKq19P3u9AsYX2dr8Z1V/bWrtcUEk3QZH6iqHsm6sgfloX6PANLesO1TX/6aS7/sbBk2s6V8flkzfxON0lUChFDF3B6AdKqWLJIWzqr82NfveaAYZzQB9B+rvEfX3R37gnlX9tSkWpYN2qJR9D3POcd9vR33mnBRpA/J+zE1f+02ope+hElBJoYl4vt+aSmuf6pjZ8q0iCk103+9B5Tom/Q30bs+yt+EEusqiRvssJ1Rev9+Sqld9a4cb6bRpQBuO0VUC9SPfB9LHK4UmH348329CreuY1mqqv2qY5r7fjjL/N8opp5xyqgjqA5wV4JYDCuBjAAAAAElFTkSuQmCC"
++     style="width:100%;height:100%;object-fit:contain;"
++     alt="QR code"
++   />
+            </div>
             <div class="omr-header">
               <div class="omr-box">
                 <h1 class="omr-title">OMR ANSWER SHEET</h1>
@@ -524,6 +594,12 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
                 </div>
               </div>
             </div>
+            <div style="display: flex;">
+              <div class="alignment-marker-1"></div>
+              <div class="alignment-marker-2"></div>
+              <div class="alignment-marker-3"></div>
+              <div class="alignment-marker-4"></div>
+            </div>
             <div class="omr-table" style="display: flex; gap: 12px;">
               <div class="column">${renderColumn(col1)}</div>
               <div class="column">${renderColumn(col2)}</div>
@@ -532,24 +608,24 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
             </div>
           </div>
         `;
-      })
-      .join("");
-  })()}
+          })
+          .join("");
+      })()}
 </body>
 
   </html>
   `;
 
-  printWindow.document.write(omrContent);
-  printWindow.document.close();
-  printWindow.focus();
+    printWindow.document.write(omrContent);
+    printWindow.document.close();
+    printWindow.focus();
 
-  setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 500);
-};
-  
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
 
   const handleOMRPreview = () => {
     setShowOMRPreview(true);
@@ -729,7 +805,7 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
                   <h1 className="text-3xl font-bold mb-2 uppercase tracking-wide">
                     {paperTitle}
                   </h1>
-                 
+
                 </div>
 
                 {/* Questions */}
@@ -767,13 +843,12 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
                                   ([key, value]) => (
                                     <div
                                       key={key}
-                                      className={`flex items-start p-2 rounded ${
-                                        q.correctanswer &&
-                                        q.correctanswer.toLowerCase() ===
+                                      className={`flex items-start p-2 rounded ${q.correctanswer &&
+                                          q.correctanswer.toLowerCase() ===
                                           key.toLowerCase()
                                           ? "bg-green-100 border-l-4 border-green-500"
                                           : "hover:bg-gray-50"
-                                      }`}
+                                        }`}
                                     >
                                       <span className="font-medium mr-3 min-w-[20px]">
                                         {key.toUpperCase()})
@@ -928,11 +1003,10 @@ for (let i = 0; i < allQuestions.length; i += questionsPerPage) {
                                 {option.toUpperCase()}
                               </span>
                               <div
-                                className={`w-4 h-4 border-2 border-black rounded-full flex items-center justify-center ${
-                                  correctOptionKey === option
+                                className={`w-4 h-4 border-2 border-black rounded-full flex items-center justify-center ${correctOptionKey === option
                                     ? "bg-black"
                                     : "bg-white"
-                                }`}
+                                  }`}
                               >
                                 {correctOptionKey === option && (
                                   <div className="w-2 h-2 bg-white rounded-full"></div>
