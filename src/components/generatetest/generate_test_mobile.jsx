@@ -17,7 +17,7 @@ export default function CenterText() {
   useEffect(() => {
     const fetchTestData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/test-data`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/admin-tests`);
         setTestData(response.data.tests);
       } catch (err) {
         setError("Failed to fetch test data");

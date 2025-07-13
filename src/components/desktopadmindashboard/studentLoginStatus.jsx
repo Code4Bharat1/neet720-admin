@@ -102,12 +102,12 @@ const StudentActivityCard = () => {
   const remainingProfiles = studentData.studentProfiles.length - 10;
 
   return (
-    <div className="relative p-6 shadow-lg w-full sm:w-[30rem] max-w-4xl mx-auto mt-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl overflow-hidden min-h-[20rem] z-50">
-      <div className="absolute inset-0 opacity-10 z-0"
+    <div className="relative p-6 shadow-lg w-full sm:w-[30rem] max-w-4xl mx-auto mt-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl overflow-hidden min-h-[20rem] --z50">
+      <div className="absolute inset-0 opacity-10 -z0"
         style={{ backgroundImage: `url('/Vector 1.svg')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       </div>
 
-      <div className="flex justify-between items-start mb-8 relative z-10">
+      <div className="flex justify-between items-start mb-8 relative --z50">
         <h2 className="text-white text-2xl font-bold">
           Inactive Students
           <p className="text-white text-sm font-normal opacity-80 mt-1">Not logged in for last 7 days</p>
@@ -127,7 +127,7 @@ const StudentActivityCard = () => {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center relative z-10 bg-white p-3 rounded-xl shadow-inner">
+      <div className="flex flex-wrap gap-3 items-center relative --z10 bg-white p-3 rounded-xl shadow-inner">
         {profilesToDisplay.map((profile, index) => {
           const randomLetter = initialsSet[index % initialsSet.length];
           const circleColor = circleColors[index % circleColors.length];
@@ -138,7 +138,7 @@ const StudentActivityCard = () => {
               style={{ backgroundImage: profile.profileImage ? `url(${profile.profileImage})` : "none", backgroundSize: 'cover' }}
             >
               {!profile.profileImage && randomLetter}
-              <div className="bg-[#007AFF] bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max text-white text-xs py-1 px-2 rounded hidden group-hover:block z-20">
+              <div className="bg-[#007AFF] bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max text-white text-xs py-1 px-2 rounded hidden group-hover:block --z20">
                 {profile.fullName || "Unknown Student"}
               </div>
             </div>
@@ -155,7 +155,7 @@ const StudentActivityCard = () => {
         )}
       </div>
 
-      <div className="absolute top-4 right-4 bg-white p-3 rounded-xl shadow-xl z-10 flex items-center space-x-3">
+      <div className="absolute top-4 right-4 bg-white p-3 rounded-xl shadow-xl -z10 flex items-center space-x-3">
         <AiOutlineUserAdd className="text-red-500 text-2xl" />
         <div>
           <h3 className="text-xl font-semibold text-gray-800">{studentData.studentCount}</h3>
@@ -164,7 +164,7 @@ const StudentActivityCard = () => {
       </div>
 
       {studentData.studentProfiles.length > 10 && (
-        <div className="mt-6 flex justify-center z-10 relative">
+        <div className="mt-6 flex justify-center -z10 relative">
           <button
             onClick={() => setShowMore(!showMore)}
             className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-black cursor-pointer px-4 py-2 rounded-full transition-all shadow-md"

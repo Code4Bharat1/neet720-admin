@@ -87,7 +87,7 @@ export default function Page() {
   return (
     <div className="min-h-screen md:flex bg-gray-50">
       {/* Desktop Sidebar Section (visible on md+) */}
-      <div className="md:w-1/6 bg-[#007AFF]">
+    <div className="md:w-1/6">
         <Sidebar />
       </div>
 
@@ -98,10 +98,13 @@ export default function Page() {
           <DesktopNavbar />
         </div>
 
-        
+        <div className=" md:hidden sticky top-0 z-10">
+            <MobileNavbar />
+          </div>
 
         {/* Page Content - Desktop */}
-        <div className="hidden md:block px-6 pb-20">
+        <div className="block px-6 pb-20">
+          
           {/* Mode Switcher */}
           <div className="mb-6">
             <ModeSwitcher selectedMode={selectedMode} setSelectedMode={setSelectedMode} />
@@ -137,66 +140,10 @@ export default function Page() {
           </section>
         </div>
 
-        {/* Mobile View */}
-        <div className="block md:hidden">
-          {/* Mobile Navs */}
-          <div className="sticky top-0 z-10">
-            <MobileNavbar />
-          </div>
-          
-          {/* Refresh Button (Mobile) */}
-          <div className="flex justify-between items-center px-4 py-2 bg-white border-b border-gray-200 mb-4">
-            <button 
-              onClick={refreshDashboard}
-              className="bg-blue-50 text-blue-600 p-2 rounded-full hover:bg-blue-100 transition-colors"
-            >
-              <HiOutlineRefresh className="text-xl" />
-            </button>
-            
-            <select 
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="bg-white border border-gray-300 rounded-md px-2 py-1 text-sm"
-            >
-              <option value="today">Today</option>
-              <option value="week">Last 7 Days</option>
-              <option value="month">Last 30 Days</option>
-            </select>
-          </div>
-          
-          {/* Page Content */}
-          <div className="px-4 pb-20">
-            <div className="mb-4">
-              <ModeSwitchermobile selectedMode={selectedMode} setSelectedMode={setSelectedMode} />
-            </div>
-            
-            <section className="mb-6">
-              <StatsCardsmobile />
-            </section>
-            
-            <section className="mb-6">
-              <TopPerformersTablemobile selectedMode={selectedMode} />
-            </section>
-            
-            <section className="mb-6">
-              <SpotlightOnImprovementTablemobile selectedMode={selectedMode} />
-            </section>
-            
-            <section className="mb-6">
-              <StudentActivityCardmobile />
-            </section>
-            
-            <section className="mb-6">
-              <TestResultDownloadmobile />
-            </section>
-          </div>
-
           {/* Mobile Bottom Nav */}
-          <div className="fixed bottom-0 left-0 w-full z-10">
+          <div className="md:hidden fixed bottom-0 left-0 w-full z-10">
             <MobilebottomNavbar />
           </div>
-        </div>
-
         {/* Scroll to Top Button */}
         <AnimatePresence>
           {showScrollTop && (
