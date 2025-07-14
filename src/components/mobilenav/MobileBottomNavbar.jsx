@@ -22,7 +22,7 @@ const MobilebottomNavbar = () => {
           <span className="text-xs">View Students</span>
         </a>
 
-        <a href="/Practicetest" className="flex flex-col items-center text-gray-700 hover:text-blue-500">
+        <a href="/Customize" className="flex flex-col items-center text-gray-700 hover:text-blue-500">
           <FaClipboardList className="text-2xl text-black hover:text-black" />
           <span className="text-xs">Test</span>
         </a>
