@@ -5,6 +5,8 @@ import Sidebar from '@/components/desktopsidebar/sidebar'
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import MobileNavbar from '@/components/mobilenav/mobilenav'
+import MobilebottomNavbar from '@/components/mobilenav/MobileBottomNavbar'
 
 const Page = () => {
   const [formData, setFormData] = useState({
@@ -184,11 +186,15 @@ const Page = () => {
 
   return (
     <div className='flex min-h-screen bg-gray-50'>
-      <div className='w-50'><Sidebar /></div>
+      <div className='w-50 max-sm:hidden'><Sidebar /></div>
+      <div className="hidden max-md:block fixed top-0 left-0 w-full h-16 bg-white shadow-md z-50">
+        <MobileNavbar />
+        <MobilebottomNavbar />
+      </div>
       <div className='flex-1'>
         <DesktopNavbar />
         
-        <div className='p-6 max-w-7xl mx-auto ml-10'>
+        <div className='p-6 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20'>
           {/* Header Section */}
           <div className='mb-8'>
             <div className='flex justify-between items-center mb-4'>

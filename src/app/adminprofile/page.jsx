@@ -9,6 +9,8 @@ import {
   Search, ChevronLeft, ChevronRight, Save, Edit3, RefreshCw, Filter, 
   ArrowUp, ArrowDown, Trash2, Eye, FileText
 } from 'lucide-react';
+import MobilebottomNavbar from '@/components/mobilenav/MobileBottomNavbar';
+import MobileNavbar from '@/components/mobilenav/mobilenav';
 
 export default function AdminDashboardPage() {
   // Admin Profile States
@@ -222,7 +224,7 @@ const [filterFromCard, setFilterFromCard] = useState(null);
   if (isLoading) {
     return (
       <div className="flex h-screen">
-        <div className="w-64 bg-gradient-to-b from-blue-700 to-blue-800 shadow-lg">
+        <div className="w-64 shadow-lg">
           <Sidebar />
         </div>
         <div className="flex-1 flex justify-center items-center">
@@ -248,16 +250,20 @@ const [filterFromCard, setFilterFromCard] = useState(null);
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen max-sm:-ml-56 ml-20 bg-gray-50">
+      
+        <div className="block md:hidden fixed top-0 z-10">
+            <MobileNavbar />
+          </div>
       {/* Sidebar */}
       <div className="w-55">
         <Sidebar />
-      </div>
+      </div>  
       
       
       {/* Main content */}
       <div className="flex-1 py-8 px-6 overflow-x-hidden">
-        
+    
         <div className="max-w-7xl mx-auto ">
           {/* Page Header with stats */}
           <div className="mb-8">
@@ -609,6 +615,10 @@ const [filterFromCard, setFilterFromCard] = useState(null);
           </div>
         </div>
       </div>
+      {/* Mobile Bottom Nav */}
+          <div className="md:hidden fixed bottom-0 left-0 w-full z-10">
+            <MobilebottomNavbar />
+          </div>
     </div>
   );
 }

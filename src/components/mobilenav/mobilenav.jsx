@@ -15,7 +15,10 @@
     ChevronUp,
     File,
     Archive,
+    Scan,
   } from "lucide-react";
+  import { PiBook } from "react-icons/pi";
+
 
   /* -------------------------------------------
     MOBILE SIDEBAR NAV
@@ -31,18 +34,18 @@
     };
 
     return (
-      <div className="relative w-full flex sm:hidden md:hidden lg:hidden xl:hidden">
+      <div className="relative w-full flex items-center justify-between md:hidden lg:hidden xl:hidden">
         {/* Top Navbar */}
-        <div className="flex justify-between items-center p-4 bg-white shadow-md">
-          <button onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex justify-between items-center w-full p-4 bg-white shadow-md">
+          <button onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <h1 className="text-lg font-bold text-blue-700">Dashboard</h1>
           <img
-            src="/mobilenavprofile.png"
+            src="/neet720_logo.jpg"
             alt="Profile"
             className="w-10 h-10 rounded-full shadow-md cursor-pointer"
-            onClick={() => handleNavigation("/profile")}
+            onClick={() => handleNavigation("/adminprofile")}
           />
         </div>
 
@@ -53,48 +56,48 @@
           } transition-transform duration-300 ease-in-out`}
         >
           {/* Back Icon */}
-          <div className="bg-[#007AFF] top-4 left-4">
-            <button onClick={() => setIsOpen(false)}>
+          <div className="top-4 right-0 bg-white">
+            <button onClick={() => setIsOpen(false)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
               <ChevronLeft className="w-6 h-6 text-gray-900 font-bold" />
             </button>
           </div>
 
           {/* Logo and Title */}
-          <div className="flex flex-col justify-center items-center p-4 mt-10">
+          <div className="flex flex-col justify-center items-center p-4 mt-2">
             <img
-              src="/mobilenavprofile.png"
+              src="/neet720_logo.jpg"
               alt="Profile"
               className="w-16 h-16 rounded-full drop-shadow-lg"
             />
-            <h2 className="text-xl font-bold mt-2">Nexcore</h2>
+            <h2 className="text-xl font-bold mt-2">Neet720</h2>
           </div>
 
           <nav className="flex flex-col gap-2 px-4">
             <button
               onClick={() => handleNavigation("/Practisetest")}
-              className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
             >
-              <FileText className="w-5 h-5 text-gray-700 group-hover:text-white" />
-              <span className="text-gray-900 group-hover:text-white">Practise Test</span>
+              <FileText className="w-5 h-5 text-gray-700 " />
+              <span className="text-gray-900">Practise Test</span>
             </button>
 
             <button
               onClick={() => handleNavigation("/Customize")}
-              className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
             >
-              <Edit className="w-5 h-5 text-gray-700 group-hover:text-white" />
-              <span className="text-gray-900 group-hover:text-white">Customized Test</span>
+              <Edit className="w-5 h-5 text-gray-700 " />
+              <span className="text-gray-900 ">Customized Test</span>
             </button>
 
             {/* Paper Generator Dropdown */}
             <div className="flex flex-col">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-between gap-3 p-2 rounded-lg group transition-all"
+                className="flex items-center justify-between gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <Layers className="w-5 h-5 text-gray-700 group-hover:text-white" />
-                  <span className="text-gray-900 group-hover:text-white">Paper Generator</span>
+                  <Layers className="w-5 h-5 text-gray-700 " />
+                  <span className="text-gray-900 ">Paper Generator</span>
                 </div>
                 {isDropdownOpen ? (
                   <ChevronUp className="w-5 h-5" />
@@ -107,48 +110,63 @@
                 <div className="ml-8 flex flex-col gap-2">
                   <button
                     onClick={() => handleNavigation("/generatetest")}
-                    className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+                    className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
                   >
-                    <File className="w-5 h-5 text-gray-700 group-hover:text-white" />
-                    <span className="text-gray-900 group-hover:text-white">Tests</span>
+                    <File className="w-5 h-5 text-gray-700 " />
+                    <span className="text-gray-900 ">Tests</span>
                   </button>
                   <button
                     onClick={() => handleNavigation("/batches")}
-                    className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+                    className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
                   >
-                    <Archive className="w-5 h-5 text-gray-700 group-hover:text-white" />
-                    <span className="text-gray-900 group-hover:text-white">Batches</span>
+                    <Archive className="w-5 h-5 text-gray-700 " />
+                    <span className="text-gray-900 ">Batches</span>
                   </button>
                 </div>
               )}
             </div>
 
-            <button
-              onClick={() => handleNavigation("/paper_candidate_field")}
-              className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+              <button
+              onClick={() => handleNavigation("/scan-omr")}
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
             >
-              <Settings className="w-5 h-5 text-gray-700 group-hover:text-white" />
-              <span className="text-gray-900 group-hover:text-white">Settings</span>
+              <Scan className="w-5 h-5 text-xl"/>
+              <span className="text-gray-900 ">Scan OMR</span>
             </button>
 
             <button
-              onClick={() => handleNavigation("/profile")}
-              className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+              onClick={() => handleNavigation("/notice")}
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
             >
-              <User className="w-5 h-5 text-gray-700 group-hover:text-white" />
-              <span className="text-gray-900 group-hover:text-white">Profile</span>
+              <PiBook className="w-5 h-5 text-xl" />
+              <span className="text-gray-900 ">Post Notice</span>
             </button>
-            
+
+            <button
+              onClick={() => handleNavigation("/paper_candidate_field")}
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
+            >
+              <Settings className="w-5 h-5 text-gray-700 " />
+              <span className="text-gray-900 ">Settings</span>
+            </button>
+
+            <button
+              onClick={() => handleNavigation("/adminprofile")}
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
+            >
+              <User className="w-5 h-5 text-gray-700 " />
+              <span className="text-gray-900 ">Profile</span>
+            </button>
 
             <button
               onClick={() => {
                 localStorage.clear();
                 handleNavigation("/");
               }}
-              className="flex items-center gap-3 p-2 rounded-lg group transition-all"
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
             >
-              <LogOut className="w-5 h-5 text-red-600 group-hover:text-white" />
-              <span className="text-red-600 group-hover:text-white">Logout</span>
+              <LogOut className="w-5 h-5 text-red-600 " />
+              <span className="text-red-600 ">Logout</span>
             </button>
           </nav>
         </div>

@@ -18,7 +18,7 @@ export default function page() {
     </div>  
 
       {/* Sidebar Section */}
-      <div className="md:w-1/6 bg-[#007AFF]">
+      <div className="md:w-1/6">
         <Sidebar />
       </div>
 
@@ -26,23 +26,10 @@ export default function page() {
       <div className="w-full md:w-5/6 md:flex-1 h-screen bg-white">
         {/* Navigation Bar */}
         <Desktopnav />
-        <div className="hidden md:block">
+        <div className="block">
           <Batches/>
-                </div>
-                <div className="md:hidden">
-                  <Batchesmobile/>
-                </div>
-        
-
-
-
-
-
-    
-                
+        </div>
       </div>
-
-      
     </div>
   );
 };

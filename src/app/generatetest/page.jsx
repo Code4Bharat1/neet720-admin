@@ -6,10 +6,10 @@ import Desktopnav from "@/components/desktopnav/nav";
 import Sidebar from "@/components/desktopsidebar/sidebar";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
 import React, { useState } from "react";
-
-
 import Generatetest from "@/components/generatetest/generate_test";
 import Generatetestmobile from "@/components/generatetest/generate_test_mobile"
+
+
 export default function page() {
   return (
     <div className="min-h-screen md:flex bg-white">
@@ -18,10 +18,8 @@ export default function page() {
       <MobilebottomNavbar/>
     </div>  
 
-
-
       {/* Sidebar Section */}
-      <div className="md:w-1/6 bg-[#007AFF]">
+      <div className="md:w-1/6">
         <Sidebar />
       </div>
 
@@ -29,17 +27,10 @@ export default function page() {
       <div className="w-full md:w-5/6 md:flex-1 h-screen bg-white">
         {/* Navigation Bar */}
         <Desktopnav />
-
-        
          
-        <div className="hidden md:block">
-          
+        <div className="block">
           <Generatetest/>
-        </div>
-        <div className="md:hidden">
-          <Generatetestmobile/>
-        </div>
-                      
+        </div>        
       </div>
     </div>
   );

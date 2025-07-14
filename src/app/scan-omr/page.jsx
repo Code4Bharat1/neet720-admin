@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Sidebar from '@/components/desktopsidebar/sidebar';
 import DesktopNavbar from '@/components/desktopnav/nav';
-import Webcam from 'react-webcam';
-import { useRef } from 'react';
+import MobileNavbar from '@/components/mobilenav/mobilenav';
+import MobilebottomNavbar from '@/components/mobilenav/MobileBottomNavbar';
 
 const Page = () => {
   const [studentName, setStudentName] = useState('');
@@ -120,11 +120,15 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      <Sidebar />
+      <Sidebar/>
+      <div className="hidden max-sm:block relative top-0 left-0 w-full h-16 bg-white shadow-md z-50">
+        <MobileNavbar />
+        <MobilebottomNavbar />
+      </div>
       <div>
         <div className="">
-          <DesktopNavbar />
-          <div className='ml-65 p-8'>
+          <DesktopNavbar/>
+          <div className='ml-65 p-8 max-md:ml-0 max-sm:p-3'>
             {/* Header Section */}
             <div className="mb-8">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">

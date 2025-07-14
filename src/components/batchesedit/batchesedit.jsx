@@ -1,366 +1,399 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Papa from "papaparse"; // To parse CSV files
+"use client"
+
+import { useState, useEffect } from "react"
+import axios from "axios"
+import { motion, AnimatePresence } from "framer-motion"
+import { Users, Mail, Plus, X, Check, AlertCircle, BookOpen, UserPlus, Edit3, Loader2 } from "lucide-react"
 
 const UpdateBatchForm = () => {
-
-  
-  const [batchId, setBatchId] = useState("");
-  const [batchName, setBatchName] = useState("");
-  const [noOfStudents, setNoOfStudents] = useState(""); 
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("update"); // "update" or "add"
-
-  const handleBatchIdChange = (e) => setBatchId(e.target.value);
-  const handleBatchNameChange = (e) => setBatchName(e.target.value);
-  const handleNoOfStudentsChange = (e) => setNoOfStudents(e.target.value);
-  const handleFileChange = (e) => setFile(e.target.files[0]);
-
+  const [batchId, setBatchId] = useState("")
+  const [batchName, setBatchName] = useState("")
+  const [noOfStudents, setNoOfStudents] = useState("")
+  const [emailAddresses, setEmailAddresses] = useState([""])
+  const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState("update")
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const savedBatchId = localStorage.getItem("batchId");
-        const savedBatchName = localStorage.getItem("batchName");
-        const savedNoOfStudents = localStorage.getItem("noOfStudents");
-  
-        if (savedBatchId) setBatchId(savedBatchId);
-        if (savedBatchName) setBatchName(savedBatchName);
-        if (savedNoOfStudents) setNoOfStudents(savedNoOfStudents);
+        const savedBatchId = localStorage.getItem("batchId")
+        const savedBatchName = localStorage.getItem("batchName")
+        const savedNoOfStudents = localStorage.getItem("noOfStudents")
+        if (savedBatchId) setBatchId(savedBatchId)
+        if (savedBatchName) setBatchName(savedBatchName)
+        if (savedNoOfStudents) setNoOfStudents(savedNoOfStudents)
       } catch (error) {
-        console.error("Error accessing localStorage:", error);
+        console.error("Error accessing localStorage:", error)
       }
     }
-  }, []);
+  }, [])
 
   const resetForm = () => {
-    setBatchId("");
-    setBatchName("");
-    setNoOfStudents("");
-    setFile(null);
-    setError("");
-    setSuccessMessage("");
-  };
+    setBatchId("")
+    setBatchName("")
+    setNoOfStudents("")
+    setEmailAddresses([""])
+    setError("")
+    setSuccessMessage("")
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-    setIsLoading(true);
+  const handleEmailChange = (index, value) => {
+    const updatedEmails = [...emailAddresses]
+    updatedEmails[index] = value
+    setEmailAddresses(updatedEmails)
+  }
 
-    // Validate the fields
-    if (!batchId || !batchName || !noOfStudents) {
-      setError("Batch ID, Batch Name, and Number of Students are required");
-      setIsLoading(false);
-      return;
-    }
+  const addEmailField = () => {
+    setEmailAddresses([...emailAddresses, ""])
+  }
 
-    if (!file) {
-      setError("Please select a CSV file");
-      setIsLoading(false);
-      return;
-    }
+  const removeEmailField = (index) => {
+    const updatedEmails = emailAddresses.filter((_, i) => i !== index)
+    setEmailAddresses(updatedEmails)
+  }
 
-    // Read the CSV file
-    Papa.parse(file, {
-      complete: async (result) => {
-        const emailAddresses = result.data.map((row) => row[0]); // Assuming email is in the first column of the CSV
+  const handleUpdateBatch = async (e) => {
+    e.preventDefault()
+    setError("")
+    setSuccessMessage("")
+    setIsLoading(true)
 
-        if (emailAddresses.length === 0) {
-          setError("No email addresses found in the CSV file");
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          // Send the emails, batchId, and batchName to the backend
-          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/update`, {
-            emails: emailAddresses,
-            batchId: batchId,
-            batchName: batchName,
-          });
-
-          setSuccessMessage(response.data.message); // Assuming backend sends a message in response
-          setTimeout(() => resetForm(), 3000); // Reset form after 3 seconds
-        } catch (error) {
-          const errorMessage = error.response?.data?.message || error.message || "Error updating batch";
-          setError(errorMessage);
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      header: false, // We don't expect headers in the CSV
-      error: (error) => {
-        setError(`Error parsing CSV: ${error.message}`);
-        setIsLoading(false);
-      }
-    });
-  };
-
-  // Adding a batch with just batchId, batchName, and noOfStudents
-  const handleAddBatch = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-    setIsLoading(true);
-
-    // Validate if batch details are provided
-    if (!batchId || !batchName || !noOfStudents) {
-      setError("Batch ID, Batch Name, and Number of Students are required");
-      setIsLoading(false);
-      return;
+    if (!batchId || !batchName || !emailAddresses.length || emailAddresses.some((e) => e.trim() === "")) {
+      setError("All fields including email addresses must be filled")
+      setIsLoading(false)
+      return
     }
 
     try {
-      let token = "";
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/update`, {
+        emails: emailAddresses,
+        batchId,
+        batchName,
+      })
+      setSuccessMessage(response.data.message)
+      setTimeout(() => resetForm(), 3000)
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error updating batch"
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAddBatch = async (e) => {
+    e.preventDefault()
+    setError("")
+    setSuccessMessage("")
+    setIsLoading(true)
+
+    if (!batchId || !batchName || !noOfStudents) {
+      setError("Batch ID, Batch Name, and Number of Students are required")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      let token = ""
       if (typeof window !== "undefined") {
-        token=localStorage.getItem("adminAuthToken");
+        token = localStorage.getItem("adminAuthToken")
       }
-      // Send the batch details to the backend to create a new batch
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/batch`,
         {
-          batchId: batchId,
-          batchName: batchName,
+          batchId,
+          batchName,
           no_of_students: noOfStudents,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-      
-
-      setSuccessMessage(response.data.message); // Assuming backend sends a message in response
-      setTimeout(() => resetForm(), 3000); // Reset form after 3 seconds
+          },
+        },
+      )
+      setSuccessMessage(response.data.message)
+      setTimeout(() => resetForm(), 3000)
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || "Error creating batch";
-      setError(errorMessage);
+      const errorMessage = error.response?.data?.message || error.message || "Error creating batch"
+      setError(errorMessage)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  // Generate and download template Excel file
-  const downloadTemplate = () => {
-    // Create CSV content
-    const csvContent = "Email Address\n"; // Header
-    
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    
-    // Create a download link
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", "student_email_template.csv");
-    document.body.appendChild(link);
-    
-    // Start download
-    link.click();
-    
-    // Clean up
-    document.body.removeChild(link);
-  };
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+  }
 
   return (
-    <div className="max-w-2xl mx-auto p-8 bg-white border border-gray-200 rounded-lg shadow-lg mt-8">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Batch Management</h2>
-      
-      {/* Tabs */}
-      <div className="flex border-b border-gray-300 mb-6">
-        <button
-          className={`py-3 px-6 font-medium text-sm focus:outline-none ${
-            activeTab === "update" 
-              ? "border-b-2 border-blue-600 text-blue-600" 
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-          onClick={() => setActiveTab("update")}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <motion.div className="max-w-4xl mx-auto" variants={containerVariants} initial="hidden" animate="visible">
+        {/* Header */}
+        <motion.div className="text-center mb-8" variants={itemVariants}>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Batch Management</h1>
+          <p className="text-gray-600 text-lg">Manage your student batches efficiently</p>
+        </motion.div>
+
+        {/* Main Card */}
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+          variants={itemVariants}
         >
-          Update Existing Batch
-        </button>
-        <button
-          className={`py-3 px-6 font-medium text-sm focus:outline-none ${
-            activeTab === "add" 
-              ? "border-b-2 border-blue-600 text-blue-600" 
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-          onClick={() => setActiveTab("add")}
-        >
-          Add New Batch
-        </button>
-      </div>
-
-      <form onSubmit={activeTab === "update" ? handleSubmit : handleAddBatch}>
-        {/* Batch ID */}
-        <div className="mb-5">
-          <label htmlFor="batchId" className="block text-sm font-medium text-gray-700 mb-1">Batch ID</label>
-          <input
-            type="text"
-            id="batchId"
-            name="batchId"
-            value={batchId}
-            onChange={handleBatchIdChange}
-            required
-            placeholder="Enter batch ID"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
-        </div>
-
-        {/* Batch Name */}
-        <div className="mb-5">
-          <label htmlFor="batchName" className="block text-sm font-medium text-gray-700 mb-1">Batch Name</label>
-          <input
-            type="text"
-            id="batchName"
-            name="batchName"
-            value={batchName}
-            onChange={handleBatchNameChange}
-            required
-            placeholder="Enter batch name"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
-        </div>
-
-        {/* Number of Students */}
-        <div className="mb-5">
-          <label htmlFor="noOfStudents" className="block text-sm font-medium text-gray-700 mb-1">Number of Students</label>
-          <input
-            type="number"
-            id="noOfStudents"
-            name="noOfStudents"
-            value={noOfStudents}
-            onChange={handleNoOfStudentsChange}
-            required
-            placeholder="Enter number of students"
-            min="1"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
-        </div>
-
-        {/* File Upload - Only show in Update tab */}
-        {activeTab === "update" && (
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="file" className="block text-sm font-medium text-gray-700">Upload CSV File</label>
+          {/* Tab Navigation */}
+          <div className="bg-gray-50 border-b border-gray-200">
+            <div className="flex">
               <button
-                type="button"
-                onClick={downloadTemplate}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                className={`flex-1 py-4 px-6 font-semibold text-sm transition-all duration-300 relative ${
+                  activeTab === "update"
+                    ? "text-blue-600 bg-white"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab("update")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download Template
+                <div className="flex items-center justify-center space-x-2">
+                  <Edit3 className="w-4 h-4" />
+                  <span>Update Existing Batch</span>
+                </div>
+                {activeTab === "update" && (
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" layoutId="activeTab" />
+                )}
+              </button>
+              <button
+                className={`flex-1 py-4 px-6 font-semibold text-sm transition-all duration-300 relative ${
+                  activeTab === "add" ? "text-blue-600 bg-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab("add")}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <UserPlus className="w-4 h-4" />
+                  <span>Add New Batch</span>
+                </div>
+                {activeTab === "add" && (
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" layoutId="activeTab" />
+                )}
               </button>
             </div>
-            <div className="flex flex-col items-center justify-center w-full">
-              <label htmlFor="file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg className="w-8 h-8 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                  </svg>
-                  <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                  <p className="text-xs text-gray-500">CSV file with student emails</p>
+          </div>
+
+          {/* Form Content */}
+          <div className="p-8">
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={activeTab}
+                onSubmit={activeTab === "update" ? handleUpdateBatch : handleAddBatch}
+                className="space-y-6"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Batch ID Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Batch ID</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <BookOpen className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter batch ID"
+                      value={batchId}
+                      onChange={(e) => setBatchId(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    />
+                  </div>
                 </div>
-                <input 
-                  id="file" 
-                  type="file" 
-                  aaccept=".csv,text/csv"
-                  className="hidden" 
-                  onChange={handleFileChange}
-                />
-              </label>
-            </div>
-            {file && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected file: {file.name}
-              </p>
-            )}
+
+                {/* Batch Name Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Batch Name</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Users className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter batch name"
+                      value={batchName}
+                      onChange={(e) => setBatchName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Conditional Content */}
+                {activeTab === "add" ? (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Number of Students</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Users className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="Enter number of students"
+                        value={noOfStudents}
+                        onChange={(e) => setNoOfStudents(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-gray-700">Student Email Addresses</label>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {emailAddresses.length} email{emailAddresses.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      <AnimatePresence>
+                        {emailAddresses.map((email, index) => (
+                          <motion.div
+                            key={index}
+                            className="flex items-center space-x-3"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <div className="flex-1 relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Mail className="h-4 w-4 text-gray-400" />
+                              </div>
+                              <input
+                                type="email"
+                                placeholder={`Student email ${index + 1}`}
+                                value={email}
+                                onChange={(e) => handleEmailChange(index, e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                              />
+                            </div>
+                            {emailAddresses.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeEmailField(index)}
+                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={addEmailField}
+                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add another email</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Error and Success Messages */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      className="flex items-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                    >
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm">{error}</span>
+                    </motion.div>
+                  )}
+
+                  {successMessage && (
+                    <motion.div
+                      className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                    >
+                      <Check className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm">{successMessage}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        {activeTab === "update" ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+                        <span>{activeTab === "update" ? "Update Batch" : "Create Batch"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.form>
+            </AnimatePresence>
           </div>
-        )}
+        </motion.div>
 
-        {/* Submit Button */}
-        <div className="flex justify-center mt-8">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-3 px-6 text-white font-medium rounded-lg text-center ${
-              isLoading 
-                ? "bg-gray-400 cursor-not-allowed" 
-                : activeTab === "update" 
-                  ? "bg-blue-600 hover:bg-blue-700" 
-                  : "bg-green-600 hover:bg-green-700"
-            } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              activeTab === "update" ? "focus:ring-blue-500" : "focus:ring-green-500"
-            } transition-colors`}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : activeTab === "update" ? (
-              "Update Batch"
-            ) : (
-              "Add New Batch"
-            )}
-          </button>
-        </div>
-      </form>
-
-      {/* Messages */}
-      {error && (
-        <div className="mt-6 p-4 border-l-4 border-red-500 bg-red-50 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+        {/* Additional Info Cards */}
+        <motion.div className="grid md:grid-cols-2 gap-6 mt-8" variants={itemVariants}>
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Edit3 className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-800">Update Batch</h3>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
+            <p className="text-gray-600 text-sm">
+              Modify existing batch details and manage student email addresses for seamless communication.
+            </p>
           </div>
-        </div>
-      )}
 
-      {successMessage && (
-        <div className="mt-6 p-4 border-l-4 border-green-500 bg-green-50 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-800">Create Batch</h3>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-green-700">{successMessage}</p>
-            </div>
+            <p className="text-gray-600 text-sm">
+              Set up new student batches with essential information to organize your educational programs.
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Instructions */}
-      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Instructions</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-          <li>Fill in all required fields: Batch ID, Batch Name, and Number of Students.</li>
-          <li>For batch updates, upload a CSV file containing student email addresses.</li>
-          <li>You can download a template CSV file by clicking on "Download Template".</li>
-          <li>Each email address should be on a separate row in the CSV file.</li>
-        </ul>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default UpdateBatchForm;
+export default UpdateBatchForm

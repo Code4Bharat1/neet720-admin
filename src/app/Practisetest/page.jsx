@@ -11,14 +11,14 @@ function Page() {
     <>
       {/* Mobile View */}
       <div className="md:hidden block min-h-screen bg-white">
-        <MobileNavbar />
-        <TestMobile />
+        <MobileNavbar /> 
+            <Practisetest />
       </div>
 
       {/* Desktop View */}
       <div className="hidden md:flex min-h-screen bg-white">
         {/* Sidebar Section */}
-        <div className="md:w-1/6 bg-[#007AFF]">
+        <div className="md:w-1/6">
           <Sidebar />
         </div>
 

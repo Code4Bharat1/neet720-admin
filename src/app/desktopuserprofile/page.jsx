@@ -61,7 +61,7 @@ export default function Page() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* Sidebar (Desktop Only) */}
-      <aside className="hidden md:block md:w-1/6 bg-[#007AFF]">
+      <aside className="hidden md:block md:w-1/6">
         <Sidebar />
       </aside>
 
