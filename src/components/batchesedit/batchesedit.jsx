@@ -272,7 +272,7 @@ const UpdateBatchForm = () => {
                 <input 
                   id="file" 
                   type="file" 
-                  accept=".csv" 
+                  aaccept=".csv,text/csv"
                   className="hidden" 
                   onChange={handleFileChange}
                 />
