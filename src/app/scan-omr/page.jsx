@@ -16,7 +16,29 @@ const Page = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const webcamRef = useRef(null);
+  const [capturedImages , setCapturedImages] = useState([]);
 
+
+  const capturePhoto = () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    const imageBlob = dataURItoBlob(imageSrc);
+    const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    setCapturedImages(prev => [...prev, file]);
+    setStudentFiles(prev => [...prev, file]);
+  };
+
+  // Utility function to convert base64 data to Blob
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
   const handleEvaluate = async (e) => {
     e.preventDefault();
 
@@ -119,7 +141,7 @@ const Page = () => {
             {/* Main Form Card */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8 mb-8">
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 w-full rounded-full mb-6"></div>
-              
+
               <form onSubmit={handleEvaluate} className="space-y-8">
                 {/* Student Email Input */}
                 <div className="group">
@@ -190,6 +212,34 @@ const Page = () => {
                           <p className="text-blue-600 font-semibold mt-2">{originalFiles.length} file(s) selected</p>
                         )}
                       </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4 mt-6">
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={{ width: 4000, height: 3000, facingMode: "environment" }}
+                      className="rounded-xl shadow-md w-full"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl"
+                    >
+                      Capture OMR Sheet
+                    </button>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      {capturedImages.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={URL.createObjectURL(img)}
+                          alt={`Captured OMR ${idx + 1}`}
+                          className="rounded-xl shadow-sm border"
+                        />
+                      ))}
                     </div>
                   </div>
 
