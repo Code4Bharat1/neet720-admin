@@ -194,7 +194,7 @@ const Page = () => {
       <div className='flex-1'>
         <DesktopNavbar />
         
-        <div className='p-6 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20'>
+        <div className='p-6 md:ml-20 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20'>
           {/* Header Section */}
           <div className='mb-8'>
             <div className='flex justify-between items-center mb-4'>

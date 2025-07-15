@@ -46,8 +46,8 @@ const AdminLogin = () => {
       {/* Left Logo Section */}
       <div className="hidden md:flex w-full md:w-[40%] items-center justify-center p-6">
         <Image
-          src="/nexcore-logo-pc.png"
-          alt="Nexcore Logo"
+          src="/neet720_logo.jpg"
+          alt="Neet720 Logo"
           width={300}
           height={200}
           className="object-contain"

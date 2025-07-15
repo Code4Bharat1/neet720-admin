@@ -343,7 +343,7 @@ const Desktop_student = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 p-6 relative">
+    <div className="h-full bg-gradient-to-b from-white to-gray-50 p-6 relative">
       <Head>
         <title>Student Management</title>
         <meta name="description" content="Student management system" />
@@ -363,7 +363,7 @@ const Desktop_student = () => {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto">
+      <main className="max-w-6xl mx-auto h-fit">
         {/* Template download button */}
         <div className="mb-8">
           <button
