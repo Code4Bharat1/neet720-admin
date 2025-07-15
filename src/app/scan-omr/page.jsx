@@ -62,11 +62,12 @@ const Page = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/evaluate-omr", formData, {
+      const response = await axios.post("https://omr.neet720.com/api/process-omr-base64", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+      console.log("Evaluation response:", response.data);
 
       setResult(response.data);
     } catch (error) {
@@ -93,7 +94,7 @@ const Page = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/evaluate-omr', formData, {
+      const response = await axios.post('https://omr.neet720.com/api/process-omr-base64', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
