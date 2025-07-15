@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import Sidebar from '@/components/desktopsidebar/sidebar';
 import DesktopNavbar from '@/components/desktopnav/nav';
 import MobileNavbar from '@/components/mobilenav/mobilenav';
 import MobilebottomNavbar from '@/components/mobilenav/MobileBottomNavbar';
+import Webcam from 'react-webcam';
 
 const Page = () => {
   const [studentName, setStudentName] = useState('');
@@ -16,16 +17,29 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const webcamRef = useRef(null);
-  const [capturedImages , setCapturedImages] = useState([]);
+  const [capturedImages, setCapturedImages] = useState([]);
 
 
   const capturePhoto = () => {
     const imageSrc = webcamRef.current.getScreenshot();
+
+    if (!imageSrc) {
+      alert("Failed to capture image.");
+      return;
+    }
+
     const imageBlob = dataURItoBlob(imageSrc);
-    const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, {
+      type: "image/jpeg",
+    });
+
     setCapturedImages(prev => [...prev, file]);
     setStudentFiles(prev => [...prev, file]);
+
+    // Immediately evaluate this captured image
+    evaluateCapturedOMR(file);
   };
+
 
   // Utility function to convert base64 data to Blob
   const dataURItoBlob = (dataURI) => {
@@ -38,6 +52,30 @@ const Page = () => {
     }
     return new Blob([ab], { type: mimeString });
   };
+  const evaluateCapturedOMR = async (file) => {
+    const formData = new FormData();
+    formData.append("studentName", studentName);
+    formData.append("testName", testName);
+    formData.append("original", originalFiles[0]); // assume 1 original OMR
+    formData.append("student", file); // ✅ the captured photo
+
+    try {
+      setLoading(true);
+      const response = await axios.post("http://localhost:5000/api/evaluate-omr", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setResult(response.data);
+    } catch (error) {
+      console.error("Error evaluating:", error.response?.data || error.message);
+      alert("Evaluation failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEvaluate = async (e) => {
     e.preventDefault();
 
@@ -120,14 +158,14 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      <Sidebar/>
+      <Sidebar />
       <div className="hidden max-sm:block relative top-0 left-0 w-full h-16 bg-white shadow-md z-50">
         <MobileNavbar />
         <MobilebottomNavbar />
       </div>
       <div>
         <div className="">
-          <DesktopNavbar/>
+          <DesktopNavbar />
           <div className='ml-65 p-8 max-md:ml-0 max-sm:p-3'>
             {/* Header Section */}
             <div className="mb-8">
@@ -214,21 +252,60 @@ const Page = () => {
                     </div>
                   </div>
                   <div className="space-y-4 mt-6">
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={{ width: 4000, height: 3000, facingMode: "environment" }}
-                      className="rounded-xl shadow-md w-full"
-                    />
+                    {typeof window !== "undefined" && window.innerWidth <= 768 ? (
+                      // For mobile: use native camera
+                      <div className="space-y-4">
+                        <label className="block text-sm font-semibold text-gray-700">Capture OMR via Camera (Mobile)</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              const file = e.target.files[0];
+                              setCapturedImages(prev => [...prev, file]);
+                              setStudentFiles(prev => [...prev, file]);
+                              evaluateCapturedOMR(file); // Optional: auto-evaluate
+                            }
+                          }}
+                          className="w-full p-3 rounded-xl border border-gray-300 bg-white shadow"
+                        />
+                        <div className="grid grid-cols-3 gap-4">
+                          {capturedImages.map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={URL.createObjectURL(img)}
+                              alt={`Captured OMR ${idx + 1}`}
+                              className="rounded-xl shadow border"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      // For desktop: use react-webcam
+                      <div className="space-y-4 mt-6">
+                        <Webcam
+                          audio={false}
+                          ref={webcamRef}
+                          screenshotFormat="image/jpeg"
+                          screenshotQuality={1}
+                          videoConstraints={{
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            facingMode: "environment"
+                          }}
+                          className="rounded-xl shadow-md w-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={capturePhoto}
+                          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl"
+                        >
+                          Capture OMR Sheet
+                        </button>
+                      </div>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl"
-                    >
-                      Capture OMR Sheet
-                    </button>
 
                     <div className="grid grid-cols-3 gap-4">
                       {capturedImages.map((img, idx) => (
