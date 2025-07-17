@@ -397,6 +397,34 @@ const OMRScannerWithQR = () => {
     }
     setShowQRScanner(false)
   }
+=======
+    return new Blob([ab], { type: mimeString });
+  };
+  const evaluateCapturedOMR = async (file) => {
+    const formData = new FormData();
+    formData.append("studentName", studentName);
+    formData.append("testName", testName);
+    formData.append("original", originalFiles[0]); // assume 1 original OMR
+    formData.append("student", file); // ✅ the captured photo
+
+    try {
+      setLoading(true);
+      const response = await axios.post("https://omr.neet720.com/api/process-omr-base64", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("Evaluation response:", response.data);
+
+      setResult(response.data);
+    } catch (error) {
+      console.error("Error evaluating:", error.response?.data || error.message);
+      alert("Evaluation failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+>>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
 
   const handleEvaluate = async (e) => {
     e.preventDefault()
@@ -412,8 +440,8 @@ const OMRScannerWithQR = () => {
     studentFiles.forEach((file) => formData.append("student", file))
 
     try {
-      setLoading(true)
-      const response = await axios.post("http://localhost:5000/api/evaluate-omr", formData, {
+      setLoading(true);
+      const response = await axios.post('https://omr.neet720.com/api/process-omr-base64', formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
