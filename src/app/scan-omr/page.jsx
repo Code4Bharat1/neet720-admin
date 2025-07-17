@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
-import { FileText, CheckCircle, XCircle, Loader2, Send, Trash2, Zap, Key, HelpCircle } from "lucide-react"
+import { FileText, CheckCircle, XCircle, Loader2, Send, Trash2, Zap, Key, HelpCircle, QrCode } from "lucide-react"
 
 // File Upload Component
 const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon }) => {
@@ -25,7 +25,6 @@ const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon
         <Icon className="w-4 h-4 mr-2" />
         {label}
       </label>
-
       <div className="relative">
         <input
           ref={fileInputRef}
@@ -54,7 +53,6 @@ const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon
           )}
         </motion.div>
       </div>
-
       {/* Display Selected Files */}
       {files.length > 0 && (
         <div className="space-y-3">
@@ -103,7 +101,6 @@ const OMRScannerSimplified = () => {
 
   const handleEvaluate = async (e) => {
     e.preventDefault()
-
     if (answerKeyFiles.length === 0 || questionPaperFiles.length === 0) {
       alert("Please upload both OMR answer key and question paper files.")
       return
@@ -112,31 +109,62 @@ const OMRScannerSimplified = () => {
     try {
       setLoading(true)
 
-      // Step 1: Process Answer Key
-      const answerKeyFormData = new FormData()
-      answerKeyFiles.forEach((file) => answerKeyFormData.append("omrfile", file))
-
-      console.log("Processing Answer Key...")
-      const answerKeyResponse = await axios.post("https://omr.neet720.com/api/process-omr", answerKeyFormData, {
+      // Step 1: Process OMR Answer Key
+      const answerKeyOmrFormData = new FormData()
+      answerKeyFiles.forEach((file) => answerKeyOmrFormData.append("omrfile", file))
+      console.log("Processing OMR Answer Key...")
+      const answerKeyOmrResponse = await axios.post("https://omr.neet720.com/api/process-omr", answerKeyOmrFormData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
 
-      // Step 2: Process Question Paper
-      const questionPaperFormData = new FormData()
-      questionPaperFiles.forEach((file) => questionPaperFormData.append("omrfile", file))
+      // Step 2: Process OMR Question Paper
+      const questionPaperOmrFormData = new FormData()
+      questionPaperFiles.forEach((file) => questionPaperOmrFormData.append("omrfile", file))
+      console.log("Processing OMR Question Paper...")
+      const questionPaperOmrResponse = await axios.post(
+        "https://omr.neet720.com/api/process-omr",
+        questionPaperOmrFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      )
 
-      console.log("Processing Question Paper...")
-      const questionPaperResponse = await axios.post("https://omr.neet720.com/api/process-omr", questionPaperFormData, {
+      // Step 3: Process QR Code for Answer Key
+      const answerKeyQrFormData = new FormData()
+      answerKeyFiles.forEach((file) => answerKeyQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
+      console.log("Processing QR Code for Answer Key...")
+      const answerKeyQrResponse = await axios.post("https://omr.neet720.com/api/scan_qr", answerKeyQrFormData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
 
-      // Step 3: Compare both responses
-      console.log("Comparing responses...")
-      const comparisonResult = compareOMRResponses(answerKeyResponse.data, questionPaperResponse.data)
+      // Step 4: Process QR Code for Question Paper
+      const questionPaperQrFormData = new FormData()
+      questionPaperFiles.forEach((file) => questionPaperQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
+      console.log("Processing QR Code for Question Paper...")
+      const questionPaperQrResponse = await axios.post(
+        "https://omr.neet720.com/api/scan_qr",
+        questionPaperQrFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      )
+
+      // Step 5: Compare both OMR and QR responses
+      console.log("Comparing OMR and QR responses...")
+      const comparisonResult = compareOMRResponses(
+        answerKeyOmrResponse.data,
+        questionPaperOmrResponse.data,
+        answerKeyQrResponse.data,
+        questionPaperQrResponse.data,
+      )
       setResult(comparisonResult)
     } catch (error) {
       console.error("Error evaluating:", error.response?.data || error.message)
@@ -147,20 +175,35 @@ const OMRScannerSimplified = () => {
   }
 
   // Function to compare answer key and question paper responses
-  const compareOMRResponses = (answerKeyData, questionPaperData) => {
-    console.log("Answer Key Data:", answerKeyData)
-    console.log("Question Paper Data:", questionPaperData)
+  const compareOMRResponses = (answerKeyOmrData, questionPaperOmrData, answerKeyQrData, questionPaperQrData) => {
+    console.log("Answer Key OMR Data:", answerKeyOmrData)
+    console.log("Question Paper OMR Data:", questionPaperOmrData)
+    console.log("Answer Key QR Data:", answerKeyQrData)
+    console.log("Question Paper QR Data:", questionPaperQrData)
 
-    if (!answerKeyData.success || !questionPaperData.success) {
-      throw new Error("Invalid response format from one or both APIs")
+    if (!answerKeyOmrData.success || !questionPaperOmrData.success) {
+      throw new Error("Invalid OMR response format from one or both APIs")
+    }
+    if (!answerKeyOmrData.results || !questionPaperOmrData.results) {
+      throw new Error("Missing OMR results data from one or both APIs")
     }
 
-    if (!answerKeyData.results || !questionPaperData.results) {
-      throw new Error("Missing results data from one or both APIs")
+    // QR Code Comparison
+    let qrComparisonStatus = "matched"
+    let qrComparisonMessage = "QR codes match."
+    if (!answerKeyQrData.success || !questionPaperQrData.success) {
+      qrComparisonStatus = "error"
+      qrComparisonMessage = "Failed to read QR code from one or both sheets."
+    } else if (
+      answerKeyQrData.data?.testName !== questionPaperQrData.data?.testName ||
+      answerKeyQrData.data?.testId !== questionPaperQrData.data?.testId
+    ) {
+      qrComparisonStatus = "mismatch"
+      qrComparisonMessage = "Test Name or Test ID mismatch between sheets."
     }
 
-    const answerKey = answerKeyData.results
-    const studentAnswers = questionPaperData.results
+    const answerKey = answerKeyOmrData.results
+    const studentAnswers = questionPaperOmrData.results
 
     // Create a map of correct answers from answer key
     const correctAnswersMap = {}
@@ -203,9 +246,9 @@ const OMRScannerSimplified = () => {
           unansweredCount++
           status = "unanswered"
         } else if (correctAnswer === null) {
-          // If no correct answer is provided, mark as incorrect
+          // If no correct answer is provided, mark as incorrect (or unanswerable)
           incorrectCount++
-          status = "incorrect"
+          status = "incorrect" // Or a new status like "no_correct_answer"
         } else if (studentAnswer === correctAnswer) {
           correctCount++
           status = "correct"
@@ -253,10 +296,14 @@ const OMRScannerSimplified = () => {
     return {
       success: true,
       message: "OMR comparison completed successfully",
-      answerKeySummary: answerKeyData.summary,
-      questionPaperSummary: questionPaperData.summary,
-      answerKeyImage: answerKeyData.processed_image,
-      questionPaperImage: questionPaperData.processed_image,
+      answerKeySummary: answerKeyOmrData.summary,
+      questionPaperSummary: questionPaperOmrData.summary,
+      answerKeyImage: answerKeyOmrData.processed_image,
+      questionPaperImage: questionPaperOmrData.processed_image,
+      answerKeyQrData: answerKeyQrData.data,
+      questionPaperQrData: questionPaperQrData.data,
+      qrComparisonStatus: qrComparisonStatus,
+      qrComparisonMessage: qrComparisonMessage,
       pages: pages,
       totalScore: correctCount,
       maxScore: totalQuestions,
@@ -297,8 +344,10 @@ const OMRScannerSimplified = () => {
         answerKeySummary: result.answerKeySummary,
         questionPaperSummary: result.questionPaperSummary,
         comparisonDetails: result.comparisonDetails,
+        answerKeyQrData: result.answerKeyQrData, // Include QR data
+        questionPaperQrData: result.questionPaperQrData, // Include QR data
+        qrComparisonStatus: result.qrComparisonStatus, // Include QR comparison status
       })
-
       alert("Result saved successfully!")
     } catch (error) {
       console.error("Error saving marks:", error.response?.data || error.message)
@@ -319,10 +368,10 @@ const OMRScannerSimplified = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            OMR Scanner & Comparator
+            OMR & QR Scanner Comparator
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            Upload OMR answer key and question paper for comparison and evaluation
+            Upload OMR answer key and question paper for comparison and evaluation, including QR code verification.
           </p>
         </motion.div>
 
@@ -334,7 +383,6 @@ const OMRScannerSimplified = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 w-full rounded-full mb-4 sm:mb-6"></div>
-
           <form onSubmit={handleEvaluate} className="space-y-6">
             {/* File Upload Section */}
             <div className="grid gap-6 lg:grid-cols-2">
@@ -348,7 +396,6 @@ const OMRScannerSimplified = () => {
                   icon={Key}
                 />
               </motion.div>
-
               {/* Question Paper Upload */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                 <FileUploadZone
@@ -360,7 +407,6 @@ const OMRScannerSimplified = () => {
                 />
               </motion.div>
             </div>
-
             {/* Evaluate Button */}
             <motion.div
               className="pt-4"
@@ -376,12 +422,12 @@ const OMRScannerSimplified = () => {
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <Loader2 className="animate-spin -ml-1 mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    Comparing OMR Sheets...
+                    Comparing OMR & QR Sheets...
                   </div>
                 ) : (
                   <div className="flex items-center justify-center">
                     <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Compare & Evaluate OMR Sheets
+                    Compare & Evaluate Sheets
                   </div>
                 )}
               </button>
@@ -403,10 +449,9 @@ const OMRScannerSimplified = () => {
               <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 text-white">
                 <div className="flex flex-col space-y-4">
                   <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">OMR Comparison Complete!</h2>
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">OMR & QR Comparison Complete!</h2>
                     <p className="text-green-100 text-sm sm:text-base">{result.message}</p>
                   </div>
-
                   {/* Summary Statistics */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
                     <div className="bg-white/20 rounded-lg p-3">
@@ -432,20 +477,48 @@ const OMRScannerSimplified = () => {
                       <div className="text-xs opacity-90">Score</div>
                     </div>
                   </div>
-
                   {/* Comparison Details */}
                   {result.comparisonDetails && (
                     <div className="text-center text-sm text-green-100">
                       <p>
-                        Answer Key: {result.comparisonDetails.answerKeyMarked}/
+                        Answer Key OMR: {result.comparisonDetails.answerKeyMarked}/
                         {result.comparisonDetails.totalAnswerKeyQuestions} marked
                       </p>
                       <p>
-                        Student Paper: {result.comparisonDetails.studentMarked}/
+                        Student Paper OMR: {result.comparisonDetails.studentMarked}/
                         {result.comparisonDetails.totalStudentQuestions} marked
                       </p>
                     </div>
                   )}
+                  {/* QR Code Details */}
+                  <div className="bg-white/20 rounded-lg p-3 text-center text-sm">
+                    <h3 className="font-bold text-lg mb-2 flex items-center justify-center">
+                      <QrCode className="w-5 h-5 mr-2" /> QR Code Verification
+                    </h3>
+                    <p
+                      className={`font-semibold ${result.qrComparisonStatus === "matched" ? "text-green-200" : "text-red-200"}`}
+                    >
+                      Status: {result.qrComparisonMessage}
+                    </p>
+                    {result.answerKeyQrData && (
+                      <div className="mt-2">
+                        <p className="font-semibold text-green-100">Answer Key QR:</p>
+                        <p>Test Name: {result.answerKeyQrData.testName || "N/A"}</p>
+                        <p>Test ID: {result.answerKeyQrData.testId || "N/A"}</p>
+                        <p>Batch Name: {result.answerKeyQrData.batchName || "N/A"}</p>
+                      </div>
+                    )}
+                    {result.questionPaperQrData && (
+                      <div className="mt-2">
+                        <p className="font-semibold text-green-100">Student Paper QR:</p>
+                        <p>Student ID: {result.questionPaperQrData.studentId || "N/A"}</p>
+                        <p>Test Name: {result.questionPaperQrData.testName || "N/A"}</p>
+                        <p>Test ID: {result.questionPaperQrData.testId || "N/A"}</p>
+                        <p>Subject: {result.questionPaperQrData.subject || "N/A"}</p>
+                        <p>Chapter: {result.questionPaperQrData.chapter || "N/A"}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -472,7 +545,6 @@ const OMRScannerSimplified = () => {
                       </div>
                     </motion.div>
                   )}
-
                   {/* Question Paper Image */}
                   {result.questionPaperImage && (
                     <motion.div
@@ -526,7 +598,6 @@ const OMRScannerSimplified = () => {
                         </div>
                       </div>
                     </div>
-
                     {/* Questions Table */}
                     <div className="p-3 sm:p-6">
                       <div className="overflow-x-auto">
