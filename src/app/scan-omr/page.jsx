@@ -1,6 +1,5 @@
 "use client"
 
-<<<<<<< HEAD
 import { useState, useRef, useCallback, useEffect } from "react"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
@@ -22,15 +21,6 @@ import {
   X,
   Zap,
 } from "lucide-react"
-=======
-import React, { useState, useRef } from 'react';
-import axios from 'axios';
-import Sidebar from '@/components/desktopsidebar/sidebar';
-import DesktopNavbar from '@/components/desktopnav/nav';
-import MobileNavbar from '@/components/mobilenav/mobilenav';
-import MobilebottomNavbar from '@/components/mobilenav/MobileBottomNavbar';
-import Webcam from "react-webcam";
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
 
 // QR Scanner Component
 const QRScanner = ({ isOpen, onClose, onQRDetected }) => {
@@ -40,24 +30,11 @@ const QRScanner = ({ isOpen, onClose, onQRDetected }) => {
   const [qrData, setQrData] = useState(null)
   const [error, setError] = useState("")
 
-<<<<<<< HEAD
   const scanQRCode = useCallback(() => {
     if (webcamRef.current && canvasRef.current) {
       const video = webcamRef.current.video
       const canvas = canvasRef.current
       const context = canvas.getContext("2d")
-=======
-const Page = () => {
-  const [studentName, setStudentName] = useState('');
-  const [testName, setTestName] = useState('');
-  const [originalFiles, setOriginalFiles] = useState([]);
-  const [studentFiles, setStudentFiles] = useState([]);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const webcamRef = useRef(null);
-  const [capturedImages, setCapturedImages] = useState([]);
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
 
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.width = video.videoWidth
@@ -387,7 +364,6 @@ const OMRScannerWithQR = () => {
   }, [])
 
   const capturePhoto = () => {
-<<<<<<< HEAD
     const imageSrc = webcamRef.current.getScreenshot()
     const imageBlob = dataURItoBlob(imageSrc)
     const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, { type: "image/jpeg" })
@@ -395,29 +371,6 @@ const OMRScannerWithQR = () => {
     setStudentFiles((prev) => [...prev, file])
   }
 
-=======
-    const imageSrc = webcamRef.current.getScreenshot();
-
-    if (!imageSrc) {
-      alert("Failed to capture image.");
-      return;
-    }
-
-    const imageBlob = dataURItoBlob(imageSrc);
-    const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, {
-      type: "image/jpeg",
-    });
-
-    setCapturedImages(prev => [...prev, file]);
-    setStudentFiles(prev => [...prev, file]);
-
-    // Immediately evaluate this captured image
-    evaluateCapturedOMR(file);
-  };
-
-
-  // Utility function to convert base64 data to Blob
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
   const dataURItoBlob = (dataURI) => {
     const byteString = atob(dataURI.split(",")[1])
     const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0]
@@ -426,7 +379,6 @@ const OMRScannerWithQR = () => {
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i)
     }
-<<<<<<< HEAD
     return new Blob([ab], { type: mimeString })
   }
 
@@ -445,33 +397,6 @@ const OMRScannerWithQR = () => {
     }
     setShowQRScanner(false)
   }
-=======
-    return new Blob([ab], { type: mimeString });
-  };
-  const evaluateCapturedOMR = async (file) => {
-    const formData = new FormData();
-    formData.append("studentName", studentName);
-    formData.append("testName", testName);
-    formData.append("original", originalFiles[0]); // assume 1 original OMR
-    formData.append("student", file); // ✅ the captured photo
-
-    try {
-      setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/evaluate-omr", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      setResult(response.data);
-    } catch (error) {
-      console.error("Error evaluating:", error.response?.data || error.message);
-      alert("Evaluation failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
 
   const handleEvaluate = async (e) => {
     e.preventDefault()
@@ -552,7 +477,6 @@ const OMRScannerWithQR = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-<<<<<<< HEAD
       {/* Mobile-first responsive container */}
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
@@ -658,23 +582,6 @@ const OMRScannerWithQR = () => {
                   required
                 />
               </motion.div>
-=======
-      <Sidebar />
-      <div className="hidden max-sm:block relative top-0 left-0 w-full h-16 bg-white shadow-md z-50">
-        <MobileNavbar />
-        <MobilebottomNavbar />
-      </div>
-      <div>
-        <div className="">
-          <DesktopNavbar />
-          <div className='ml-65 p-8 max-md:ml-0 max-sm:p-3'>
-            {/* Header Section */}
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                OMR Scanner
-              </h1>
-              <p className="text-gray-600">Upload and evaluate OMR sheets with advanced scanning technology</p>
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
             </div>
 
             {/* File Upload Section */}
@@ -698,7 +605,6 @@ const OMRScannerWithQR = () => {
                     Student OMR Sheets
                   </label>
 
-<<<<<<< HEAD
                   {/* Desktop Webcam */}
                   <div className="hidden lg:block space-y-4">
                     <Webcam
@@ -716,123 +622,6 @@ const OMRScannerWithQR = () => {
                       <Camera className="w-5 h-5" />
                       <span>Capture OMR Sheet</span>
                     </button>
-=======
-                {/* Test Name Input */}
-                <div className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
-                    Test Name
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={testName}
-                      onChange={(e) => setTestName(e.target.value)}
-                      className="w-full border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 p-4 rounded-xl transition-all duration-300 bg-gray-50 focus:bg-white placeholder-gray-400"
-                      placeholder="Enter test name"
-                      required
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* File Upload Section */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Original OMR Upload */}
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
-                      Upload Original OMR Sheets
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        multiple
-                        onChange={(e) => setOriginalFiles([...e.target.files])}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        required
-                      />
-                      <div className="border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-8 text-center transition-all duration-300 hover:shadow-lg">
-                        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p className="text-gray-600 font-medium">Click to upload original OMR sheets</p>
-                        <p className="text-sm text-gray-400 mt-1">Or drag and drop files here</p>
-                        {originalFiles.length > 0 && (
-                          <p className="text-blue-600 font-semibold mt-2">{originalFiles.length} file(s) selected</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4 mt-6">
-                    {typeof window !== "undefined" && window.innerWidth <= 768 ? (
-                      // For mobile: use native camera
-                      <div className="space-y-4">
-                        <label className="block text-sm font-semibold text-gray-700">Capture OMR via Camera (Mobile)</label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              const file = e.target.files[0];
-                              setCapturedImages(prev => [...prev, file]);
-                              setStudentFiles(prev => [...prev, file]);
-                              evaluateCapturedOMR(file); // Optional: auto-evaluate
-                            }
-                          }}
-                          className="w-full p-3 rounded-xl border border-gray-300 bg-white shadow"
-                        />
-                        <div className="grid grid-cols-3 gap-4">
-                          {capturedImages.map((img, idx) => (
-                            <img
-                              key={idx}
-                              src={URL.createObjectURL(img)}
-                              alt={`Captured OMR ${idx + 1}`}
-                              className="rounded-xl shadow border"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      // For desktop: use react-webcam
-                      <div className="space-y-4 mt-6">
-                        <Webcam
-                          audio={false}
-                          ref={webcamRef}
-                          screenshotFormat="image/jpeg"
-                          screenshotQuality={1}
-                          videoConstraints={{
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 },
-                            facingMode: "environment"
-                          }}
-                          className="rounded-xl shadow-md w-full"
-                        />
-                        <button
-                          type="button"
-                          onClick={capturePhoto}
-                          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl"
-                        >
-                          Capture OMR Sheet
-                        </button>
-                      </div>
-                    )}
-
-
-                    <div className="grid grid-cols-3 gap-4">
-                      {capturedImages.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={URL.createObjectURL(img)}
-                          alt={`Captured OMR ${idx + 1}`}
-                          className="rounded-xl shadow-sm border"
-                        />
-                      ))}
-                    </div>
->>>>>>> e485982e20c46dd9b21c1b6d0f0a82816c7d367e
                   </div>
 
                   {/* Mobile Scanner */}
