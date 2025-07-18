@@ -91,7 +91,7 @@ const BatchesInfoPage = () => {
     return (
       <div className="flex min-h-screen bg-gray-50">
         {/* Sidebar with fixed positioning */}
-        <div className="w-64 fixed h-screen bg-blue-600 z-10">
+        <div className="w-64 fixed h-screen z-10">
           <Sidebar />
         </div>
 

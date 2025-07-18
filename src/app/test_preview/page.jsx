@@ -24,7 +24,7 @@ const Page = () => {
       </div>
 
       {/* Sidebar Section */}
-      <div className="md:w-1/6 bg-[#007AFF]">
+      <div className="md:w-1/6">
         <Sidebar />
       </div>
       <div className="w-full md:w-5/6 md:flex-1 h-screen bg-white">
