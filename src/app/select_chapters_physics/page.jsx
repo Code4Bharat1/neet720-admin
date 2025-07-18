@@ -11,16 +11,14 @@ import MobilePhysicsFirstPart from "@/components/select_chapters_physics/physics
 import PhysicsLastnav from "@/components/select_chapters_physics/physicslastnav/lastnav";
 import PhysicsLastnavmobile from "@/components/select_chapters_physics/physicslastnav/mobilelastnav";
 
-
-
 import React from "react";
 
 export default function Home() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar Section */}
-      <div className="md:w-1/6 bg-[#007AFF]">
-        <Sidebar/>
+      <div className="md:w-1/6">
+        <Sidebar />
       </div>
 
       {/* Main Content Section */}
@@ -30,26 +28,24 @@ export default function Home() {
           <DesktopNavbar />
         </div>
         <div>
-          <MobileNavbar/>
+          <MobileNavbar />
         </div>
         <div>
           <MobilebottomNavbar />
         </div>
-        <div >
-        
-        </div>
         {/* Scrollable Content Section */}
-        <div className="flex-1 overflow-y-auto  ">
-         <PhysicsFirstPart/>
-         <PhysicsChapterList/>
-         <PhysicsLastnav/> 
-      <div className=" block md:hidden">
-     <MobilePhysicsFirstPart/>
-     <MobilephysicsChapterList/>
-     < PhysicsLastnavmobile />
-      </div> 
+        <div className="flex-1 overflow-y-auto block">
+          <PhysicsFirstPart />
+          <PhysicsChapterList />
+          <PhysicsLastnav />
+          
+        <div className="md:hidden">
+            <MobilePhysicsFirstPart />
+            <MobilephysicsChapterList />
+            <PhysicsLastnavmobile />
+          </div>
+        </div>
       </div>
     </div>
-</div>
   );
 }

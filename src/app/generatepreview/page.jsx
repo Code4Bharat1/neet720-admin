@@ -52,7 +52,7 @@ function Page() {
   return (
     <div className="min-h-screen md:flex bg-white overflow-x-hidden">
       {/* Sidebar for Desktop */}
-      <div className="hidden md:block w-1/6 bg-[#007AFF]">
+      <div className="hidden md:block w-1/6">
         <Sidebar />
       </div>
 

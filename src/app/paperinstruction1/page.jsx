@@ -16,7 +16,7 @@ function Page() {
       <div className="md:flex ">
 
         {/* Desktop Sidebar Section (visible on md+) */}
-        <div className="md:w-1/6 bg-[#007AFF]">
+        <div className="md:w-1/6">
           <Sidebar />
         </div>
 

@@ -115,20 +115,6 @@ const handleContinueClick = () => {
       </button>
 
 
-      {/* Search Bar */}
-  <div className="flex justify-center mt-4">
-    <div className="relative w-full max-w-md">
-      <input
-        type="text"
-        placeholder="Search Tests"
-        className="w-full px-4 py-3 pl-10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-medium "
-      />
-      <div className="bg-[#007AFF] left-3 top-1/2 transform -translate-y-1/2">
-        <FaSearch className="h-5 w-5 text-gray-400" />
-      </div>
-    </div>
-  </div>
-
 
 
 
@@ -213,11 +199,6 @@ const handleContinueClick = () => {
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
             </select>
-            <img
-              src="Vector 1.png"  // Replace with the actual path of your arrow image
-              alt="Dropdown Arrow"
-              className="bg-[#007AFF] top-1/2 right-4 w-4 h-3 pointer-events-none mt-11"
-            />
           </div>
 
           {/* Subjects */}
@@ -246,24 +227,6 @@ const handleContinueClick = () => {
             </div>
           </div>
 
-            {/* Marks Checkbox (Mobile) */}
-            <div className="mt-1 flex flex-col gap-4">
-            <p className="text-xl text-black-200 whitespace-nowrap">Select how many marks should the test <br />be created for?</p>
-            <div className="flex gap-4 flex-wrap justify-center">
-              {["10 Marks", "20 Marks", "30 Marks", "40 Marks", "50 Marks", "60 Marks"].map((mark) => (
-                <div key={mark} className="w-[146px] h-[52px] shadow-lg shadow-gray-300 rounded-lg flex items-center px-4">
-                  <input
-                    type="checkbox"
-                    id={`marks${mark}`}
-                    className="w-4 h-4"
-                    checked={marks.includes(mark)}
-                    onChange={() => handleMarksChange(mark)}
-                  />
-                  <label htmlFor={`marks${mark}`} className="ml-2 font-semibold">{mark}</label>
-                </div>
-              ))}
-            </div>
-          </div>
 
             {/* Form Section (Mobile View) */}
             <div className="mt-8 p-6 bg-[#FFBB38] rounded-[38px] shadow-lg border border-[#FBB03B]">
@@ -290,17 +253,7 @@ const handleContinueClick = () => {
               />
             </div>
           </div>
-
-
-          
-
-
-
-
-
-
-
-        </div>
+</div>
 
       </div>
 
