@@ -66,7 +66,7 @@ export default function BiologyChapterList() {
     let page = 1,
       more = true
     while (more) {
-      const res = await axios.get(`${API_BASE}/Chemistry/questions`, {
+      const res = await axios.get(`${API_BASE}/chemistry/questions`, {
         params: { page, limit: PAGE_SIZE },
       })
       const { questions, pagination } = res.data
