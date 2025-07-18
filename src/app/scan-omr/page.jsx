@@ -940,4 +940,4 @@ const OMRScannerWithQR = () => {
   )
 }
 
-export default OMRScannerSimplified
+export default OMRScannerWithQR
