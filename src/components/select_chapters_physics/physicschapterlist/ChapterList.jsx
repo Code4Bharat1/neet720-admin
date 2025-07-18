@@ -15,7 +15,7 @@ const PAGE_SIZE = 250; // tweak if you want smaller/larger chunks
 /* -------------------------------------------------------------------- */
 /*  MAIN COMPONENT                                                     */
 /* -------------------------------------------------------------------- */
-export default function BiologyChapterList() {
+export default function PhysicsChapterList() {
   /* -------------------- state --------------------------------------- */
   const [chapters, setChapters] = useState([]); // table data
   const [loading, setLoading] = useState(true); // first‑paint spinner

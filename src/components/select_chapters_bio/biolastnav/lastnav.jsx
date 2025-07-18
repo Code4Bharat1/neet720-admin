@@ -32,12 +32,6 @@ export default function BioLastnavDesktop() {
         router.push("/generatepreview");
       }
     };
-  
-
-
-
-
-
 
   return (
     <div className="hidden md:flex justify-between items-center w-full p-4">

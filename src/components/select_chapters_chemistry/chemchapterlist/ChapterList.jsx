@@ -116,7 +116,7 @@ export default function BiologyChapterList() {
         totalMarks: ch.numQuestions * 4,
         questions: ch.rows,
       }));
-    localStorage.setItem("chemistry", JSON.stringify(selectedChapters));
+    localStorage.setItem("Chemistry", JSON.stringify(selectedChapters));
 
     const changedQuestions = chs
       .filter((ch) => ch.isChecked && ch.rows.length > 0)
@@ -139,7 +139,7 @@ export default function BiologyChapterList() {
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (!chapters.length) return;
-    const saved = JSON.parse(localStorage.getItem("chemistry")) || [];
+    const saved = JSON.parse(localStorage.getItem("Chemistry")) || [];
 
     setChapters((prev) =>
       prev.map((ch) => {

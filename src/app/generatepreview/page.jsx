@@ -25,16 +25,29 @@ import Scheduletest_mobile from "@/components/generatepreview/scheduletest_mobil
 function Page() {
   const [selectedSubjects, setSelectedSubjects] = useState([]);
 
+  function toProperCase(subject) {
+    return subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
+  }
+
+
   useEffect(() => {
-    const stored = localStorage.getItem("selectedSubjects");
+    let stored = localStorage.getItem("selectedSubjects");
+    let subjectsArr = [];
     if (stored) {
       try {
-        setSelectedSubjects(JSON.parse(stored));
+        subjectsArr = JSON.parse(stored).map(toProperCase);
       } catch (error) {
         console.error("Invalid selectedSubjects JSON in localStorage");
+        subjectsArr = ["Physics", "Chemistry", "Biology"]; // Fallback default
       }
+    } else {
+      subjectsArr = ["Physics", "Chemistry", "Biology"]; // Default if not set
     }
+    // Save normalized subjects back if needed
+    localStorage.setItem("selectedSubjects", JSON.stringify(subjectsArr));
+    setSelectedSubjects(subjectsArr);
   }, []);
+
 
   return (
     <div className="min-h-screen md:flex bg-white overflow-x-hidden">

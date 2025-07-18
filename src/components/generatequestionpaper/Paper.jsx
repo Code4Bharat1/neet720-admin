@@ -31,11 +31,7 @@ export default function Paper() {
   const [studentsData, setStudentsData] = useState([]);
   const [adminTests, setAdminTests] = useState([]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
+  // Helper to aggregate all questions with numbering
   const getAllQuestions = () => {
     const allQuestions = [];
     let questionCounter = 1;
@@ -53,18 +49,69 @@ export default function Paper() {
 
   const allQuestions = getAllQuestions();
 
+  // --- AUTO-FILL FIELDS FROM BACKEND ---
+  useEffect(() => {
+    const fetchPaperInfo = async () => {
+      const testid = localStorage.getItem("testid");
+      if (!testid) return;
+      try {
+        // Try a dedicated paper info endpoint (recommended for clean logic)
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/paper-info`,
+          { params: { testid } }
+        );
+        const data = res.data;
+
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || prev.title,
+          duration: data.duration || prev.duration,
+          marks: data.marks || prev.marks,
+          date: data.date || prev.date,
+          instruction: data.instruction || prev.instruction,
+          batch: data.batch || prev.batch,
+        }));
+      } catch (error) {
+        // Fallback: Try to get from /get-questions if /paper-info not available
+        try {
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
+            { testid }
+          );
+          const data = response.data.data;
+
+          // Example: Suppose the first question object has paperInfo
+          if (data && data.length && data[0].paperInfo) {
+            const info = data[0].paperInfo;
+            setFormData((prev) => ({
+              ...prev,
+              title: info.title || prev.title,
+              duration: info.duration || prev.duration,
+              marks: info.marks || prev.marks,
+              date: info.date || prev.date,
+              instruction: info.instruction || prev.instruction,
+              batch: info.batch || prev.batch,
+            }));
+          }
+        } catch (err2) {
+          console.error("Failed to fetch paper info from both endpoints.", err2);
+        }
+      }
+    };
+    fetchPaperInfo();
+  }, []);
+
+  // --- FETCH QUESTIONS ---
   useEffect(() => {
     const fetchQuestions = async () => {
       const testid = localStorage.getItem("testid");
       if (!testid) return;
-
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
           { testid }
         );
         const data = response.data.data;
-
         const grouped = {};
         data.forEach((q) => {
           if (!grouped[q.subject]) grouped[q.subject] = [];
@@ -74,17 +121,16 @@ export default function Paper() {
             marks: q.marks || 4,
           });
         });
-
         setQuestionsBySubject(grouped);
       } catch (error) {
         console.error("Failed to fetch questions:", error);
       }
     };
-
     fetchQuestions();
   }, []);
 
-   useEffect(() => {
+  // --- FETCH BATCH INFO ---
+  useEffect(() => {
     fetchBatchInfo();
   }, []);
 
@@ -92,32 +138,28 @@ export default function Paper() {
     try {
       const batchId =
         typeof window !== "undefined" ? localStorage.getItem("batchId") : null;
-
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/batchesInfo`,
         { params: { batchId } }
       );
-
-      // ✅ Use response data directly
       const batchData = response.data.batchData;
-
       if (batchData) {
-        setBatchList([batchData]); // wrap in array to support .map
+        setBatchList([batchData]);
         setStudentsData(response.data.studentsData || []);
         setAdminTests(response.data.adminTests || []);
-        console.log("Fetched Batch Data:", batchData);
       } else {
         setBatchList([]);
-        console.warn("No batch data found.");
       }
     } catch (error) {
-      setError(
-        "Error fetching data: " +
-          (error.response?.data?.message || error.message)
-      );
+      // Optional: set error message state
     }
   };
   
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
   const handleLogoUpload = (file) => {
     if (!file) return;
     const reader = new FileReader();
@@ -142,13 +184,12 @@ export default function Paper() {
     router.push("/print-omr");
   };
 
+  // --- PRINT LOGIC (unchanged) ---
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
-
-    // New renderQuestions uses the grouped object
     const renderQuestions = (questionsBySubject) => {
       let output = "";
-      let serial = 1; // Serial number starts at 1
+      let serial = 1;
       Object.entries(questionsBySubject).forEach(([subject, questions]) => {
         output += `<div class="subject-header">${subject}</div>`;
         questions.forEach((q) => {
@@ -160,20 +201,12 @@ export default function Paper() {
               ? `
             <div class="options-double">
               <div class="row">
-                <div class="option"><strong>A)</strong> ${
-                  q.options[0] || ""
-                }</div>
-                <div class="option"><strong>B)</strong> ${
-                  q.options[1] || ""
-                }</div>
+                <div class="option"><strong>A)</strong> ${q.options[0] || ""}</div>
+                <div class="option"><strong>B)</strong> ${q.options[1] || ""}</div>
               </div>
               <div class="row">
-                <div class="option"><strong>C)</strong> ${
-                  q.options[2] || ""
-                }</div>
-                <div class="option"><strong>D)</strong> ${
-                  q.options[3] || ""
-                }</div>
+                <div class="option"><strong>C)</strong> ${q.options[2] || ""}</div>
+                <div class="option"><strong>D)</strong> ${q.options[3] || ""}</div>
               </div>
             </div>
           `
@@ -381,21 +414,19 @@ export default function Paper() {
             className="border p-3 rounded-lg"
           />
           <select
-  name="batch"
-  value={formData.batch}
-  onChange={handleChange}
-  className="border p-3 rounded-lg"
->
-  <option value="">Select Batch</option>
-  {Array.isArray(batchList) &&
-    batchList.map((batch) => (
-      <option key={batch.batchId} value={batch.batchName}>
-        {batch.batchName}
-      </option>
-  ))}
-</select>
-
-
+            name="batch"
+            value={formData.batch}
+            onChange={handleChange}
+            className="border p-3 rounded-lg"
+          >
+            <option value="">Select Batch</option>
+            {Array.isArray(batchList) &&
+              batchList.map((batch) => (
+                <option key={batch.batchId} value={batch.batchName}>
+                  {batch.batchName}
+                </option>
+            ))}
+          </select>
           <input
             type="file"
             accept="image/*"
