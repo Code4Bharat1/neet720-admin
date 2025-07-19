@@ -42,7 +42,18 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-b from-[#0077B6] to-[#ADE8F4]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-b from-[#0077B6] to-[#ADE8F4] items-center justify-center relative">
+      {/* Mobile Logo at Top - Overlapping Login Box */}
+      <div className="md:hidden flex justify-center w-full relative top-5 left-0 z-20">
+        <Image
+          src="/neet720_logo.jpg"
+          alt="Neet720 Logo"
+          width={120}
+          height={80}
+          className="object-contain drop-shadow-lg"
+          style={{ marginBottom: "-40px" }}
+        />
+      </div>
       {/* Left Logo Section */}
       <div className="hidden md:flex w-full md:w-[40%] items-center justify-center p-6">
         <Image
@@ -55,8 +66,8 @@ const AdminLogin = () => {
       </div>
 
       {/* Right Login Section */}
-      <div className="flex flex-col items-center justify-center w-full md:w-[60%] bg-white p-8 md:rounded-l-3xl shadow-lg">
-        {/* Mobile Logo */}
+      <div className="flex flex-col items-center justify-center w-full md:w-[60%] bg-white p-8 md:rounded-l-3xl shadow-lg max-w-full relative z-10 md:mt-0">
+        {/* Mobile Nexcore Logo */}
         <div className="md:hidden flex justify-center mb-6">
           <Image
             src="/nexcore-logo-pc.png"

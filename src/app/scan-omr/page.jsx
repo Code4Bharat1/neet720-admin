@@ -4,6 +4,7 @@ import { useState, useRef } from "react"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
 import { FileText, CheckCircle, XCircle, Loader2, Send, Trash2, Zap, Key, HelpCircle, QrCode } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 // File Upload Component
 const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon }) => {
@@ -93,6 +94,7 @@ const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon
 }
 
 const OMRScannerSimplified = () => {
+  const router = useRouter()
   const [answerKeyFiles, setAnswerKeyFiles] = useState([])
   const [questionPaperFiles, setQuestionPaperFiles] = useState([])
   const [result, setResult] = useState(null)
@@ -360,6 +362,27 @@ const OMRScannerSimplified = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={() => router.push('/admindashboard')}
+          className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium shadow transition-all"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back
+        </button>
         {/* Header Section */}
         <motion.div
           className="mb-6 sm:mb-8 text-center"
