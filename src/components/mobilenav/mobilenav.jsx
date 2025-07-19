@@ -34,7 +34,7 @@
     };
 
     return (
-      <div className=" relative w-full flex items-center justify-between md:hidden lg:hidden xl:hidden">
+      <div className="bg-white/20 relative w-full flex items-center justify-between md:hidden lg:hidden xl:hidden">
         {/* Top Navbar */}
         <div className="flex justify-between items-center w-full p-4 bg-white shadow-md">
           <button onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
@@ -174,7 +174,7 @@
         {/* Overlay */}
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-25 z-40"
+            className="fixed inset-0 bg-black opacity-50 z-40"
             onClick={() => setIsOpen(false)}
           />
         )}
