@@ -1,182 +1,12 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef } from "react"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
-import Webcam from "react-webcam"
-import jsQR from "jsqr"
-import {
-  Camera,
-  Upload,
-  FileText,
-  Mail,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Send,
-  Scan,
-  ImageIcon,
-  Trash2,
-  QrCode,
-  X,
-  Zap,
-} from "lucide-react"
+import { FileText, CheckCircle, XCircle, Loader2, Send, Trash2, Zap, Key, HelpCircle, QrCode } from "lucide-react"
 
-// QR Scanner Component
-const QRScanner = ({ isOpen, onClose, onQRDetected }) => {
-  const webcamRef = useRef(null)
-  const canvasRef = useRef(null)
-  const [isScanning, setIsScanning] = useState(false)
-  const [qrData, setQrData] = useState(null)
-  const [error, setError] = useState("")
-
-  const scanQRCode = useCallback(() => {
-    if (webcamRef.current && canvasRef.current) {
-      const video = webcamRef.current.video
-      const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
-
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-        const code = jsQR(imageData.data, imageData.width, imageData.height)
-
-        if (code) {
-          setQrData(code.data)
-          onQRDetected(code.data)
-          setIsScanning(false)
-          setError("")
-        }
-      }
-    }
-  }, [onQRDetected])
-
-  useEffect(() => {
-    let interval
-    if (isScanning) {
-      interval = setInterval(scanQRCode, 100)
-    }
-    return () => {
-      if (interval) clearInterval(interval)
-    }
-  }, [isScanning, scanQRCode])
-
-  const startScanning = () => {
-    setIsScanning(true)
-    setQrData(null)
-    setError("")
-  }
-
-  const stopScanning = () => {
-    setIsScanning(false)
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <motion.div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <QrCode className="w-6 h-6" />
-              <h3 className="text-lg font-bold">QR Code Scanner</h3>
-            </div>
-            <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Scanner Content */}
-        <div className="p-4 space-y-4">
-          {/* Webcam Container */}
-          <div className="relative bg-gray-100 rounded-xl overflow-hidden">
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              screenshotFormat="image/jpeg"
-              videoConstraints={{
-                width: 640,
-                height: 480,
-                facingMode: "environment",
-              }}
-              className="w-full h-64 object-cover"
-            />
-            <canvas ref={canvasRef} className="hidden" />
-
-            {/* Scanning Overlay */}
-            {isScanning && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 border-2 border-purple-500 rounded-lg relative">
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-purple-500 rounded-tl-lg"></div>
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-purple-500 rounded-tr-lg"></div>
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-purple-500 rounded-bl-lg"></div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-purple-500 rounded-br-lg"></div>
-
-                  {/* Scanning Line Animation */}
-                  <motion.div
-                    className="absolute left-0 right-0 h-0.5 bg-purple-500"
-                    animate={{
-                      y: [0, 192, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "linear",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-          {/* Error Display */}
-          {error && (
-            <motion.div
-              className="bg-red-50 border border-red-200 rounded-xl p-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="flex items-center space-x-2">
-                <XCircle className="w-5 h-5 text-red-600" />
-                <span className="font-semibold text-red-800">Error</span>
-              </div>
-              <p className="text-sm text-red-700">{error}</p>
-            </motion.div>
-          )}
-
-          {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <h4 className="font-semibold text-blue-800 mb-2">Instructions:</h4>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Position the QR code within the scanning frame</li>
-              <li>• Ensure good lighting for better detection</li>
-              <li>• Hold the camera steady</li>
-              <li>• The scanner will automatically detect QR codes</li>
-            </ul>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-// Mobile Scanner Component
-const MobileScanner = ({ onCapture, capturedImages, onRemoveImage }) => {
+// File Upload Component
+const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon }) => {
   const fileInputRef = useRef(null)
 
   const handleFileChange = (e) => {
@@ -262,170 +92,232 @@ const MobileScanner = ({ onCapture, capturedImages, onRemoveImage }) => {
   )
 }
 
-// File Upload Component
-const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon }) => {
-  const fileInputRef = useRef(null)
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files)
-    onFileSelect(selectedFiles)
-  }
-
-  return (
-    <div className="space-y-3">
-      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-        <Icon className="w-4 h-4 mr-2" />
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-          accept="image/*"
-        />
-        <motion.div
-          className={`border-2 border-dashed border-gray-300 hover:border-${color}-400 bg-gradient-to-br from-gray-50 to-${color}-50 rounded-xl p-6 sm:p-8 text-center transition-all duration-300 hover:shadow-lg`}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Icon className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-          <p className="text-gray-600 font-medium text-sm sm:text-base">Click to upload {label.toLowerCase()}</p>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">Or drag and drop files here</p>
-          {files.length > 0 && (
-            <motion.p
-              className={`text-${color}-600 font-semibold mt-2 text-sm`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {files.length} file(s) selected
-            </motion.p>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  )
-}
-
-const OMRScannerWithQR = () => {
-  const [studentName, setStudentName] = useState("")
-  const [testName, setTestName] = useState("")
-  const [originalFiles, setOriginalFiles] = useState([])
-  const [studentFiles, setStudentFiles] = useState([])
+const OMRScannerSimplified = () => {
+  const [answerKeyFiles, setAnswerKeyFiles] = useState([])
+  const [questionPaperFiles, setQuestionPaperFiles] = useState([])
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [capturedImages, setCapturedImages] = useState([])
-  const [showQRScanner, setShowQRScanner] = useState(false)
-  const [qrData, setQrData] = useState("")
-
-  const webcamRef = useRef(null)
-
-  const scanQRFromFile = async (file) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-      if (code) {
-        handleQRDetected(code.data); // ✅ fill form fields
-      } else {
-        console.warn("QR not found in image");
-      }
-    };
-
-    img.onerror = () => console.error("Failed to load image for QR scan");
-  };
-
-
-  const handleImageCapture = useCallback((file) => {
-    setCapturedImages((prev) => [...prev, file]);
-    setStudentFiles((prev) => [...prev, file]);
-    scanQRFromFile(file); // ✅ scan QR from uploaded image too
-  }, []);
-
-
-  const handleRemoveImage = useCallback((index) => {
-    setCapturedImages((prev) => prev.filter((_, i) => i !== index))
-    setStudentFiles((prev) => prev.filter((_, i) => i !== index))
-  }, [])
-
-  const capturePhoto = async () => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    const imageBlob = dataURItoBlob(imageSrc);
-    const file = new File([imageBlob], `captured_omr_${Date.now()}.jpg`, { type: "image/jpeg" });
-
-    setCapturedImages(prev => [...prev, file]);
-    setStudentFiles(prev => [...prev, file]);
-
-    scanQRFromFile(file); // ✅ auto-scan QR after capture
-  };
-
-
-  const dataURItoBlob = (dataURI) => {
-    const byteString = atob(dataURI.split(",")[1])
-    const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0]
-    const ab = new ArrayBuffer(byteString.length)
-    const ia = new Uint8Array(ab)
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i)
-    }
-    return new Blob([ab], { type: mimeString })
-  }
-
-  const handleQRDetected = (data) => {
-    setQrData(data)
-    // Parse QR data if it contains student info
-    try {
-      const parsed = JSON.parse(data)
-      if (parsed.studentEmail) setStudentName(parsed.studentEmail)
-      if (parsed.testName) setTestName(parsed.testName)
-    } catch (e) {
-      // If not JSON, treat as plain text
-      if (data.includes("@")) {
-        setStudentName(data)
-      }
-    }
-    setShowQRScanner(false)
-  }
 
   const handleEvaluate = async (e) => {
     e.preventDefault()
-    if (!studentName || !testName || originalFiles.length === 0 || studentFiles.length === 0) {
-      alert("Please fill in all fields and upload both original and student OMR files.")
+    if (answerKeyFiles.length === 0 || questionPaperFiles.length === 0) {
+      alert("Please upload both OMR answer key and question paper files.")
       return
     }
 
-    const formData = new FormData()
-    formData.append("studentName", studentName)
-    formData.append("testName", testName)
-    originalFiles.forEach((file) => formData.append("original", file))
-    studentFiles.forEach((file) => formData.append("student", file))
-
     try {
       setLoading(true)
-      const response = await axios.post("http://localhost:5000/api/evaluate-omr", formData, {
+
+      // Step 1: Process OMR Answer Key
+      const answerKeyOmrFormData = new FormData()
+      answerKeyFiles.forEach((file) => answerKeyOmrFormData.append("omrfile", file))
+      console.log("Processing OMR Answer Key...")
+      const answerKeyOmrResponse = await axios.post("https://omr.neet720.com/api/process-omr", answerKeyOmrFormData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
-      setResult(response.data)
+
+      // Step 2: Process OMR Question Paper
+      const questionPaperOmrFormData = new FormData()
+      questionPaperFiles.forEach((file) => questionPaperOmrFormData.append("omrfile", file))
+      console.log("Processing OMR Question Paper...")
+      const questionPaperOmrResponse = await axios.post(
+        "https://omr.neet720.com/api/process-omr",
+        questionPaperOmrFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      )
+
+      // Step 3: Process QR Code for Answer Key
+      const answerKeyQrFormData = new FormData()
+      answerKeyFiles.forEach((file) => answerKeyQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
+      console.log("Processing QR Code for Answer Key...")
+      const answerKeyQrResponse = await axios.post("https://omr.neet720.com/api/scan_qr", answerKeyQrFormData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+
+      // Step 4: Process QR Code for Question Paper
+      const questionPaperQrFormData = new FormData()
+      questionPaperFiles.forEach((file) => questionPaperQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
+      console.log("Processing QR Code for Question Paper...")
+      const questionPaperQrResponse = await axios.post(
+        "https://omr.neet720.com/api/scan_qr",
+        questionPaperQrFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      )
+
+      // Step 5: Compare both OMR and QR responses
+      console.log("Comparing OMR and QR responses...")
+      const comparisonResult = compareOMRResponses(
+        answerKeyOmrResponse.data,
+        questionPaperOmrResponse.data,
+        answerKeyQrResponse.data,
+        questionPaperQrResponse.data,
+      )
+      setResult(comparisonResult)
     } catch (error) {
       console.error("Error evaluating:", error.response?.data || error.message)
-      alert("Evaluation failed.")
+      alert(`Evaluation failed: ${error.response?.data?.message || error.message}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Function to compare answer key and question paper responses
+  const compareOMRResponses = (answerKeyOmrData, questionPaperOmrData, answerKeyQrData, questionPaperQrData) => {
+    console.log("Answer Key OMR Data:", answerKeyOmrData)
+    console.log("Question Paper OMR Data:", questionPaperOmrData)
+    console.log("Answer Key QR Data:", answerKeyQrData)
+    console.log("Question Paper QR Data:", questionPaperQrData)
+
+    if (!answerKeyOmrData.success || !questionPaperOmrData.success) {
+      throw new Error("Invalid OMR response format from one or both APIs")
+    }
+    if (!answerKeyOmrData.results || !questionPaperOmrData.results) {
+      throw new Error("Missing OMR results data from one or both APIs")
+    }
+
+    // QR Code Comparison
+    let qrComparisonStatus = "matched"
+    let qrComparisonMessage = "QR codes match."
+    if (!answerKeyQrData.success || !questionPaperQrData.success) {
+      qrComparisonStatus = "error"
+      qrComparisonMessage = "Failed to read QR code from one or both sheets."
+    } else if (
+      answerKeyQrData.data?.testName !== questionPaperQrData.data?.testName ||
+      answerKeyQrData.data?.testId !== questionPaperQrData.data?.testId
+    ) {
+      qrComparisonStatus = "mismatch"
+      qrComparisonMessage = "Test Name or Test ID mismatch between sheets."
+    }
+
+    const answerKey = answerKeyOmrData.results
+    const studentAnswers = questionPaperOmrData.results
+
+    // Create a map of correct answers from answer key
+    const correctAnswersMap = {}
+    answerKey.forEach((item) => {
+      if (item.marked === 1) {
+        // Only consider marked answers as correct
+        correctAnswersMap[item.question] = item.option
+      }
+    })
+
+    // Create a map of student answers
+    const studentAnswersMap = {}
+    studentAnswers.forEach((item) => {
+      if (item.marked === 1) {
+        // Only consider marked answers
+        studentAnswersMap[item.question] = item.option
+      }
+    })
+
+    // Get all question numbers (union of both sets)
+    const allQuestions = new Set([
+      ...answerKey.map((item) => item.question),
+      ...studentAnswers.map((item) => item.question),
+    ])
+
+    const comparedResults = []
+    let correctCount = 0
+    let incorrectCount = 0
+    let unansweredCount = 0
+
+    // Compare each question
+    Array.from(allQuestions)
+      .sort((a, b) => a - b)
+      .forEach((questionNum) => {
+        const correctAnswer = correctAnswersMap[questionNum] || null
+        const studentAnswer = studentAnswersMap[questionNum] || null
+
+        let status = "unanswered"
+        if (studentAnswer === null) {
+          unansweredCount++
+          status = "unanswered"
+        } else if (correctAnswer === null) {
+          // If no correct answer is provided, mark as incorrect (or unanswerable)
+          incorrectCount++
+          status = "incorrect" // Or a new status like "no_correct_answer"
+        } else if (studentAnswer === correctAnswer) {
+          correctCount++
+          status = "correct"
+        } else {
+          incorrectCount++
+          status = "incorrect"
+        }
+
+        comparedResults.push({
+          question: questionNum,
+          correctAnswer: correctAnswer || "N/A",
+          studentAnswer: studentAnswer || "N/A",
+          status: status,
+        })
+      })
+
+    // Group questions by pages (45 questions per page)
+    const questionsPerPage = 45
+    const pages = []
+    const totalQuestions = comparedResults.length
+    const pageCount = Math.ceil(totalQuestions / questionsPerPage)
+
+    for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+      const startIdx = (pageNum - 1) * questionsPerPage
+      const endIdx = Math.min(startIdx + questionsPerPage, totalQuestions)
+      const pageQuestions = comparedResults.slice(startIdx, endIdx)
+
+      const pageCorrect = pageQuestions.filter((q) => q.status === "correct").length
+      const pageIncorrect = pageQuestions.filter((q) => q.status === "incorrect").length
+      const pageUnanswered = pageQuestions.filter((q) => q.status === "unanswered").length
+
+      pages.push({
+        page: pageNum,
+        questions: pageQuestions,
+        score: pageCorrect,
+        maxScore: pageQuestions.length,
+        correct: pageCorrect,
+        incorrect: pageIncorrect,
+        unanswered: pageUnanswered,
+      })
+    }
+
+    const accuracy = totalQuestions > 0 ? ((correctCount / totalQuestions) * 100).toFixed(1) : 0
+
+    return {
+      success: true,
+      message: "OMR comparison completed successfully",
+      answerKeySummary: answerKeyOmrData.summary,
+      questionPaperSummary: questionPaperOmrData.summary,
+      answerKeyImage: answerKeyOmrData.processed_image,
+      questionPaperImage: questionPaperOmrData.processed_image,
+      answerKeyQrData: answerKeyQrData.data,
+      questionPaperQrData: questionPaperQrData.data,
+      qrComparisonStatus: qrComparisonStatus,
+      qrComparisonMessage: qrComparisonMessage,
+      pages: pages,
+      totalScore: correctCount,
+      maxScore: totalQuestions,
+      totalQuestions: totalQuestions,
+      correctAnswers: correctCount,
+      incorrectAnswers: incorrectCount,
+      unansweredQuestions: unansweredCount,
+      accuracy: accuracy,
+      comparisonDetails: {
+        totalAnswerKeyQuestions: answerKey.length,
+        totalStudentQuestions: studentAnswers.length,
+        answerKeyMarked: answerKey.filter((item) => item.marked === 1).length,
+        studentMarked: studentAnswers.filter((item) => item.marked === 1).length,
+      },
     }
   }
 
@@ -467,7 +359,6 @@ const OMRScannerWithQR = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      {/* Mobile-first responsive container */}
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
         <motion.div
@@ -493,147 +384,29 @@ const OMRScannerWithQR = () => {
         >
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 w-full rounded-full mb-4 sm:mb-6"></div>
           <form onSubmit={handleEvaluate} className="space-y-6">
-            {/* Input Fields */}
-            <div className="grid gap-4 sm:gap-6">
-              {/* Student Email */}
-              <motion.div
-                className="group"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Student Email
-                </label>
-                <input
-                  type="email"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  className="w-full border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-300 bg-gray-50 focus:bg-white placeholder-gray-400 text-sm sm:text-base"
-                  placeholder="Enter student email address"
-                  required
-                />
-              </motion.div>
-
-              {/* Test Name */}
-              <motion.div
-                className="group"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors flex items-center">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Test Name
-                </label>
-                <input
-                  type="text"
-                  value={testName}
-                  onChange={(e) => setTestName(e.target.value)}
-                  className="w-full border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-300 bg-gray-50 focus:bg-white placeholder-gray-400 text-sm sm:text-base"
-                  placeholder="Enter test name"
-                  required
-                />
-              </motion.div>
-            </div>
-
             {/* File Upload Section */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* OMR Answer Key Upload */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <FileUploadZone
-                  onFileSelect={(files) => {
-                    setStudentFiles(files);
-                    files.forEach(scanQRFromFile); // ✅ scan QR from each uploaded image
-                  }}
-                  files={studentFiles}
-                  label="Upload Student OMR Sheets"
-                  color="purple"
-                  icon={Upload}
+                  onFileSelect={setAnswerKeyFiles}
+                  files={answerKeyFiles}
+                  label="OMR Answer Key"
+                  color="blue"
+                  icon={Key}
                 />
-
               </motion.div>
-
-              {/* Student OMR Upload/Scanner */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-                <div className="space-y-4">
-
-                  {/* ✅ Mobile Webcam Only */}
-                  <div className="block lg:hidden space-y-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                      <Camera className="w-4 h-4 mr-2" />
-                      Student OMR Sheets
-                    </label>
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      screenshotQuality={1}
-                      videoConstraints={{ width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }}
-                      className="rounded-xl shadow-md w-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
-                    >
-                      <Camera className="w-5 h-5" />
-                      <span>Capture OMR Sheet</span>
-                    </button>
-                  </div>
-
-                  {/* ✅ Desktop File Upload Only */}
-                  <div className="hidden lg:block">
-                    <FileUploadZone
-                      onFileSelect={setStudentFiles}
-                      files={studentFiles}
-                      label="Upload Student OMR Sheets"
-                      color="purple"
-                      icon={Upload}
-                    />
-                  </div>
-
-                  {/* ✅ Display Captured or Uploaded Images */}
-                  {capturedImages.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-semibold text-gray-700 flex items-center">
-                        <ImageIcon className="w-4 h-4 mr-2" />
-                        Captured Images ({capturedImages.length})
-                      </h4>
-                      <div className="grid grid-cols-3 gap-3">
-                        {capturedImages.map((img, idx) => (
-                          <motion.div
-                            key={idx}
-                            className="relative group"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                          >
-                            <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
-                              <img
-                                src={URL.createObjectURL(img) || "/placeholder.svg"}
-                                alt={`Captured OMR ${idx + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(idx)}
-                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Question Paper Upload */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                <FileUploadZone
+                  onFileSelect={setQuestionPaperFiles}
+                  files={questionPaperFiles}
+                  label="Student Question Paper"
+                  color="purple"
+                  icon={HelpCircle}
+                />
               </motion.div>
-
             </div>
-
             {/* Evaluate Button */}
             <motion.div
               className="pt-4"
@@ -940,4 +713,4 @@ const OMRScannerWithQR = () => {
   )
 }
 
-export default OMRScannerWithQR
+export default OMRScannerSimplified
