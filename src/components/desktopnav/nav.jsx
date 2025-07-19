@@ -97,12 +97,11 @@ const DesktopNavbar = () => {
 
   return (
     <div
-      className="hidden md:flex h-[80px] p-4 items-center justify-end"
-      style={style}
+      className="hidden md:flex h-[80px] p-4 items-center justify-end bg-blue-400"
     >
       <div className="flex items-center space-x-4 mr-4">
         <img
-          src="/profilphoto.png"
+          src="/neet720_logo.jpg"
           alt="Profile"
           className="w-16 h-16 rounded-2xl border border-gray-300 cursor-pointer"
           onClick={toggleDropdown}

@@ -65,8 +65,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className="hidden w-70 md:block h-screen fixed top-0 left-0 z-50 shadow-md"
-      style={{ backgroundColor: sidebarColor }}
+      className="hidden w-70 md:block h-screen fixed top-0 left-0 z-50 shadow-md mr-10 bg-blue-500 text-white"
     >
       <div className="my-10 flex justify-center items-center">
         <img
@@ -89,7 +88,6 @@ const Sidebar = () => {
                     ? "bg-gradient-to-r from-white/80 to-white/0"
                     : "hover:bg-gradient-to-r hover:from-white/80 hover:to-white/0"
                 }`}
-                style={{ color: textColor }}
               >
                 {item.icon}
                 <span className="text-lg">{item.label}</span>

@@ -1,15 +1,40 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BsSearch, BsBook, BsGraphUp } from "react-icons/bs";
 import { FiChevronDown, FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function PhysicsFirstPart() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [availableSubjects, setAvailableSubjects] = useState([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("selectedSubjects");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setAvailableSubjects(parsed.map((s) => s.toLowerCase()));
+          }
+        } catch (error) {
+          console.error("Error parsing selectedSubjects from localStorage:", error);
+        }
+      }
+    }
+  }, []);
+
+  const handleSubjectClick = (subject) => {
+    if (subject) {
+      router.push(`/select_chapters_${subject.toLowerCase()}`);
+    }
+  };
 
   return (
     <section className="font-['Segoe_UI'] bg-gray-50 rounded-xl shadow-sm p-6 mb-6">
-      {/* Top Section with Generate Test Button and Title */}
+      {/* Top Section */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
         <motion.button
           whileHover={{ scale: 1.03 }}
@@ -22,7 +47,7 @@ export default function PhysicsFirstPart() {
           Generate Test
         </motion.button>
 
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-2xl font-semibold text-gray-800 flex items-center gap-2"
@@ -30,20 +55,13 @@ export default function PhysicsFirstPart() {
           <span className="bg-blue-500 p-1.5 rounded-full text-white shadow-sm">
             <BsBook className="text-lg" />
           </span>
-          Select Physics Chapters
+          Select Biology Chapters
         </motion.h1>
-
-        <div>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        </div>
+        <div className="hidden md:block">&nbsp;</div>
       </div>
 
       {/* Subject-wise Marks Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -58,36 +76,36 @@ export default function PhysicsFirstPart() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 font-medium flex items-center gap-2">
-              <span className="bg-blue-600 w-3 h-3 rounded-full"></span>
-              Physics
-            </div>
-            <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg border border-purple-100 font-medium flex items-center gap-2">
-              <span className="bg-purple-600 w-3 h-3 rounded-full"></span>
-              Chemistry 
-            </div>
-            <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg border-2 border-green-600 font-medium flex items-center gap-2">
-              <span className="bg-green-600 w-3 h-3 rounded-full"></span>
-              Biology 
-            </div>
+            {availableSubjects.includes("physics") && (
+              <div
+                className="bg-blue-50 cursor-pointer border-2 border-blue-600 text-blue-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+                onClick={() => handleSubjectClick("physics")}
+              >
+                <span className="bg-blue-600 w-3 h-3 rounded-full"></span>
+                Physics
+              </div>
+            )}
+            {availableSubjects.includes("chemistry") && (
+              <div
+                className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg border cursor-pointer border-purple-100 font-medium flex items-center gap-2"
+                onClick={() => handleSubjectClick("chemistry")}
+              >
+                <span className="bg-purple-600 w-3 h-3 rounded-full"></span>
+                Chemistry
+              </div>
+            )}
+            {availableSubjects.includes("biology") && (
+              <div
+                className="bg-green-50 cursor-pointer text-green-700 px-4 py-2 rounded-lg border border-green-100 font-medium flex items-center gap-2"
+                onClick={() => handleSubjectClick("biology")}
+              >
+                <span className="bg-green-600 w-3 h-3 rounded-full"></span>
+                Biology
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
-
-      {/* Select Chapters and Search Bar Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="flex flex-col md:flex-row items-center justify-between gap-4"
-      >
-        
-
-        
-      </motion.div>
-      
-     
-      
     </section>
   );
 }
