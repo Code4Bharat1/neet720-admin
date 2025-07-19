@@ -28,7 +28,7 @@ export default function MobileNavbar() {
         <button onClick={() => setIsOpen(!isOpen)}>
           <Menu className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-lg font-bold text-blue-700">Dashboard</h1>
+        <h1 className="text-lg font-bold text-blue-700">neet720</h1>
         <img
           src="/mobilenavprofile.png"
           alt="Logo"

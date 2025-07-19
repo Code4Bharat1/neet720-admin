@@ -34,13 +34,13 @@
     };
 
     return (
-      <div className="relative w-full flex items-center justify-between md:hidden lg:hidden xl:hidden">
+      <div className=" relative w-full flex items-center justify-between md:hidden lg:hidden xl:hidden">
         {/* Top Navbar */}
         <div className="flex justify-between items-center w-full p-4 bg-white shadow-md">
           <button onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
-          <h1 className="text-lg font-bold text-blue-700">Dashboard</h1>
+          <h1 className="text-lg font-bold text-blue-700">Neet720</h1>
           <img
             src="/neet720_logo.jpg"
             alt="Profile"
