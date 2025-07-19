@@ -26,6 +26,7 @@ const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBatch, setFilterBatch] = useState("");
   const [batchNames, setBatchNames] = useState([]);
+  const [errorMsg, setErrorMsg] = useState(""); // Add this state
 
   // 🔑 Fetch and decode token on mount
   useEffect(() => {
@@ -94,26 +95,37 @@ const Page = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async () => {
-    const {
-      adminId,
-      noticeText,
-      noticeTitle,
-      noticeStartDate,
-      noticeEndDate,
-      batchName,
-    } = formData;
-
+  const validateNoticeInput = (data) => {
+    // Basic validation for required fields and date logic
     if (
-      !adminId ||
-      !noticeText ||
-      !noticeTitle ||
-      !noticeStartDate ||
-      !noticeEndDate ||
-      !batchName
+      !data.adminId ||
+      !data.noticeText ||
+      !data.noticeTitle ||
+      !data.noticeStartDate ||
+      !data.noticeEndDate ||
+      !data.batchName
     ) {
-      return alert("All fields are required.");
+      return "All fields are required.";
     }
+    if (data.noticeTitle.length < 3) {
+      return "Notice title must be at least 3 characters.";
+    }
+    if (data.noticeText.length < 10) {
+      return "Notice content must be at least 10 characters.";
+    }
+    if (new Date(data.noticeEndDate) < new Date(data.noticeStartDate)) {
+      return "End date cannot be before start date.";
+    }
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    const validationError = validateNoticeInput(formData);
+    if (validationError) {
+      setErrorMsg(validationError); // Show error below form
+      return;
+    }
+    setErrorMsg(""); // Clear error
 
     setLoading(true);
     try {
@@ -132,8 +144,8 @@ const Page = () => {
       setShowCreateForm(false);
       fetchNotices(formData.adminId);
     } catch (error) {
+      setErrorMsg("Error creating notice. Please try again.");
       console.error("Error saving notice:", error);
-      alert("Error creating notice. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -519,6 +531,13 @@ const Page = () => {
                     />
                   </div>
                 </div>
+
+                {/* Error message display */}
+                {errorMsg && (
+                  <div className="mb-4 text-red-600 text-sm font-medium">
+                    {errorMsg}
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-gray-100">
                   <button
