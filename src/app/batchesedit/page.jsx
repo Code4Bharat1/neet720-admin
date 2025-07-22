@@ -1,43 +1,46 @@
+// app/batchesedit/page.jsx  (or wherever your route is)
 "use client";
 
+import React from "react";
+import { useSearchParams } from "next/navigation";
+
 import MobileNavbar from "@/components/mobilenav/mobilenav";
-import Desktopnav from "@/components/desktopnav/nav";
-import Sidebar from "@/components/desktopsidebar/sidebar";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
-import React, { useState } from "react";
-
-
+import Sidebar from "@/components/desktopsidebar/sidebar";
+import Desktopnav from "@/components/desktopnav/nav";
 import Batchesedit from "@/components/batchesedit/batchesedit";
 
-export default function page() {
+export default function Page() {
+  const searchParams = useSearchParams();
+  const batchId = searchParams.get("batchId");
+
+  if (!batchId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">No batch selected.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen md:flex bg-white">
-    <div className="md:hidden block">
-      < MobileNavbar />
-      <MobilebottomNavbar/>
-    </div>  
+      {/* Mobile nav */}
+      <div className="md:hidden block">
+        <MobileNavbar />
+        <MobilebottomNavbar />
+      </div>
 
-      {/* Sidebar Section */}
+      {/* Sidebar */}
       <div className="md:w-1/6">
         <Sidebar />
       </div>
 
-      {/* Main Content Section */}
-      <div className="w-full md:w-5/6 md:flex-1 h-screen bg-white">
-        {/* Navigation Bar */}
+      {/* Main content */}
+      <div className="w-full md:w-5/6 flex-1 h-screen bg-white">
         <Desktopnav />
-        <Batchesedit/>
-
-
-
-
-
-    
-                
+        {/* Pass batchId into your edit form */}
+        <Batchesedit batchId={batchId} />
       </div>
-
-      
     </div>
   );
-};
-
+}
