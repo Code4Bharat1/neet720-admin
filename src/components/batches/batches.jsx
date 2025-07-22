@@ -104,7 +104,7 @@ export default function Batches() {
       localStorage.setItem("batchName", batchName);
       localStorage.setItem("noOfStudents", no_of_students);
     }
-    router.push("/batchesedit");
+    router.push(`/batchesedit?batchId=${batchId}`);
   };
 
   const filteredBatches = batchData.filter(
@@ -148,7 +148,7 @@ export default function Batches() {
             </div>
 
             {/* New Batch Button */}
-            <Link href="/batchesedit">
+            <Link href="/batch-add">
               <button
                 id="createBatch"
                 className={`cursor-pointer w-full md:w-auto h-12 px-6 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 ${
@@ -166,7 +166,7 @@ export default function Batches() {
           {/* Batches Count Card */}
           <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
             <div className="p-4 flex items-start">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0">
+              <div className="w-12 h-12 rounded ICA-full bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0">
                 <IoSchoolOutline className="text-blue-600 text-2xl" />
               </div>
               <div>
@@ -266,7 +266,7 @@ export default function Batches() {
                     </div>
                     <button
                       onClick={() => {
-                        router.push("/batchesedit");
+                        router.push("/batch-add");
                       }}
                       className="mt-4 bg-white text-blue-600 font-semibold py-2 px-4 cursor-pointer rounded-full whitespace-nowrap hover:bg-gray-100 transition-all"
                     >

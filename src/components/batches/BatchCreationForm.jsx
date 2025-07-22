@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, Search, User, Plus, X, Check, AlertCircle, BookOpen, UserPlus, Loader2, ToggleLeft, ToggleRight } from "lucide-react"
+import { Users, Mail, Plus, X, Check, AlertCircle, BookOpen, UserPlus, Edit3, Loader2, ToggleLeft, ToggleRight, Search, User } from "lucide-react"
 import axios from "axios"
 
-const UpdateBatchForm = ({ batchId }) => {
+const BatchCreationForm = () => {
   const [batchName, setBatchName] = useState("")
   const [selectedStudents, setSelectedStudents] = useState([])
   const [availableStudents, setAvailableStudents] = useState([])
-  const [batchStudents, setBatchStudents] = useState([])
   const [status, setStatus] = useState(true)
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
@@ -21,9 +20,11 @@ const UpdateBatchForm = ({ batchId }) => {
   // Get admin ID from localStorage or token
   const getAdminId = () => {
     if (typeof window !== "undefined") {
+      // Try to get from localStorage first
       const adminId = localStorage.getItem("adminId")
       if (adminId) return adminId
 
+      // If not found, try to decode from token
       const token = localStorage.getItem("adminAuthToken")
       if (token) {
         try {
@@ -50,13 +51,10 @@ const UpdateBatchForm = ({ batchId }) => {
     })
   }
 
-  // Fetch all students and batch-specific students
+  // Fetch students when component mounts
   useEffect(() => {
-    if (batchId) {
-      fetchStudents()
-      fetchBatchStudents()
-    }
-  }, [batchId])
+    fetchStudents()
+  }, [])
 
   const fetchStudents = async () => {
     setIsLoadingStudents(true)
@@ -93,46 +91,9 @@ const UpdateBatchForm = ({ batchId }) => {
     }
   }
 
-  const fetchBatchStudents = async () => {
-    setIsLoadingStudents(true)
-    setError("")
-
-    try {
-      const adminId = getAdminId()
-      if (!adminId || !batchId) {
-        setError("Admin ID or Batch ID not found. Please try again.")
-        setIsLoadingStudents(false)
-        return
-      }
-
-      const token = localStorage.getItem("adminAuthToken")
-      if (!token) {
-        setError("Authentication token not found. Please log in again.")
-        setIsLoadingStudents(false)
-        return
-      }
-
-      const api = createAxiosInstance()
-      
-      const response = await api.post('/studentdata/batch-student', {
-        addedByAdminId: parseInt(adminId),
-        batchId
-      })
-
-      setBatchStudents(response.data.studentInfo || [])
-      setSelectedStudents(response.data.studentInfo || [])
-    } catch (error) {
-      console.error('Error fetching batch students:', error)
-      const errorMessage = error.response?.data?.message || error.message || "Error fetching batch students"
-      setError(errorMessage)
-    } finally {
-      setIsLoadingStudents(false)
-    }
-  }
-
   const resetForm = () => {
     setBatchName("")
-    setSelectedStudents(batchStudents) // Keep batch students selected
+    setSelectedStudents([])
     setStatus(true)
     setError("")
     setSuccessMessage("")
@@ -154,17 +115,17 @@ const UpdateBatchForm = ({ batchId }) => {
   }
 
   const filteredStudents = availableStudents.filter(student =>
-    (student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    !batchStudents.some(bs => bs.id === student.id) // Exclude students already in the batch
+    student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleUpdateBatch = async (e) => {
+  const handleCreateBatch = async (e) => {
     e.preventDefault()
     setError("")
     setSuccessMessage("")
     setIsLoading(true)
 
+    // Validation
     if (!batchName) {
       setError("Batch Name is required")
       setIsLoading(false)
@@ -178,7 +139,11 @@ const UpdateBatchForm = ({ batchId }) => {
     }
 
     try {
-      const token = localStorage.getItem("adminAuthToken")
+      let token = ""
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("adminAuthToken")
+      }
+
       if (!token) {
         setError("Authentication token not found. Please log in again.")
         setIsLoading(false)
@@ -188,19 +153,18 @@ const UpdateBatchForm = ({ batchId }) => {
       const studentIds = selectedStudents.map(student => student.id)
       const api = createAxiosInstance()
 
-      const response = await api.put(`/studentdata/batch/${batchId}`, {
+      const response = await api.post('/studentdata/batch', {
         batchName: batchName.trim(),
         no_of_students: selectedStudents.length,
         studentIds: studentIds,
         status: status
       })
 
-      setSuccessMessage(response.data.message || "Batch updated successfully!")
-      setBatchStudents(selectedStudents) // Update batch students after successful update
+      setSuccessMessage(response.data.message || "Batch created successfully!")
       setTimeout(() => resetForm(), 3000)
     } catch (error) {
-      console.error('Error updating batch:', error)
-      const errorMessage = error.response?.data?.message || error.message || "Error updating batch"
+      console.error('Error creating batch:', error)
+      const errorMessage = error.response?.data?.message || error.message || "Error creating batch"
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -232,10 +196,8 @@ const UpdateBatchForm = ({ batchId }) => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Update Batch</h1>
-          <p className="text-gray-600 text-lg">
-            Manage students for batch ID: {batchId} ({selectedStudents.length} students selected)
-          </p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Create New Batch</h1>
+          <p className="text-gray-600 text-lg">Set up a new student batch with all required details</p>
         </motion.div>
 
         {/* Main Card */}
@@ -246,7 +208,7 @@ const UpdateBatchForm = ({ batchId }) => {
           {/* Form Content */}
           <div className="p-8">
             <motion.form
-              onSubmit={handleUpdateBatch}
+              onSubmit={handleCreateBatch}
               className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -297,7 +259,6 @@ const UpdateBatchForm = ({ batchId }) => {
                 {/* Selected Students Display */}
                 {selectedStudents.length > 0 && (
                   <div className="space-y-2 max-h-40 overflow-y-auto bg-gray-50 p-4 rounded-lg">
-                    sunrise
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Students:</h4>
                     {selectedStudents.map((student) => (
                       <div key={student.id} className="flex items-center justify-between bg-white p-2 rounded-lg shadow-sm">
@@ -308,9 +269,6 @@ const UpdateBatchForm = ({ batchId }) => {
                           <div>
                             <p className="text-sm font-medium text-gray-800">{student.fullName}</p>
                             <p className="text-xs text-gray-500">{student.email}</p>
-                            {batchStudents.some(bs => bs.id === student.id) && (
-                              <p className="text-xs text-blue-500">Already in batch</p>
-                            )}
                           </div>
                         </div>
                         <button
@@ -401,7 +359,7 @@ const UpdateBatchForm = ({ batchId }) => {
                               })
                             ) : (
                               <p className="text-center text-gray-500 py-4">
-                                {searchTerm ? "No students found matching search" : "No students available"}
+                                {searchTerm ? "No students found matching your search" : "No students available"}
                               </p>
                             )}
                           </div>
@@ -462,7 +420,7 @@ const UpdateBatchForm = ({ batchId }) => {
                     className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    exit={{ opacity: indexedDB, y: -10 }}
                   >
                     <Check className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm">{successMessage}</span>
@@ -480,12 +438,12 @@ const UpdateBatchForm = ({ batchId }) => {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Updating Batch...</span>
+                      <span>Creating Batch...</span>
                     </>
                   ) : (
                     <>
                       <UserPlus className="w-5 h-5" />
-                      <span>Update Batch ({selectedStudents.length} students)</span>
+                      <span>Create Batch ({selectedStudents.length} students)</span>
                     </>
                   )}
                 </button>
@@ -498,4 +456,4 @@ const UpdateBatchForm = ({ batchId }) => {
   )
 }
 
-export default UpdateBatchForm
+export default BatchCreationForm

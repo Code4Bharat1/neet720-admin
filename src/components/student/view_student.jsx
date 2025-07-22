@@ -397,186 +397,180 @@ const Desktop_student = () => {
 
       <main className="max-w-6xl mx-auto w-full h-fit">
         {/* Template download button */}
-        <div className="mb-8">
+        <div className="mb-8 flex justify-between items-center">
           <button
             onClick={handleDownloadTemplate}
-            className="flex flex-col max-sm:flex-row items-start max-sm:items-center gap-2 max-sm:gap-3 bg-white shadow-md border border-gray-100 text-gray-700 py-2 max-sm:py-3 px-3 max-sm:px-4 rounded-xl hover:shadow-lg transition-all cursor-pointer w-full max-sm:w-auto"
+            className="flex flex-row items-center gap-3 bg-white shadow-md border border-gray-100 text-gray-700 py-2 px-4 rounded-xl hover:shadow-lg transition-all cursor-pointer"
           >
-            <IoDocumentTextOutline className="text-blue-500 text-lg max-sm:text-3xl  mb-1 max-sm:mb-0" />
-            <div className="flex flex-col items-center">
-              <span className="font-medium text-sm max-sm:text-base">
+            <IoDocumentTextOutline className="text-blue-500 text-2xl mb-0" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium text-base">
                 Download Excel Template
               </span>
-              <span className="text-xs max-sm:text-sm text-gray-500">
+              <span className="text-xs text-gray-500">
                 Contains: STUDENT NAME, EMAIL, PHONE NUMBER, GENDER, DOB
               </span>
             </div>
           </button>
         </div>
         {/* Title and action buttons */}
-        <div className="flex flex-col sm:flex-row justify-between items-start max-sm:items-center mb-4 sm:mb-6 gap-4">
-          <div className="flex flex-col max-sm:flex-row items-start max-sm:items-center gap-2 max-sm:gap-1/2">
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-800">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+            <h1 className="text-lg sm:text-2xl font-semibold text-gray-800">
               Student Management
             </h1>
-            <div className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-yellow-50 px-2 sm:px-3 py-1 rounded-full border border-yellow-100">
-              <span className="text-xs sm:text-sm text-yellow-700">
+            <div className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-100">
+              <span className="text-xs sm:text-base text-yellow-700">
                 {students.length}/{STUDENT_LIMIT} Students
               </span>
             </div>
           </div>
-
-          <div className="flex flex-col max-sm:flex-row gap-2 sm:gap-3 w-full max-sm:w-fit max-sm:mx-10">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={openAddStudentModal}
               disabled={students.length >= STUDENT_LIMIT || isSubmitting}
-              className={`cursor-pointer flex items-center gap-2 py-2 px-3 sm:py-2.5 sm:px-5 rounded-xl shadow-sm transition-all w-full sm:w-auto ${
+              className={`cursor-pointer flex items-center gap-2 py-2 px-4 sm:py-2.5 sm:px-5 rounded-xl shadow-sm transition-all w-full sm:w-auto ${
                 students.length >= STUDENT_LIMIT
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-yellow-500 text-white hover:bg-yellow-600 hover:shadow"
               }`}
-              // On mobile, keep buttons in one line
               style={{ minWidth: 0 }}
             >
-              <IoPersonAddOutline className="text-base max-sm:text-3xl" />
+              <IoPersonAddOutline className="text-base sm:text-xl" />
               <span className="text-sm sm:text-base">Add Student</span>
             </button>
-
             <button
               ref={importButtonRef}
               onClick={openModal}
               disabled={students.length >= STUDENT_LIMIT}
-              className={`cursor-pointer flex items-center gap-2 py-2 px-3 sm:py-2.5 sm:px-5 rounded-xl shadow-sm transition-all w-full sm:w-auto ${
+              className={`cursor-pointer flex items-center gap-2 py-2 px-4 sm:py-2.5 sm:px-5 rounded-xl shadow-sm transition-all w-full sm:w-auto ${
                 students.length >= STUDENT_LIMIT
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-green-500 text-white hover:bg-green-600 hover:shadow"
               }`}
               style={{ minWidth: 0 }}
             >
-              <IoCloudUploadOutline className="text-base max-sm:text-3xl" />
+              <IoCloudUploadOutline className="text-base sm:text-xl" />
               <span className="text-sm sm:text-base">Import Excel</span>
             </button>
             {students.length > 0 && (
               <button
                 onClick={handleExport}
-                className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 bg-white py-2 px-3 sm:px-4 rounded-lg shadow-sm hover:shadow transition-all w-full sm:w-auto"
+                className="flex items-center gap-2 text-xs sm:text-base text-gray-600 hover:text-gray-800 bg-white py-2 px-4 rounded-lg shadow-sm hover:shadow transition-all w-full sm:w-auto"
               >
-                <IoDownloadOutline className="text-base max-sm:text-4xl" />
+                <IoDownloadOutline className="text-base sm:text-xl" />
                 <span>Export Student List</span>
               </button>
             )}
           </div>
         </div>
-        {/* Export button */}
-        {/* Students Table with Enhanced Borders */}
-        <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
-          <div className="overflow-x-auto w-full">
-            <table className="w-full table-auto border-collapse min-w-[600px]">
-              <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border-b-2 border-gray-200 uppercase text-xs font-semibold tracking-wider">
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Sr.No
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Student Name
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Email
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Phone Number
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Gender
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    DOB
-                  </th>
-                  <th className="py-4 px-6 text-left border-r border-gray-200">
-                    Status
-                  </th>
-                  <th className="py-4 px-6 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 text-sm">
-                {students.length > 0 ? (
-                  students.map((student, index) => (
-                    <tr
-                      key={student.id || index}
-                      className="hover:bg-gray-50 transition-colors border-b border-gray-200"
+      </main>
+      {/* Students Table with Enhanced Borders */}
+      <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full table-auto border-collapse min-w-[600px]">
+            <thead>
+              <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border-b-2 border-gray-200 uppercase text-xs font-semibold tracking-wider">
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Sr.No
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Student Name
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Email
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Phone Number
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Gender
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  DOB
+                </th>
+                <th className="py-4 px-6 text-left border-r border-gray-200">
+                  Status
+                </th>
+                <th className="py-4 px-6 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm">
+              {students.length > 0 ? (
+                students.map((student, index) => (
+                  <tr
+                    key={student.id || index}
+                    className="hover:bg-gray-50 transition-colors border-b border-gray-200"
+                  >
+                    <td className="py-4 px-6 text-gray-800 font-medium border-r border-gray-200">
+                      {index + 1}
+                    </td>
+                    <td
+                      className="py-4 px-6 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline font-medium border-r border-gray-200"
+                      onClick={() => handleStudentClick(student.id)}
                     >
-                      <td className="py-4 px-6 text-gray-800 font-medium border-r border-gray-200">
-                        {index + 1}
-                      </td>
-                      <td
-                        className="py-4 px-6 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline font-medium border-r border-gray-200"
-                        onClick={() => handleStudentClick(student.id)}
+                      {student.fullName || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 border-r border-gray-200">
+                      {student.email || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 border-r border-gray-200">
+                      {student.phoneNumber || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 border-r border-gray-200">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs ${
+                          student.gender === "Male"
+                            ? "bg-blue-100 text-blue-800"
+                            : student.gender === "Female"
+                            ? "bg-pink-100 text-pink-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
                       >
-                        {student.fullName || "N/A"}
-                      </td>
-                      <td className="py-4 px-6 border-r border-gray-200">
-                        {student.email || "N/A"}
-                      </td>
-                      <td className="py-4 px-6 border-r border-gray-200">
-                        {student.phoneNumber || "N/A"}
-                      </td>
-                      <td className="py-4 px-6 border-r border-gray-200">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs ${
-                            student.gender === "Male"
-                              ? "bg-blue-100 text-blue-800"
-                              : student.gender === "Female"
-                              ? "bg-pink-100 text-pink-800"
-                              : "bg-purple-100 text-purple-800"
-                          }`}
-                        >
-                          {student.gender || "N/A"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 border-r border-gray-200 whitespace-nowrap">
-                        {student.dateOfBirth || "N/A"}
-                      </td>
-                      <td className="py-4 px-6 border-r border-gray-200">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs ${
-                            student.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {student.status || "N/A"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() => deleteStudent(student)}
-                          className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 rounded-full"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
-                        <p className="text-gray-500 mb-1">No students found</p>
-                        <p className="text-gray-400 text-xs">
-                          Add students individually or import from Excel
-                        </p>
-                      </div>
+                        {student.gender || "N/A"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 border-r border-gray-200 whitespace-nowrap">
+                      {student.dateOfBirth || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 border-r border-gray-200">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs ${
+                          student.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {student.status || "N/A"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <button
+                        onClick={() => deleteStudent(student)}
+                        className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 rounded-full"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
+                      <p className="text-gray-500 mb-1">No students found</p>
+                      <p className="text-gray-400 text-xs">
+                        Add students individually or import from Excel
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </main>
-
-      {/* Import Excel Modal - with blur background */}
+      </div>
       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 transition-all">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md border border-gray-100 transform transition-all">
