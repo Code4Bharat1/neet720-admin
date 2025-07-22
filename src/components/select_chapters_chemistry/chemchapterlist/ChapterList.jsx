@@ -320,7 +320,6 @@ export default function BiologyChapterList() {
 >
   {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
 </button>
-
         </motion.div>
         {/* Rows */}
         {chapters.map((chapter, index) => {

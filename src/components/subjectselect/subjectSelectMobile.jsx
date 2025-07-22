@@ -277,7 +277,7 @@ const handleContinueClick = () => {
       {/* Continue Button */}
       <div className="w-full flex justify-end mt-3 mb-15 ">
         <button
-          className="bg-blue-500 text-white py-2 px-6 rounded-full flex items-center"
+          className="bg-blue-500 text-white py-2 px-6 rounded-full flex items-center cursor-pointer"
           onClick={handleContinueClick}
         >
           Continue

@@ -232,6 +232,18 @@ export default function BiologyChapterList() {
     }, 600)
   }
 
+  const handleSelectAllChapters = () => {
+  const allSelected = chapters.every((chapter) => chapter.isChecked);
+  setChapters((prev) =>
+    prev.map((chapter) => ({
+      ...chapter,
+      isChecked: !allSelected,
+      // Optional: If selecting, you can also select all topics
+      selectedTopics: !allSelected ? [...chapter.topicsList] : [],
+    }))
+  );
+};
+
   const toggleTopicDropdown = (chapterId) => {
     setTopicDropdownVisibilities((prev) => ({
       ...prev,
@@ -294,10 +306,10 @@ export default function BiologyChapterList() {
       <div className="bg-white hidden md:block w-full max-w-6xl rounded-xl border-none shadow-lg">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-purple-600 to-purple-800 px-6 py-4 text-white rounded-t-xl"
+          className="bg-gradient-to-r from-purple-600 flex justify-between items-center to-purple-800 px-6 py-4 text-white rounded-t-xl"
           variants={itemVariants}
         >
-          <div className="flex justify-between items-center">
+          <div className="">
           <h2 className="text-xl font-semibold">biology Chapters</h2>
           <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
           </div>
