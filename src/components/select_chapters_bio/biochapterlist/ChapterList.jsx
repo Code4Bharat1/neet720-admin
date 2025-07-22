@@ -297,8 +297,16 @@ export default function BiologyChapterList() {
           className="bg-gradient-to-r from-purple-600 to-purple-800 px-6 py-4 text-white rounded-t-xl"
           variants={itemVariants}
         >
+          <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">biology Chapters</h2>
           <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
+          </div>
+          <button
+  onClick={handleSelectAllChapters}
+  className="bg-[#B1CEFB] text-white px-4 py-2 rounded-xs cursor-pointer font-semibold hover:bg-[#97b5e2] transition"
+>
+  {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
+</button>
         </motion.div>
         {/* Rows */}
         {chapters.map((chapter, index) => {
