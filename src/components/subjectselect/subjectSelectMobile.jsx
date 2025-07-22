@@ -22,18 +22,28 @@ const SubjectSelectMobile = () => {
   }, []);
 
   // Function to update selected subjects and store them in localStorage
-  const handleSubjectChange = (subject) => {
-    setSelectedSubjects((prev) => {
-      let updatedSubjects;
-      if (prev.includes(subject)) {
-        updatedSubjects = prev.filter((s) => s !== subject);
-      } else {
-        updatedSubjects = [...prev, subject];
-      }
-      localStorage.setItem("selectedSubjects", JSON.stringify(updatedSubjects));
-      return updatedSubjects;
-    });
-  };
+  const handleSubjectChange = (subjectOrSubjects) => {
+  setSelectedSubjects((prev) => {
+    let updatedSubjects;
+
+    const subjects = Array.isArray(subjectOrSubjects)
+      ? subjectOrSubjects
+      : [subjectOrSubjects];
+
+    // Toggle: if all are already selected → remove all, else → add all
+    const allSelected = subjects.every((s) => prev.includes(s));
+
+    if (allSelected) {
+      updatedSubjects = prev.filter((s) => !subjects.includes(s));
+    } else {
+      updatedSubjects = [...new Set([...prev, ...subjects])];
+    }
+
+    localStorage.setItem("selectedSubjects", JSON.stringify(updatedSubjects));
+    return updatedSubjects;
+  });
+};
+
 
 
 // Handle "Continue" button click (route to first subject's page)
@@ -204,6 +214,12 @@ const handleContinueClick = () => {
           {/* Subjects */}
           <div className="mb-12">
             <h3 className="text-xl font-medium mt-1">Select Subjects</h3>
+            <button
+  className="p-2 bg-blue-400 text-white rounded cursor-pointer"
+  onClick={() => handleSubjectChange(["Physics", "Chemistry", "Biology"])}
+>
+  Select All
+</button>
             <div className="flex flex-wrap gap-4 mt-4">
               {[
                 { name: "Physics", img: "physic.png" },

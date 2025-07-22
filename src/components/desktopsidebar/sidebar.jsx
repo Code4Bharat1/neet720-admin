@@ -60,7 +60,9 @@ const Sidebar = () => {
     { label: "Customized Test", icon: <GiTestTubes className="text-xl" />, href: "/Customize" },
     { label: "Generate Test", icon: <LuFileInput className="text-xl" />, href: "/generatetest" },
     { label : "Post Notice", icon : <PiBook className="text-xl" />, href : '/notice'},
-    { label : "Scan OMR", icon : <Scan className="text-xl"/>, href : "/scan-omr"}
+    { label : "Scan OMR", icon : <Scan className="text-xl"/>, href : "/scan-omr"},
+    { label : "Chapter-wise question", icon : <Scan className="text-xl"/>, href : "/chapterwisequestion"}
+    
   ];
 
   return (
