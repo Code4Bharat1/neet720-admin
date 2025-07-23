@@ -46,6 +46,39 @@ export default function AnswerPaper() {
     }
   };
 
+  const fetchBatchAndTestInfo = async () => {
+    const batchId = localStorage.getItem("batchId");
+    const testId = localStorage.getItem("testid");
+
+    if (!batchId || !testId) {
+      console.log("Batch ID or Test ID not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/test-info`,
+        { batchId, testId }
+      );
+
+      console.log("Batch and Test Info:", response.data);
+      console.log("test id :")
+      // Update state with the response data
+      if (response.data) {
+        setBatchId(response.data.batchId);
+        setTestId(testId);
+        setTestName(response.data.testName || "");
+        setChapters(response.data.chapters || "");
+        setSubject(response.data.subject || "");
+      }
+    } catch (error) {
+      console.error("Error fetching batch and test info:", error);
+    }
+  };
+  useEffect(() => {
+    fetchBatchAndTestInfo();
+  }, []);
+
   const handleProceed = () => {
     setProceedClicked(true);
     fetchQuestions();
@@ -822,7 +855,6 @@ export default function AnswerPaper() {
                     onChange={(e) => setTestId(e.target.value)}
                     placeholder="E.g., TEST_001"
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    required
                   />
                 </div>
                 <div>
@@ -848,7 +880,7 @@ export default function AnswerPaper() {
                     onChange={(e) => setChapters(e.target.value)}
                     placeholder="E.g., Algebra, Geometry, Calculus"
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    required
+                    
                   />
                 </div>
                 <div>
@@ -861,7 +893,7 @@ export default function AnswerPaper() {
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="E.g., Mathematics"
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    required
+                    
                   />
                 </div>
                 <div>

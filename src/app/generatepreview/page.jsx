@@ -7,7 +7,7 @@ import ImageComponent from "@/components/generatepreview/imagecomponent";
 import PhysicsCard from "@/components/generatepreview/physicscard";
 import ChemistryCard from "@/components/generatepreview/chemistrycard";
 import BiologyCard from "@/components/generatepreview/biologycard"; // ✅ Imported BiologyCard
-import Scheduletest from "@/components/generatepreview/scheduletest";
+import Scheduletest from "@/components/generatepreview/scheduletest"; // this main create test 
 
 // Navigation Components
 import DesktopNavbar from "@/components/desktopnav/nav";

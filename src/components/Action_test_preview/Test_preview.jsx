@@ -17,6 +17,7 @@ const TestPreview = () => {
 
   useEffect(() => {
     const testid = localStorage.getItem("testid");
+    console.log("testid :" , testid)
 
     if (!testid) {
       setError("No test ID found in localStorage.");

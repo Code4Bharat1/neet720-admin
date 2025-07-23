@@ -5,14 +5,12 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
 export default function QrGenerator() {
-  const [mode, setMode] = useState("batch");
   const [testId, setTestId] = useState("");
-  const [batchData, setBatchData] = useState([
-    { batch_name: "", batch_id: "", student_ids: "", students: [] },
-  ]);
   const [studentIds, setStudentIds] = useState("");
   const [qrImages, setQrImages] = useState([]);
   const [questionCount, setQuestionCount] = useState(null);
+  const [students, setStudents] = useState([]); // New state for student data
+  const [loading, setLoading] = useState(true); // Loading state
 
   // For student mode
   const [validStudents, setValidStudents] = useState([]); // [{id, fullName}]
@@ -42,24 +40,12 @@ export default function QrGenerator() {
       }
     };
     fetchTestIdAndCount();
+    fetchStudentData();
   }, []);
 
   /* ------------------------------------------------------------------
      2. HELPER FUNCTIONS
   ------------------------------------------------------------------ */
-  const handleBatchChange = (index, field, value) => {
-    const newData = [...batchData];
-    newData[index][field] = value;
-    setBatchData(newData);
-  };
-
-  const addBatchEntry = () => {
-    setBatchData([
-      ...batchData,
-      { batch_name: "", batch_id: "", student_ids: "", students: [] },
-    ]);
-  };
-
   const getAdminIdFromToken = () => {
     try {
       const token = localStorage.getItem("adminAuthToken");
@@ -72,8 +58,59 @@ export default function QrGenerator() {
     }
   };
 
+  const fetchStudentData = async () => {
+    try {
+      setLoading(true);
+      const batchId = localStorage.getItem("batchId");
+      if (!batchId) {
+        alert("Batch ID not found in localStorage.");
+        return;
+      }
+
+      const res = await axios.post(
+        "http://localhost:3085/api/batches/batch-students",
+        { batchId: batchId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("Full API response:", res.data); // For debugging
+
+      // Access the students array from the data property
+      if (
+        res.data &&
+        res.data.success &&
+        res.data.data &&
+        Array.isArray(res.data.data)
+      ) {
+        const studentsData = res.data.data;
+
+        setStudents(studentsData);
+
+        // Auto-evaluate the students
+        setValidStudents(
+          studentsData.map((student) => ({
+            id: student.id,
+            fullName:
+              student.fullName ||
+              `${student.firstName || ""} ${student.lastName || ""}`.trim(),
+          }))
+        );
+        setEvaluated(true);
+        console.log("Processed validStudents:", validStudents); // Verify the data
+      } else {
+        console.error("Invalid response format:", res.data);
+        alert("No students found in this batch");
+      }
+    } catch (error) {
+      console.error("Error fetching student data:", error);
+      alert("Failed to fetch student data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ------------------------------------------------------------------
-     3. STUDENT‑MODE : VERIFY IDS
+     3. STUDENT MODE: VERIFY IDS
   ------------------------------------------------------------------ */
   const handleEvaluate = async () => {
     setEvaluated(false);
@@ -104,7 +141,6 @@ export default function QrGenerator() {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // API returns validStudentIds: [{id, fullName}], invalidStudentIds: [id,...]
       setValidStudents(verifyRes.data.validStudentIds || []);
       setInvalidStudentIds(verifyRes.data.invalidStudentIds || []);
       setEvaluated(true);
@@ -114,75 +150,58 @@ export default function QrGenerator() {
     }
   };
 
-  /* ------------------------------------------------------------------
-     4. GENERATE QR CODES (batch‑mode & student‑mode)
-  ------------------------------------------------------------------ */
-  const handleSubmit = async () => {
-    const admin_id = getAdminIdFromToken();
-    if (!admin_id) return alert("Admin not authenticated");
-
+  // Add this function to handle generating OMR sheets directly
+  const handleGenerateOMRSheets = async () => {
     try {
-      if (mode === "batch") {
-        /* PAYLOAD → /api/batch */
-        const payload = {
-          test_id: testId,
-          batch_data: batchData.map((b) => ({
-            batch_id: b.batch_id,
-            student_ids: b.students.map((s) => s.id),
-          })),
-        };
+      // First generate QR codes if not already generated
+      // if (qrImages.length === 0) {
+      //   await handleGenerateQR();
+      // }
 
-        const res = await axios.post(
-          "http://127.0.0.1:5000/api/batch",
-          payload,
-          { headers: { "Content-Type": "application/json" } }
-        );
-
-        // enrich with names
-        const allStudents = batchData.flatMap((b) => b.students);
-        const qrImagesWithName = res.data.qr_images.map((img) => ({
-          ...img,
-          fullName:
-            allStudents.find((s) => String(s.id) === String(img.label))?.fullName || "",
-        }));
-        setQrImages(qrImagesWithName);
-        return qrImagesWithName;
-      } else {
-        /* STUDENT MODE → /api/student */
-        if (!evaluated || validStudents.length === 0) {
-          alert("Please evaluate and check student IDs first.");
-          return [];
-        }
-        const validIds = validStudents.map((s) => s.id);
-
-        const res = await axios.post(
-          "http://127.0.0.1:5000/api/student",
-          {
-            test_id: testId,
-            student_ids: validIds,
-          },
-          { headers: { "Content-Type": "application/json" } }
-        );
-
-        const qrImagesWithName = res.data.qr_images.map((img) => ({
-          ...img,
-          fullName: validStudents.find((s) => s.id === img.label)?.fullName || "",
-        }));
-
-        setQrImages(qrImagesWithName);
-        return qrImagesWithName;
-      }
-    } catch (err) {
-      console.error("Error generating QR codes:", err);
-      alert("Something went wrong while generating QR codes.");
-      return [];
+      // Then print the OMR sheets
+      handlePrintOMR();
+    } catch (error) {
+      console.error("Error generating OMR sheets:", error);
+      alert("Failed to generate OMR sheets");
     }
   };
 
+  /* ------------------------------------------------------------------
+     4. GENERATE QR CODES (student-mode)
+  ------------------------------------------------------------------ */
   const handleGenerateQR = async () => {
-    const qrList = await handleSubmit();
-    if (!qrList || qrList.length === 0) {
-      alert("QR code generation failed.");
+    const admin_id = getAdminIdFromToken();
+    if (!admin_id) {
+      alert("Admin not authenticated");
+      return;
+    }
+
+    if (!evaluated || validStudents.length === 0) {
+      alert("Please evaluate and check student IDs first.");
+      return;
+    }
+
+    try {
+      const validIds = validStudents.map((s) => s.id);
+
+      const res = await axios.post(
+        "http://127.0.0.1:5000/api/student",
+        {
+          test_id: testId,
+          student_ids: validIds,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const qrImagesWithName = res.data.qr_images.map((img) => ({
+        ...img,
+        fullName: validStudents.find((s) => s.id === img.label)?.fullName || "",
+      }));
+
+      setQrImages(qrImagesWithName);
+    } catch (err) {
+      console.error("Error generating QR codes:", err);
+      alert("Something went wrong while generating QR codes.");
     }
   };
 
@@ -190,10 +209,6 @@ export default function QrGenerator() {
      5. PRINT OMR (added black alignment square)
   ------------------------------------------------------------------ */
   const handlePrintOMR = () => {
-    if (!qrImages || qrImages.length === 0) {
-      alert("Please generate QR codes first.");
-      return;
-    }
     if (!questionCount || questionCount < 1) {
       alert("Invalid or missing question count.");
       return;
@@ -205,92 +220,328 @@ export default function QrGenerator() {
       return;
     }
 
+    // Get test details from localStorage or state
+    const paperTitle = localStorage.getItem("testName") || "Test";
+    const batchName = localStorage.getItem("batchName") || "Batch";
+
     // Build question list
     const allQuestions = Array.from({ length: questionCount }, (_, i) => ({
       number: i + 1,
     }));
 
+    // Calculate columns (4 columns with equal distribution)
+    const questionsPerPage = 180; // Adjust based on your layout needs
+    const questionsPerColumn = Math.ceil(questionCount / 4);
+    const columns = [
+      allQuestions.slice(0, questionsPerColumn),
+      allQuestions.slice(questionsPerColumn, questionsPerColumn * 2),
+      allQuestions.slice(questionsPerColumn * 2, questionsPerColumn * 3),
+      allQuestions.slice(questionsPerColumn * 3),
+    ];
+
     // Column renderer
-    const renderOMRColumn = (columnQuestions) =>
+    const renderColumn = (columnQuestions) =>
       columnQuestions
-        .map((q) => `
-          <div class="question-row">
-            <div class="question-number">${q.number}.</div>
-            <div class="options-bubbles">
-              ${["A", "B", "C", "D"]
+        .map(
+          (q) => `
+      <div class="question-row">
+        <div class="question-number">${q.number}.</div>
+        <div class="options-bubbles">
+          ${["A", "B", "C", "D"]
             .map((opt) => `<div class="bubble-option">${opt}</div>`)
             .join("")}
-            </div>
-          </div>`)
+        </div>
+      </div>`
+        )
         .join("");
 
-    /* -------------------------------
-       HTML TEMPLATE (with marker)
-    --------------------------------*/
+    // Generate HTML for all students
     const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>OMR Sheets</title>
+  <title>OMR Answer Sheet - ${paperTitle}</title>
   <style>
-    @page { size: A4; margin: 1.5cm; }
-    body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; background: #fff; color: #000; }
-
-    .omr-page       { page-break-after: always; }
-    .omr-flex-header{ display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:2px 10px;border:1px solid #000; }
-    .omr-left-info  { display:flex;flex-direction:column;min-width:180px;font-size:10pt;gap:6px }
-    .omr-center-title{ text-align:center;flex:1 }
-    .omr-title      { font-size:16pt;font-weight:bold;margin-bottom:4px }
-    .omr-subtitle   { font-size:11pt;color:#444 }
-    .omr-right-qr   { display:flex;justify-content:flex-end;min-width:100px }
-    .qr-img         { width:80px;height:80px;object-fit:contain;margin-left:10px }
-
-    .alignment-marker{ width:10px;height:10px;background:#000;margin:6px 0 10px 32px; }
-
-    .omr-table      { display:flex;justify-content:space-between;gap:12px }
-    .column         { flex:1 }
-    .question-row   { display:flex;align-items:center;margin-bottom:3px;font-size:7pt;gap:2px }
-    .question-number{ min-width:20px;font-weight:bold }
-    .options-bubbles{ display:flex;gap:10px;margin-left:10px }
-    .bubble-option  { width:14px;height:14px;border:1px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:6pt;font-weight:bold }
-    .info-line      { display:inline-block;width:100px;margin-left:5px }
+    @page {
+      size: A4;
+      margin: 1.5cm;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 10pt;
+      margin: 0;
+      padding: 0;
+      background: white;
+      color: #000;
+    }
+    .omr-page {
+      page-break-after: always;
+      padding: 0;
+    }
+    .qr-code-box {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 92px;
+      height: 92px;
+      border: 2px solid #000;
+      box-sizing: border-box;
+      overflow: hidden;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .alignment-marker {
+      width: 14px;
+      height: 14px;
+      background: #000;
+      border: 1px solid #000;
+      margin: 6px 0 10px 10px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .alignment-marker-1 {
+      margin-left: 42px;
+    }
+    .omr-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .omr-box {
+      border: 2px solid #000;
+      padding: 12px;
+      display: inline-block;
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .omr-title {
+      font-size: 16pt;
+      font-weight: bold;
+      text-align: center;
+      margin: 4px 0;
+    }
+    .omr-subtitle {
+      font-size: 11pt;
+      color: #444;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .omr-info {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 30px;
+      font-size: 10pt;
+    }
+    .omr-info div {
+      flex: 1;
+    }
+    .info-line {
+      display: inline-block;
+      border-bottom: 1px solid #000;
+      width: 120px;
+      margin-left: 5px;
+    }
+    .omr-table {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .column {
+      flex: 1;
+      border: 1px solid black;
+      padding: 10px;
+    }
+    .question-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 3px;
+      font-size: 6pt;
+    }
+    .question-number {
+      min-width: 20px;
+      font-weight: bold;
+      font-size: 7pt;
+    }
+    .options-bubbles {
+      display: flex;
+      gap: 10px;
+      margin-left: 10px;
+    }
+    .bubble-option {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6pt;
+      font-weight: bold;
+      line-height: 1;
+      text-align: center;
+      padding: 0;
+    }
+    .instructions {
+      font-size: 9pt;
+      text-align: center;
+      margin: 10px 0;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-${qrImages
-        .map((qr) => {
-          const fullName = qr.fullName || "";
-          const col1 = allQuestions.slice(0, 45);
-          const col2 = allQuestions.slice(45, 90);
-          const col3 = allQuestions.slice(90, 135);
-          const col4 = allQuestions.slice(135, 180);
+  ${
+    validStudents.length > 0
+      ? validStudents
+          .map((student) => {
+            const studentName = student.fullName || "Student";
+            const studentId = student.id || "";
+            const qrCode = qrImages.find((qr) => qr.label === studentId);
 
-          return `
-  <div class="omr-page">
-    <div class="omr-flex-header">
-      <div class="omr-left-info">
-        <div>Name: <span class="info-line">${fullName}</span></div>
-        <div>Roll No: <span class="info-line">${qr.label}</span></div>
-        <div>Date: <span class="info-line"></span></div>
+            return `
+      <div class="omr-page">
+        ${
+          qrCode
+            ? `
+        <div class="qr-code-box">
+          <img src="${qrCode.img}" 
+               style="width:100%;height:100%;object-fit:contain;" 
+               alt="QR code for ${studentId}">
+        </div>`
+            : ""
+        }
+        
+        <div class="omr-header">
+          <div class="omr-box">
+            <h1 class="omr-title">OMR ANSWER SHEET</h1>
+            <p class="omr-subtitle">${paperTitle} - ${batchName}</p>
+            <div class="omr-info">
+              <div>Name: <span class="info-line">${studentName}</span></div>
+              <div>Roll No: <span class="info-line">${studentId}</span></div>
+              <div>Date: <span class="info-line"></span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="instructions">
+          ** Fill the bubbles completely using black/blue ballpoint pen only **
+        </div>
+        
+        <div style="display: flex;">
+          <div class="alignment-marker alignment-marker-1"></div>
+          <div class="alignment-marker"></div>
+          <div class="alignment-marker"></div>
+          <div class="alignment-marker"></div>
+        </div>
+        
+        <div class="omr-table">
+          ${columns
+            .map(
+              (columnQuestions) => `
+            <div class="column">
+              ${renderColumn(columnQuestions)}
+            </div>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+          })
+          .join("")
+      : // Fallback if no valid students (use QR images if available)
+      qrImages.length > 0
+      ? qrImages
+          .map(
+            (qr) => `
+      <div class="omr-page">
+        <div class="qr-code-box">
+          <img src="${qr.img}" 
+               style="width:100%;height:100%;object-fit:contain;" 
+               alt="QR code for ${qr.label}">
+        </div>
+        
+        <div class="omr-header">
+          <div class="omr-box">
+            <h1 class="omr-title">OMR ANSWER SHEET</h1>
+            <p class="omr-subtitle">${paperTitle} - ${batchName}</p>
+            <div class="omr-info">
+              <div>Name: <span class="info-line">${
+                qr.fullName || ""
+              }</span></div>
+              <div>Roll No: <span class="info-line">${qr.label}</span></div>
+              <div>Date: <span class="info-line"></span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="instructions">
+          ** Fill the bubbles completely using black/blue ballpoint pen only **
+        </div>
+        
+        <div style="display: flex;">
+          <div class="alignment-marker alignment-marker-1"></div>
+          <div class="alignment-marker"></div>
+          <div class="alignment-marker"></div>
+          <div class="alignment-marker"></div>
+        </div>
+        
+        <div class="omr-table">
+          ${columns
+            .map(
+              (columnQuestions) => `
+            <div class="column">
+              ${renderColumn(columnQuestions)}
+            </div>`
+            )
+            .join("")}
+        </div>
       </div>
-      <div class="omr-center-title">
-        <div class="omr-title">OMR Question SHEET</div>
-        <div class="omr-subtitle">**Do not write anything on the QR**</div>
+    `
+          )
+          .join("")
+      : // Default OMR sheet if no students or QR codes
+        `
+    <div class="omr-page">
+      <div class="qr-code-box">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASIAAAEiAQAAAAB1xeIbAAABfUlEQVR4nO2aS26EMBBEXwekLBkpB5ijwA1ypCg3MzeC5UhGlQV2Qsgi2fCLuxfItp7kkl00psHE79E//QECp5xyyimnzk5ZihrrRjMY80h3qK4iqFaSNIAClayjkiTpO7W/riKoMXnc7B5RAMysPl5XSZTCWGPdjjM6tYjJ9p6xUCqnlUbACNZqmseWL11nVX9tKq19P3u9AsYX2dr8Z1V/bWrtcUEk3QZH6iqHsm6sgfloX6PANLesO1TX/6aS7/sbBk2s6V8flkzfxON0lUChFDF3B6AdKqWLJIWzqr82NfveaAYZzQB9B+rvEfX3R37gnlX9tSkWpYN2qJR9D3POcd9vR33mnBRpA/J+zE1f+02ope+hElBJoYl4vt+aSmuf6pjZ8q0iCk103+9B5Tom/Q30bs+yt+EEusqiRvssJ1Rev9+Sqld9a4cb6bRpQBuO0VUC9SPfB9LHK4UmH348329CreuY1mqqv2qY5r7fjjL/N8opp5xyqgjqA5wV4JYDCuBjAAAAAElFTkSuQmCC"
+             style="width:100%;height:100%;object-fit:contain;"
+             alt="Default QR code">
       </div>
-      <div class="omr-right-qr"><img src="${qr.img}" class="qr-img" /></div>
+      
+      <div class="omr-header">
+        <div class="omr-box">
+          <h1 class="omr-title">OMR ANSWER SHEET</h1>
+          <p class="omr-subtitle">${paperTitle} - ${batchName}</p>
+          <div class="omr-info">
+            <div>Name: <span class="info-line"></span></div>
+            <div>Roll No: <span class="info-line"></span></div>
+            <div>Date: <span class="info-line"></span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="instructions">
+        ** Fill the bubbles completely using black/blue ballpoint pen only **
+      </div>
+      
+      <div style="display: flex;">
+        <div class="alignment-marker alignment-marker-1"></div>
+        <div class="alignment-marker"></div>
+        <div class="alignment-marker"></div>
+        <div class="alignment-marker"></div>
+      </div>
+      
+      <div class="omr-table">
+        ${columns
+          .map(
+            (columnQuestions) => `
+          <div class="column">
+            ${renderColumn(columnQuestions)}
+          </div>`
+          )
+          .join("")}
+      </div>
     </div>
-
-    <!-- alignment square -->
-    <div class="alignment-marker"></div>
-
-    <div class="omr-table">
-      <div class="column">${renderOMRColumn(col1)}</div>
-      <div class="column">${renderOMRColumn(col2)}</div>
-      <div class="column">${renderOMRColumn(col3)}</div>
-      <div class="column">${renderOMRColumn(col4)}</div>
-    </div>
-  </div>`;
-        })
-        .join("")}
+    `
+  }
 </body>
 </html>`;
 
@@ -300,11 +551,11 @@ ${qrImages
       printWindow.focus();
       printWindow.print();
       printWindow.close();
-    }, 600);
+    }, 1000);
   };
 
   /* ------------------------------------------------------------------
-     6. JSX UI (UNCHANGED)
+     6. JSX UI (STUDENT MODE ONLY)
   ------------------------------------------------------------------ */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -313,8 +564,18 @@ ${qrImages
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center gap-4 mb-2">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01" />
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01"
+                />
               </svg>
             </div>
             <div>
@@ -324,283 +585,142 @@ ${qrImages
               {questionCount !== null && (
                 <p className="text-gray-600 mt-1 flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Total Questions in Test: <span className="font-semibold text-gray-800">{questionCount}</span>
+                  Total Questions in Test:{" "}
+                  <span className="font-semibold text-gray-800">
+                    {questionCount}
+                  </span>
                 </p>
               )}
             </div>
-          </div>
-
-          {/* Mode Toggle */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-            <button
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${mode === "batch"
-                  ? "bg-white text-blue-600 shadow-md transform scale-105"
-                  : "text-gray-600 hover:text-gray-800"
-                }`}
-              onClick={() => {
-                setMode("batch");
-                setValidStudents([]);
-                setInvalidStudentIds([]);
-                setEvaluated(false);
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                Batch QR
-              </div>
-            </button>
-            <button
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${mode === "student"
-                  ? "bg-white text-blue-600 shadow-md transform scale-105"
-                  : "text-gray-600 hover:text-gray-800"
-                }`}
-              onClick={() => {
-                setMode("student");
-                setValidStudents([]);
-                setInvalidStudentIds([]);
-                setEvaluated(false);
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Student QR
-              </div>
-            </button>
           </div>
         </div>
 
         {/* Form Section */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            {mode === "batch" ? (
-              <>
-                <div className="space-y-6">
-                  {batchData.map((entry, index) => (
-                    <div key={index} className="relative bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200 p-6 rounded-xl hover:shadow-lg transition-all duration-300">
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </div>
-                      <div className="space-y-4">
-                        <div className="relative">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Batch Name</label>
-                          <input
-                            type="text"
-                            placeholder="Enter batch name..."
-                            value={entry.batch_name}
-                            onChange={(e) =>
-                              handleBatchChange(index, "batch_name", e.target.value)
-                            }
-                            required
-                            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-white"
-                          />
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const admin_id = getAdminIdFromToken();
-                              if (!admin_id) return alert("Admin not authenticated");
-                              console.log("Fetching student IDs for batch:", entry.batch_name);
-                              console.log("Admin ID:", admin_id);
-                              const res = await axios.post(
-                                "http://localhost:3085/api/qr/students",
-                                {
-                                  batchName: entry.batch_name,
-                                  admin_id : admin_id,
-                                },
-                                {
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                }
-                              );
-
-                              const updated = [...batchData];
-                              updated[index].batch_id = res.data.batchId;
-                              updated[index].student_ids = res.data.studentIds.join(", ");
-                              updated[index].students = res.data.students || [];
-                              setBatchData(updated);
-                            } catch (err) {
-                              console.error("Failed to fetch student IDs", err);
-                            }
-                          }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                          </svg>
-                          Get Student IDs
-                        </button>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Batch ID</label>
-                            <input
-                              type="text"
-                              placeholder="Auto-filled batch ID"
-                              value={entry.batch_id}
-                              readOnly
-                              className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Student IDs</label>
-                            <input
-                              type="text"
-                              placeholder="Comma separated student IDs"
-                              value={entry.student_ids}
-                              onChange={(e) =>
-                                handleBatchChange(index, "student_ids", e.target.value)
-                              }
-                              required
-                              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Show students after fetch */}
-                        {entry.students && entry.students.length > 0 && (
-                          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2 mt-2">
-                            <div className="font-bold text-green-700 mb-1">Students:</div>
-                            <ul className="ml-2">
-                              {entry.students.map((student) => (
-                                <li key={student.id}>
-                                  {student.fullName} <span className="text-xs text-gray-500">({student.id})</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={addBatchEntry}
-                  className="w-full bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-dashed border-gray-400 py-4 px-6 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 text-gray-700 font-medium flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Another Batch
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Student IDs</label>
-                    <textarea
-                      placeholder="Enter student IDs separated by commas (e.g., STU001, STU002, STU003)"
-                      value={studentIds}
-                      onChange={(e) => {
-                        setStudentIds(e.target.value);
-                        setValidStudents([]);
-                        setInvalidStudentIds([]);
-                        setEvaluated(false);
-                      }}
-                      required
-                      rows={4}
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-white resize-none"
-                    />
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading student data...</p>
+            </div>
+          ) : (
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Students in Batch
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    {students.length > 0 ? (
+                      <ul className="space-y-2">
+                        {students.map((student) => (
+                          <li
+                            key={student.id}
+                            className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
+                          >
+                            <span className="font-medium">
+                              {student.fullName ||
+                                `${student.firstName} ${
+                                  student.lastName || ""
+                                }`}
+                            </span>
+                            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {student.id}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">
+                        No students found in this batch
+                      </p>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleEvaluate}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg font-semibold"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Evaluate Students
-                    </div>
-                  </button>
-
-                  {evaluated && (
-                    <div className="space-y-4 mt-6">
-                      {validStudents.length > 0 && (
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                            <h3 className="font-bold text-green-800 text-lg">Valid Students ({validStudents.length})</h3>
-                          </div>
-                          <div className="grid gap-2">
-                            {validStudents.map((s) => (
-                              <div key={s.id} className="bg-white p-3 rounded-lg border border-green-200 flex items-center justify-between">
-                                <span className="font-medium text-gray-800">{s.fullName}</span>
-                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{s.id}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {invalidStudentIds.length > 0 && (
-                        <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </div>
-                            <h3 className="font-bold text-red-800 text-lg">Invalid Student IDs ({invalidStudentIds.length})</h3>
-                          </div>
-                          <div className="grid gap-2">
-                            {invalidStudentIds.map((id) => (
-                              <div key={id} className="bg-white p-3 rounded-lg border border-red-200">
-                                <span className="text-gray-800">{id}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {validStudents.length === 0 && (
-                        <div className="text-center py-8">
-                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
-                          </div>
-                          <p className="text-red-700 font-medium text-lg">No valid students found</p>
-                          <p className="text-gray-600 mt-1">Please check the student IDs and try again</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              </>
-            )}
 
-            <button
-              type="button"
-              onClick={handleGenerateQR}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${mode === "student"
-                  ? evaluated && validStudents.length > 0
+                {evaluated && validStudents.length > 0 && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="font-bold text-green-800 text-lg">
+                        Valid Students ({validStudents.length})
+                      </h3>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGenerateQR}
+                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                  validStudents.length > 0
                     ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 shadow-lg"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 shadow-lg"
                 }`}
-              disabled={mode === "student" && (!evaluated || validStudents.length === 0)}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01" />
-                </svg>
-                Generate QR Codes
-              </div>
-            </button>
-          </form>
+                disabled={validStudents.length === 0}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01"
+                    />
+                  </svg>
+                  Generate QR Codes
+                </div>
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={handleGenerateOMRSheets}
+            className={`bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl ${
+              students.length > 0
+                ? "hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105"
+                : "opacity-50 cursor-not-allowed"
+            } transition-all duration-200 shadow-lg font-semibold text-lg`}
+            disabled={students.length === 0}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Generate {students.length} OMR Sheets
+            </div>
+          </button>
         </div>
 
         {/* QR Results Section */}
@@ -608,18 +728,33 @@ ${qrImages
           <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01" />
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-2.01.01h.01M8 16h.01M4 12h.01M4 16h.01M12 8h.01"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">Generated QR Codes</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Generated QR Codes
+              </h2>
               <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                 {qrImages.length} codes
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {qrImages.map((qr) => (
-                <div key={qr.label} className="bg-gradient-to-br from-gray-50 to-blue-50 p-6 rounded-xl border-2 border-gray-200 hover:shadow-lg transition-all duration-300 text-center group">
+                <div
+                  key={qr.label}
+                  className="bg-gradient-to-br from-gray-50 to-blue-50 p-6 rounded-xl border-2 border-gray-200 hover:shadow-lg transition-all duration-300 text-center group"
+                >
                   <div className="mb-4">
                     <h3 className="font-semibold text-gray-800 mb-1">
                       {qr.fullName ? qr.fullName : qr.label}
@@ -631,7 +766,11 @@ ${qrImages
                     )}
                   </div>
                   <div className="bg-white p-4 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300">
-                    <img src={qr.img} alt={qr.label} className="w-32 h-32 mx-auto" />
+                    <img
+                      src={qr.img}
+                      alt={qr.label}
+                      className="w-32 h-32 mx-auto"
+                    />
                   </div>
                 </div>
               ))}
@@ -643,8 +782,18 @@ ${qrImages
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg font-semibold text-lg"
               >
                 <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
                   </svg>
                   Print OMR Sheets
                 </div>
