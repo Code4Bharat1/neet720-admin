@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import axios from "axios";  // For making API requests
+import axios from "axios"; // For making API requests
 import toast from "react-hot-toast";
 
 function Scheduletest() {
@@ -18,8 +18,8 @@ function Scheduletest() {
     batch: "",
     batchId: "", // Added batchId to formData
   });
-  const [batchData, setBatchData] = useState([]);  // State to store batch data
-  const [loading, setLoading] = useState(true);  // Loading state for fetching data
+  const [batchData, setBatchData] = useState([]); // State to store batch data
+  const [loading, setLoading] = useState(true); // Loading state for fetching data
   const [adminId, setAdminId] = useState("");
 
   useEffect(() => {
@@ -52,8 +52,8 @@ function Scheduletest() {
           console.error("No admin token found");
           return;
         }
-        
-        const payload = JSON.parse(atob(token.split('.')[1]));
+
+        const payload = JSON.parse(atob(token.split(".")[1]));
         const adminId = payload.id;
 
         const response = await axios.post(
@@ -61,16 +61,15 @@ function Scheduletest() {
           { adminId } // Send as request body
         );
 
-        const formattedBatchData = response.data.batchData.map(batch => ({
+        const formattedBatchData = response.data.batchData.map((batch) => ({
           batchId: batch.id || batch.batch_id, // Use whichever field exists
-          batchName: batch.batchName
+          batchName: batch.batchName,
         }));
-        console.log("response :" , response)
-        console.log("batch data : ",formattedBatchData)
+        console.log("response :", response);
+        console.log("batch data : ", formattedBatchData);
 
         setBatchData(formattedBatchData);
         console.log("Fetched batch data:", formattedBatchData);
-
       } catch (error) {
         console.error("Error fetching batch data:", error);
         toast.error("Failed to load batches");
@@ -89,7 +88,9 @@ function Scheduletest() {
     const { name, value } = e.target;
     if (name === "batch") {
       // Find the selected batch's ID
-      const selectedBatch = batchData.find(batch => batch.batchName === value);
+      const selectedBatch = batchData.find(
+        (batch) => batch.batchName === value
+      );
       setFormData((prev) => ({
         ...prev,
         batch: value,
@@ -109,11 +110,12 @@ function Scheduletest() {
       }
 
       // Get the payload from localStorage
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const adminId = payload.id;
 
       // Get the changed questions from localStorage
-      const changedQuestions = JSON.parse(localStorage.getItem("changedQuestions")) || [];
+      const changedQuestions =
+        JSON.parse(localStorage.getItem("changedQuestions")) || [];
 
       if (changedQuestions.length === 0) {
         console.log("No questions to review");
@@ -163,7 +165,7 @@ function Scheduletest() {
         if (data) {
           try {
             const chapters = JSON.parse(data);
-            
+
             // Prepare question IDs
             chapters.forEach((chapter) => {
               const ids = chapter.questions.map((q) => q.id);
@@ -203,27 +205,30 @@ function Scheduletest() {
         duration: formData.duration,
         exam_start_date: formData.scheduledAt || "2025-05-01T10:00:00Z",
         exam_end_date: formData.endsAt || "2025-05-01T13:00:00Z",
-        instruction: "Attempt all questions carefully. Negative marking applies.",
+        instruction:
+          "Attempt all questions carefully. Negative marking applies.",
         batch_name: formData.batch,
         batchId: formData.batchId, // Added batchId to payload
         status: "Active",
       };
 
+      console.log("payload :", payload);
+
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/admintest`,
         payload
       );
-      
+
       toast.success("Test created successfully!", {
-        duration: 5000
+        duration: 5000,
       });
-      
+
       localStorage.removeItem("changedQuestions");
       router.push("/generatetest");
     } catch (error) {
       console.error("Error in test creation process:", error);
       toast.error("Failed to create test.", {
-        duration: 5000
+        duration: 5000,
       });
     }
   };
@@ -244,10 +249,15 @@ function Scheduletest() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 backdrop-blur-sm" onClick={closeModal}></div>
+          <div
+            className="fixed inset-0 backdrop-blur-sm"
+            onClick={closeModal}
+          ></div>
 
           <div className="relative bg-white p-6 border-[#848080] rounded-xl shadow-lg max-w-screen-sm sm:max-w-lg md:max-w-4xl w-full mx-4 sm:mx-8 overflow-hidden">
-            <h2 className="text-2xl font-semibold mb-4 mt-1">Schedule test for Batch</h2>
+            <h2 className="text-2xl font-semibold mb-4 mt-1">
+              Schedule test for Batch
+            </h2>
             <div className="border-b border-gray-300 mb-3"></div>
 
             <div className="flex space-x-4 mb-4 ml-2">
@@ -261,7 +271,9 @@ function Scheduletest() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2">
               <div className="flex flex-col">
-                <label className="text-[#535353] font-medium">Test Duration (in Minutes):</label>
+                <label className="text-[#535353] font-medium">
+                  Test Duration (in Minutes):
+                </label>
                 <input
                   type="text"
                   name="duration"
@@ -272,7 +284,9 @@ function Scheduletest() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-[#535353] font-medium">Scheduled at:</label>
+                <label className="text-[#535353] font-medium">
+                  Scheduled at:
+                </label>
                 <input
                   type="date"
                   name="scheduledAt"
@@ -296,7 +310,9 @@ function Scheduletest() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
               <div className="flex flex-col">
-                <label className="text-[#535353] font-medium">Show Test Results Instantly:</label>
+                <label className="text-[#535353] font-medium">
+                  Show Test Results Instantly:
+                </label>
                 <select
                   name="showResultsInstantly"
                   value={formData.showResultsInstantly}
@@ -310,7 +326,9 @@ function Scheduletest() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-[#535353] font-medium">Select Batch:</label>
+                <label className="text-[#535353] font-medium">
+                  Select Batch:
+                </label>
                 <select
                   name="batch"
                   value={formData.batch}
@@ -332,10 +350,16 @@ function Scheduletest() {
             </div>
 
             <div className="flex justify-end space-x-4 mt-6">
-              <button onClick={closeModal} className="bg-[#CEDFFC] text-[#000000] py-2 px-9 rounded-full">
+              <button
+                onClick={closeModal}
+                className="bg-[#CEDFFC] text-[#000000] py-2 px-9 rounded-full"
+              >
                 Cancel
               </button>
-              <button onClick={handleCreateTest} className="bg-[#EB3D3C] text-white py-2 px-8 rounded-full">
+              <button
+                onClick={handleCreateTest}
+                className="bg-[#EB3D3C] text-white py-2 px-8 rounded-full"
+              >
                 Create Test
               </button>
             </div>

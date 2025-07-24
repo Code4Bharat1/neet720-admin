@@ -23,6 +23,7 @@ export default function TestDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
   const [testData, setTestData] = useState([]);
+  const [batchId , setBatchId] = useState("")
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [testCount, setTestCount] = useState(0);
@@ -49,7 +50,7 @@ export default function TestDashboard() {
           const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/admin-tests`, {
             adminId,
           });
-
+          console.log(response.data)
           setTestData(response.data.tests);
           setTestCount(response.data.tests.length);
         }
@@ -144,9 +145,13 @@ export default function TestDashboard() {
     localStorage.removeItem("selectedSubjects");
     localStorage.removeItem("testName");
     localStorage.removeItem("ScheduleTest");
+    localStorage.removeItem("batchId");
+    localStorage.removeItem("testid");
   };
 
-  const handleActionClick = (testId) => {
+  const handleActionClick = (testId , batchId) => {
+    console.log(batchId)
+    localStorage.setItem("batchId" , batchId)
     localStorage.setItem("testid", testId);
     router.push("/test_preview");
   };
@@ -330,7 +335,7 @@ export default function TestDashboard() {
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm font-medium text-gray-900">{row.no_of_questions}</td>
                         <td className="border-b border-gray-300 px-6 py-4 text-center">
                           <button
-                            onClick={() => handleActionClick(row.id)}
+                            onClick={() => handleActionClick(row.id , row.batchId)}
                             className="rounded-md bg-blue-50 p-2 text-blue-600 transition-colors hover:bg-blue-100 hover:shadow-md"
                             title="View test details"
                           >
