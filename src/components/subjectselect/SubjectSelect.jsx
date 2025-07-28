@@ -51,7 +51,7 @@ const SelectSubjectPage = () => {
     },
   };
   const allQuestionTypes = [
-    "MCQ",
+    "mcq",
     "True/False",
     "Short Answer",
     "Long Answer",
@@ -60,21 +60,21 @@ const SelectSubjectPage = () => {
 
   const defaultCountsByDifficulty = {
     Easy: {
-      MCQ: 10,
+      "mcq": 10,
       "True/False": 5,
       "Short Answer": 2,
       "Long Answer": 0,
       "Assertion Reason": 0,
     },
     Medium: {
-      MCQ: 8,
+      "mcq": 8,
       "True/False": 4,
       "Short Answer": 4,
       "Long Answer": 2,
       "Assertion Reason": 2,
     },
     Hard: {
-      MCQ: 4,
+      "mcq": 4,
       "True/False": 2,
       "Short Answer": 4,
       "Long Answer": 3,

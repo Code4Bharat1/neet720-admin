@@ -10,6 +10,38 @@ import { ChevronDown } from "lucide-react"
 /* -------------------------------------------------------------------- */
 const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}/admintest`
 const PAGE_SIZE = 250 // tweak if you want smaller/larger chunks
+// This assumes you have an object like: {"MCQ":10,"True/False":5,"Short Answer":2,"Long Answer":0,"Assertion Reason":0}
+
+
+function pickQuestionsByType(pool, totalNeeded, typeCounts) {
+  // pool = array of questions, each must have questionType field
+  // typeCounts = {"MCQ":10,...}
+  let selected = [];
+  let usedIds = new Set();
+
+  // 1. First, pick type-priority questions
+  for (const [type, wantCount] of Object.entries(typeCounts)) {
+    if (!wantCount || wantCount <= 0) continue;
+    const qOfType = shuffleArray(pool.filter(q => q.questionType === type && !usedIds.has(q.id)));
+    for (let i = 0; i < Math.min(qOfType.length, wantCount); i++) {
+      selected.push(qOfType[i]);
+      usedIds.add(qOfType[i].id);
+      if (selected.length >= totalNeeded) break;
+    }
+    if (selected.length >= totalNeeded) break;
+  }
+
+  // 2. If not filled yet, add more (of any type) at random
+  if (selected.length < totalNeeded) {
+    const remaining = shuffleArray(pool.filter(q => !usedIds.has(q.id)));
+    for (let i = 0; i < Math.min(remaining.length, totalNeeded - selected.length); i++) {
+      selected.push(remaining[i]);
+    }
+  }
+
+  return selected.slice(0, totalNeeded);
+}
+
 
 function shuffleArray(array) {
   // Fisher-Yates Shuffle (returns a new shuffled array)
@@ -59,6 +91,7 @@ export default function PhysicsChapterList() {
           rows: [],
           isQuestionsPreviewOpen: false, // New state for question preview dropdown
         }))
+        console.log("Physics skeleton built:", skeleton)
         setChapters(skeleton) // paint instantly
         /* stream real questions */
         await streamAllQuestions(setChapters)
@@ -80,6 +113,7 @@ export default function PhysicsChapterList() {
         params: { page, limit: PAGE_SIZE },
       });
       const { questions, pagination } = res.data;
+      console.log(`Fetched page ${page} with ${questions.length} questions`)
 
       setter((prev) => {
         const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) };
@@ -91,12 +125,13 @@ export default function PhysicsChapterList() {
             ch.topics[q.topic_name] = { name: q.topic_name, questions: [] };
             ch.topicsList.push(q.topic_name);
           }
-          // push question
+          // push question (now with questionType)
           const qObj = {
             id: q.id,
             subject: "Physics",
             question: q.question_text,
             topicName: q.topic_name,
+            questionType: q.question_type, // <-- HERE
           };
           ch.topics[q.topic_name].questions.push(qObj);
           ch.allQuestions.push(qObj);
@@ -113,6 +148,7 @@ export default function PhysicsChapterList() {
       page += 1;
     }
   };
+
 
 
   /* ------------------------------------------------------------------ */
@@ -655,15 +691,17 @@ export default function PhysicsChapterList() {
 /*  Pure helper reducers                                                */
 /* -------------------------------------------------------------------- */
 function toggleChapterCheck(prev, id, cb) {
+  const typeCounts = JSON.parse(localStorage.getItem("questionTypeCounts")) || {};
   const upd = prev.map((ch) => {
     if (ch.id === id) {
       if (!ch.isChecked) {
         // Selecting the chapter: build a shuffled initial set of questions if needed
         const pool =
-          ch.selectedTopics.length > 0 ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || []) : ch.allQuestions;
-        const shuffledPool = shuffleArray(pool);
+          ch.selectedTopics.length > 0
+            ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || [])
+            : ch.allQuestions;
         const numQuestions = ch.numQuestions > 0 ? ch.numQuestions : 0;
-        const rows = shuffledPool.slice(0, numQuestions).map((q, idx) => ({
+        const rows = pickQuestionsByType(pool, numQuestions, typeCounts).map((q, idx) => ({
           id: q.id,
           subject: "Physics",
           question: q.question,
@@ -697,19 +735,19 @@ function toggleChapterCheck(prev, id, cb) {
 }
 
 
+
 function changeQuestionCount(prev, id, e, cb) {
-  let value = Number.parseInt(e.target.value, 10) || 0
+  let value = Number.parseInt(e.target.value, 10) || 0;
+  const typeCounts = JSON.parse(localStorage.getItem("questionTypeCounts")) || {};
   const upd = prev.map((ch) => {
-    if (ch.id !== id) return ch
+    if (ch.id !== id) return ch;
 
-    // Pool of questions based on selectedTopics
-    const pool =
-      ch.selectedTopics.length > 0 ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || []) : ch.allQuestions;
+    const pool = ch.selectedTopics.length > 0
+      ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || [])
+      : ch.allQuestions;
 
-    const shuffledPool = shuffleArray(pool);
-
-    value = Math.min(value, shuffledPool.length);
-    const rows = shuffledPool.slice(0, value).map((q, idx) => ({
+    value = Math.min(value, pool.length);
+    const rows = pickQuestionsByType(pool, value, typeCounts).map((q, idx) => ({
       id: q.id,
       subject: "Physics",
       question: q.question,
@@ -720,10 +758,11 @@ function changeQuestionCount(prev, id, e, cb) {
     }));
 
     return { ...ch, isChecked: value > 0 || ch.isChecked, numQuestions: value, totalMarks: value * 4, rows }
-  })
-  cb(upd)
-  return upd
+  });
+  cb(upd);
+  return upd;
 }
+
 
 function replaceRandom(prev, chapterId, rowIndex, setRefreshing, cb) {
   const upd = prev.map((ch) => {
