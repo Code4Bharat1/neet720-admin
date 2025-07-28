@@ -11,6 +11,17 @@ import { ChevronDown } from "lucide-react"
 const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}/admintest`
 const PAGE_SIZE = 250 // tweak if you want smaller/larger chunks
 
+function shuffleArray(array) {
+  // Fisher-Yates Shuffle (returns a new shuffled array)
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+
 /* -------------------------------------------------------------------- */
 /*  MAIN COMPONENT                                                     */
 /* -------------------------------------------------------------------- */
@@ -25,7 +36,7 @@ export default function PhysicsChapterList() {
   /*  STEP‑1  Fetch lightweight metadata → build skeleton               */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const meta = await axios.get(`${API_BASE}/Physics/metadata`)
         /* meta.data = { chapters: [ { chapter_name, topics:[{topic_name,…}] } ] } */
@@ -63,41 +74,51 @@ export default function PhysicsChapterList() {
   /*  STEP‑2  Stream questions page‑by‑page until backend says stop      */
   /* ------------------------------------------------------------------ */
   const streamAllQuestions = async (setter) => {
-    let page = 1,
-      more = true
+    let page = 1, more = true;
     while (more) {
       const res = await axios.get(`${API_BASE}/physics/questions`, {
         params: { page, limit: PAGE_SIZE },
-      })
-      const { questions, pagination } = res.data
+      });
+      const { questions, pagination } = res.data;
+
       setter((prev) => {
-        const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) }
+        const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) };
         questions.forEach((q) => {
-          const ch = map[q.chapter_name]
-          if (!ch) return // safety guard if backend has an unknown chapter
-          /* ensure topic exists */
+          const ch = map[q.chapter_name];
+          if (!ch) return; // safety guard if backend has an unknown chapter
+          // ensure topic exists
           if (!ch.topics[q.topic_name]) {
-            ch.topics[q.topic_name] = { name: q.topic_name, questions: [] }
-            ch.topicsList.push(q.topic_name)
+            ch.topics[q.topic_name] = { name: q.topic_name, questions: [] };
+            ch.topicsList.push(q.topic_name);
           }
-          /* push question */
+          // push question
           const qObj = {
             id: q.id,
             subject: "Physics",
             question: q.question_text,
             topicName: q.topic_name,
-          }
-          ch.topics[q.topic_name].questions.push(qObj)
-          ch.allQuestions.push(qObj)
-        })
+          };
+          ch.topics[q.topic_name].questions.push(qObj);
+          ch.allQuestions.push(qObj);
+        });
         // recompute maxQuestions for each chapter
-        Object.values(map).forEach((c) => (c.maxQuestions = c.allQuestions.length))
-        return Object.values(map) // keep original order
-      })
-      more = pagination.has_next_page
-      page += 1
+        Object.values(map).forEach((c) => (c.maxQuestions = c.allQuestions.length));
+        return Object.values(map); // keep original order
+      });
+
+      // --- FIX HERE ---
+      more = pagination && typeof pagination.has_next_page !== "undefined"
+        ? pagination.has_next_page
+        : false;
+      page += 1;
     }
-  }
+  };
+
+
+  /* ------------------------------------------------------------------ */
+  /*  Utility function to shuffle an array (used for random question replacement) */
+
+
 
   /* ------------------------------------------------------------------ */
   /*  LocalStorage helpers (kept identical to your original logic)      */
@@ -152,18 +173,18 @@ export default function PhysicsChapterList() {
         const rows =
           s.questions && s.questions.length
             ? s.questions.map((q) => ({
-                ...q,
-                originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
-              }))
+              ...q,
+              originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
+            }))
             : pool.slice(0, num).map((q, idx) => ({
-                id: q.id,
-                subject: "Physics",
-                question: q.question,
-                originalIndex: idx,
-                chapterName: ch.name,
-                unitName: ch.unit,
-                topicName: q.topicName,
-              }))
+              id: q.id,
+              subject: "Physics",
+              question: q.question,
+              originalIndex: idx,
+              chapterName: ch.name,
+              unitName: ch.unit,
+              topicName: q.topicName,
+            }))
         return {
           ...ch,
           isChecked: true,
@@ -194,10 +215,11 @@ export default function PhysicsChapterList() {
           const newPool =
             newSelectedTopics.length > 0
               ? newSelectedTopics.flatMap((t) => ch.topics[t]?.questions || [])
-              : ch.allQuestions
+              : ch.allQuestions;
+          const shuffledNewPool = shuffleArray(newPool);
 
-          const newNumQuestions = Math.min(ch.numQuestions, newPool.length)
-          const newRows = newPool.slice(0, newNumQuestions).map((q, idx) => ({
+          const newNumQuestions = Math.min(ch.numQuestions, shuffledNewPool.length);
+          const newRows = shuffledNewPool.slice(0, newNumQuestions).map((q, idx) => ({
             id: q.id,
             subject: "Physics",
             question: q.question,
@@ -205,7 +227,8 @@ export default function PhysicsChapterList() {
             chapterName: ch.name,
             unitName: ch.unit,
             topicName: q.topicName,
-          }))
+          }));
+
 
           return {
             ...ch,
@@ -232,16 +255,16 @@ export default function PhysicsChapterList() {
   }
 
   const handleSelectAllChapters = () => {
-  const allSelected = chapters.every((chapter) => chapter.isChecked);
-  setChapters((prev) =>
-    prev.map((chapter) => ({
-      ...chapter,
-      isChecked: !allSelected,
-      // Optional: If selecting, you can also select all topics
-      selectedTopics: !allSelected ? [...chapter.topicsList] : [],
-    }))
-  );
-};
+    const allSelected = chapters.every((chapter) => chapter.isChecked);
+    setChapters((prev) =>
+      prev.map((chapter) => ({
+        ...chapter,
+        isChecked: !allSelected,
+        // Optional: If selecting, you can also select all topics
+        selectedTopics: !allSelected ? [...chapter.topicsList] : [],
+      }))
+    );
+  };
 
   const toggleTopicDropdown = (chapterId) => {
     setTopicDropdownVisibilities((prev) => ({
@@ -308,17 +331,17 @@ export default function PhysicsChapterList() {
           className="bg-gradient-to-r flex justify-between items-center from-purple-600 to-purple-800 px-6 py-4 text-white rounded-t-xl"
           variants={itemVariants}
         >
-        
+
           <div className="">
-          <h2 className="text-xl font-semibold">Physics Chapters</h2>
-          <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
+            <h2 className="text-xl font-semibold">Physics Chapters</h2>
+            <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
           </div>
-           <button
-  onClick={handleSelectAllChapters}
-  className="bg-[#B1CEFB] text-white px-4 py-2 rounded-xs cursor-pointer font-semibold hover:bg-[#97b5e2] transition"
->
-  {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
-</button>
+          <button
+            onClick={handleSelectAllChapters}
+            className="bg-[#B1CEFB] text-white px-4 py-2 rounded-xs cursor-pointer font-semibold hover:bg-[#97b5e2] transition"
+          >
+            {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
+          </button>
         </motion.div>
         {/* Rows */}
         {chapters.map((chapter, index) => {
@@ -567,8 +590,8 @@ export default function PhysicsChapterList() {
                                                 whileTap={{ scale: 0.9 }}
                                                 animate={
                                                   refreshing &&
-                                                  refreshing.chapterId === chapter.id &&
-                                                  refreshing.rowIndex === idx
+                                                    refreshing.chapterId === chapter.id &&
+                                                    refreshing.rowIndex === idx
                                                     ? { rotate: 360 }
                                                     : { rotate: 0 }
                                                 }
@@ -632,22 +655,47 @@ export default function PhysicsChapterList() {
 /*  Pure helper reducers                                                */
 /* -------------------------------------------------------------------- */
 function toggleChapterCheck(prev, id, cb) {
-  const upd = prev.map((ch) =>
-    ch.id === id
-      ? {
+  const upd = prev.map((ch) => {
+    if (ch.id === id) {
+      if (!ch.isChecked) {
+        // Selecting the chapter: build a shuffled initial set of questions if needed
+        const pool =
+          ch.selectedTopics.length > 0 ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || []) : ch.allQuestions;
+        const shuffledPool = shuffleArray(pool);
+        const numQuestions = ch.numQuestions > 0 ? ch.numQuestions : 0;
+        const rows = shuffledPool.slice(0, numQuestions).map((q, idx) => ({
+          id: q.id,
+          subject: "Physics",
+          question: q.question,
+          originalIndex: idx,
+          chapterName: ch.name,
+          unitName: ch.unit,
+          topicName: q.topicName,
+        }));
+        return {
           ...ch,
-          isChecked: !ch.isChecked,
-          numQuestions: !ch.isChecked ? 0 : ch.numQuestions,
-          totalMarks: !ch.isChecked ? 0 : ch.totalMarks,
-          rows: !ch.isChecked ? [] : ch.rows,
-          selectedTopics: !ch.isChecked ? [] : ch.selectedTopics, // Reset selectedTopics on uncheck
-          isQuestionsPreviewOpen: !ch.isChecked ? false : ch.isQuestionsPreviewOpen, // Close preview on uncheck
-        }
-      : ch,
-  )
-  cb(upd)
-  return upd
+          isChecked: true,
+          rows,
+        };
+      } else {
+        // Unchecking: reset as before
+        return {
+          ...ch,
+          isChecked: false,
+          numQuestions: 0,
+          totalMarks: 0,
+          rows: [],
+          selectedTopics: [],
+          isQuestionsPreviewOpen: false,
+        };
+      }
+    }
+    return ch;
+  });
+  cb(upd);
+  return upd;
 }
+
 
 function changeQuestionCount(prev, id, e, cb) {
   let value = Number.parseInt(e.target.value, 10) || 0
@@ -656,10 +704,12 @@ function changeQuestionCount(prev, id, e, cb) {
 
     // Pool of questions based on selectedTopics
     const pool =
-      ch.selectedTopics.length > 0 ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || []) : ch.allQuestions
+      ch.selectedTopics.length > 0 ? ch.selectedTopics.flatMap((t) => ch.topics[t]?.questions || []) : ch.allQuestions;
 
-    value = Math.min(value, pool.length)
-    const rows = pool.slice(0, value).map((q, idx) => ({
+    const shuffledPool = shuffleArray(pool);
+
+    value = Math.min(value, shuffledPool.length);
+    const rows = shuffledPool.slice(0, value).map((q, idx) => ({
       id: q.id,
       subject: "Physics",
       question: q.question,
@@ -667,7 +717,8 @@ function changeQuestionCount(prev, id, e, cb) {
       chapterName: ch.name,
       unitName: ch.unit,
       topicName: q.topicName,
-    }))
+    }));
+
     return { ...ch, isChecked: value > 0 || ch.isChecked, numQuestions: value, totalMarks: value * 4, rows }
   })
   cb(upd)
