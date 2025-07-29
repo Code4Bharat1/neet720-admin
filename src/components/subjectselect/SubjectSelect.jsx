@@ -1,604 +1,340 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaFlask, FaDumbbell, FaArrowRight } from "react-icons/fa";
-import { GiFruitBowl } from "react-icons/gi";
-import { MdScience } from "react-icons/md";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import { motion } from "framer-motion";
+import { ChevronDown, ArrowRight, BookOpen, FlaskConical, Atom, Dna, Check, Plus } from "lucide-react";
 
 const SelectSubjectPage = () => {
   const [difficulty, setDifficulty] = useState("Medium");
-  const [marks, setMarks] = useState([]);
   const [testName, setTestName] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [positiveMarks, setPositiveMarks] = useState("");
   const [negativeMarks, setNegativeMarks] = useState("");
-  const router = useRouter();
   const [questionTypeCounts, setQuestionTypeCounts] = useState({});
 
-  // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3,
-      },
-    },
-  };
-
-  const popIn = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 15,
-      },
-    },
-  };
   const allQuestionTypes = [
-    "mcq",
-    "True/False",
-    "Short Answer",
-    "Long Answer",
-    "Assertion Reason",
+    { id: "mcq", label: "Multiple Choice", icon: "📝" },
+    { id: "true_false", label: "True/False", icon: "✓" },
+    { id: "short_answer", label: "Short Answer", icon: "📄" },
+    { id: "long_answer", label: "Long Answer", icon: "📋" },
+    { id: "assertion_reason", label: "Assertion Reason", icon: "🔗" },
+    { id: "statement_based", label: "Statement Based", icon: "💭" }
   ];
 
   const defaultCountsByDifficulty = {
-    Easy: {
-      "mcq": 10,
-      "True/False": 5,
-      "Short Answer": 2,
-      "Long Answer": 0,
-      "Assertion Reason": 0,
-    },
-    Medium: {
-      "mcq": 8,
-      "True/False": 4,
-      "Short Answer": 4,
-      "Long Answer": 2,
-      "Assertion Reason": 2,
-    },
-    Hard: {
-      "mcq": 4,
-      "True/False": 2,
-      "Short Answer": 4,
-      "Long Answer": 3,
-      "Assertion Reason": 3,
-    },
+    Easy: { mcq: 10, true_false: 5, short_answer: 2, long_answer: 0, assertion_reason: 0, statement_based: 0 },
+    Medium: { mcq: 8, true_false: 4, short_answer: 4, long_answer: 2, assertion_reason: 2, statement_based: 1 },
+    Hard: { mcq: 4, true_false: 2, short_answer: 4, long_answer: 3, assertion_reason: 3, statement_based: 2 }
   };
 
-  // Load selected subjects from localStorage when the component mounts
-  useEffect(() => {
-    const savedSubjects =
-      JSON.parse(localStorage.getItem("selectedSubjects")) || [];
-    setSelectedSubjects(savedSubjects);
-  }, []);
+  const subjects = [
+    { name: "Physics", icon: Atom, color: "from-blue-500 to-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+    { name: "Chemistry", icon: FlaskConical, color: "from-green-500 to-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" },
+    { name: "Biology", icon: Dna, color: "from-purple-500 to-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" }
+  ];
 
-  // Load question type counts from localStorage or set defaults
-  useEffect(() => {
-    const savedCounts = JSON.parse(localStorage.getItem("questionTypeCounts"));
-    if (savedCounts) setQuestionTypeCounts(savedCounts);
-  }, []);
+  const steps = [
+    { title: "Choose Subjects", description: "Select subjects and difficulty level", active: true },
+    { title: "Select Chapters", description: "Choose specific chapters and question details", active: false },
+    { title: "Complete Test", description: "Review and create your test", active: false }
+  ];
 
-  // Save question type counts to localStorage whenever they change
+  // Initialize with defaults based on difficulty
   useEffect(() => {
-    localStorage.setItem(
-      "questionTypeCounts",
-      JSON.stringify(questionTypeCounts)
+    const defaultCounts = defaultCountsByDifficulty[difficulty];
+    setQuestionTypeCounts(defaultCounts);
+  }, [difficulty]);
+
+  const handleSubjectToggle = (subjectName) => {
+    setSelectedSubjects(prev => 
+      prev.includes(subjectName) 
+        ? prev.filter(s => s !== subjectName)
+        : [...prev, subjectName]
     );
-  }, [questionTypeCounts]);
-
-  // Function to update selected subjects and store them in localStorage
-  const handleSubjectChange = (subjectOrSubjects) => {
-    setSelectedSubjects((prev) => {
-      let updatedSubjects;
-
-      const subjects = Array.isArray(subjectOrSubjects)
-        ? subjectOrSubjects
-        : [subjectOrSubjects];
-
-      // Toggle: if all are already selected → remove all, else → add all
-      const allSelected = subjects.every((s) => prev.includes(s));
-
-      if (allSelected) {
-        updatedSubjects = prev.filter((s) => !subjects.includes(s));
-      } else {
-        updatedSubjects = [...new Set([...prev, ...subjects])];
-      }
-
-      localStorage.setItem("selectedSubjects", JSON.stringify(updatedSubjects));
-      return updatedSubjects;
-    });
   };
 
-  // Load marks in localStorage
-  useEffect(() => {
-    const savedMarks = JSON.parse(localStorage.getItem("selectedMarks")) || [];
-    setMarks(savedMarks);
-  }, []);
-
-  const handleMarksChange = (marksOption) => {
-    setMarks((prev) => {
-      let updatedMarks;
-      if (prev.includes(marksOption)) {
-        updatedMarks = prev.filter((m) => m !== marksOption);
-      } else {
-        updatedMarks = [...prev, marksOption];
-      }
-      localStorage.setItem("selectedMarks", JSON.stringify(updatedMarks));
-      return updatedMarks;
-    });
+  const handleSelectAll = () => {
+    const allSubjectNames = subjects.map(s => s.name);
+    const allSelected = allSubjectNames.every(name => selectedSubjects.includes(name));
+    
+    if (allSelected) {
+      setSelectedSubjects([]);
+    } else {
+      setSelectedSubjects(allSubjectNames);
+    }
   };
 
-  // Handle input change and save positive and negative marks to localStorage at once
-  const handlePositiveMarksChange = (e) => {
-    const value = e.target.value;
-    setPositiveMarks(value);
-    saveMarksToLocalStorage(value, negativeMarks, difficulty); // Save all values together
-  };
-
-  const handleNegativeMarksChange = (e) => {
-    const value = e.target.value;
-    setNegativeMarks(value);
-    saveMarksToLocalStorage(positiveMarks, value, difficulty); // Save all values together
-  };
-
-  // Function to save positive, negative marks and difficulty in localStorage
-  const saveMarksToLocalStorage = (positive, negative, difficulty) => {
-    const marksData = {
-      positiveMarks: positive,
-      negativeMarks: negative,
-      difficultyLevel: difficulty,
-    };
-    localStorage.setItem("marks", JSON.stringify(marksData));
-  };
-
-  // Handle Test Name change and save to localStorage
-  const handleTestNameChange = (e) => {
-    const value = e.target.value;
-    setTestName(value);
-    localStorage.setItem("testName", value); // Save test name to localStorage whenever it changes
-  };
-
-  // Handle "Continue" button click (route to first subject's page)
-  const handleContinueClick = () => {
+  const handleContinue = () => {
     if (!testName.trim()) {
-      toast.error("Test name is required!", {
-        duration: 5000,
-      });
+      alert("Please enter a test name");
       return;
     }
-
-    if (selectedSubjects.length > 0) {
-      const subject = selectedSubjects[0].toLowerCase(); // Get the first selected subject and convert it to lowercase
-      router.push(`/select_chapters_${subject}`); // Route to the first selected subject's page
-    } else {
-      toast.error("Please select at least one subject!", {
-        duration: 5000,
-      });
+    if (selectedSubjects.length === 0) {
+      alert("Please select at least one subject");
+      return;
     }
+    // Navigate to next page
+    console.log("Continuing with:", { testName, selectedSubjects, difficulty, questionTypeCounts });
   };
 
+  const allSubjectsSelected = subjects.every(subject => selectedSubjects.includes(subject.name));
+
   return (
-    <motion.div
-      className="max-w-[1000px] m-auto"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="w-full max-w-7xl mx-auto p-6">
-        {/* Top Section: Create Test */}
-        <motion.div
-          className="text-center mb-8 md:ml-50"
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.h3
-            className="text-base font-extrabold text-black text-center mb-2 sm:text-lg md:text-xl"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Create Test
-          </motion.h3>
-          <motion.input
-            type="text"
-            placeholder="Enter Test Name"
-            value={testName}
-            onChange={handleTestNameChange}
-            className="mt-4 px-9 py-2 border-none rounded-xl bg-[#D1E3FF] text-black font-bold text-lg w-full md:w-2/5 placeholder:text-gray-400 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: 0.4,
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
-            whileFocus={{ boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.5)" }}
-          />
-        </motion.div>
-
-        {/* Main Content Section */}
-        <motion.div
-          className="grid grid-cols-1 max-w-full md:grid-cols-3 gap-2 items-start text-black ml-35"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Left Section */}
-          <motion.div className="relative w-[100%]" variants={fadeIn}>
-            {/* Difficulty */}
-            <motion.div className="relative mb-8" variants={popIn}>
-              <h3 className="text-2xl font-semibold">Select Difficulty</h3>
-              <p className="mt-5">
-                Select at least 1 difficulty for each subject
-              </p>
-              <motion.select
-                value={difficulty}
-                onChange={(e) => {
-                  const newDifficulty = e.target.value;
-                  setDifficulty(newDifficulty);
-
-                  const defaultCounts =
-                    defaultCountsByDifficulty[newDifficulty];
-                  setQuestionTypeCounts(defaultCounts); // Override existing counts with defaults
-
-                  saveMarksToLocalStorage(
-                    positiveMarks,
-                    negativeMarks,
-                    newDifficulty
-                  );
-                }}
-                className="p-2 mt-5 w-[480px] h-[54px] rounded-[15px] bg-[#007AFF] text-white appearance-none px-9 text-lg outline-none focus:ring-0 shadow-lg font-normal ml-[-10px]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <option value="Easy" className="bg-white text-black">
-                  Easy
-                </option>
-                <option value="Medium" className="bg-white text-black">
-                  Medium
-                </option>
-                <option value="Hard" className="bg-white text-black">
-                  Hard
-                </option>
-              </motion.select>
-
-              <motion.img
-                src="Vector 1.png" // Replace with the actual path of your arrow image
-                alt="Dropdown Arrow"
-                className="absolute top-1/2 left-110 w-4 h-3 pointer-events-none mt-11"
-                animate={{ y: [0, 3, 0] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.5,
-                  repeatType: "reverse",
-                }}
-              />
-            </motion.div>
-
-            {/* Subjects */}
-            <motion.div className="mb-8" variants={fadeIn}>
-              <h3 className="text-lg font-semibold">Select Subjects</h3>
-              <button
-                className="p-2 bg-blue-400 text-white rounded cursor-pointer"
-                onClick={() =>
-                  handleSubjectChange(["Physics", "Chemistry", "Biology"])
-                }
-              >
-                Select All
-              </button>
-
-              <motion.div
-                className="flex flex-col gap-4 mt-2"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {[
-                  { name: "Physics", img: "physic.png" },
-                  { name: "Chemistry", img: "chemistry.png" },
-                  { name: "Biology", img: "botany.png" },
-                ].map((subject) => (
-                  <motion.div
-                    key={subject.name}
-                    onClick={() => handleSubjectChange(subject.name)}
-                    className={`cursor-pointer p-4 w-[357px] font-[700] h-[50px] drop-shadow-md rounded-2xl text-center ${
-                      selectedSubjects.includes(subject.name)
-                        ? "bg-blue-500 text-white border-purple-500"
-                        : "bg-white border-gray-400"
-                    } flex items-center justify-start gap-4 transition-colors duration-300`}
-                    variants={popIn}
-                    whileHover={{
-                      scale: 1.05,
-                      boxShadow:
-                        "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    animate={
-                      selectedSubjects.includes(subject.name)
-                        ? { y: [0, -5, 0], transition: { duration: 0.3 } }
-                        : {}
-                    }
-                  >
-                    <img
-                      src={subject.img}
-                      alt={subject.name}
-                      className="w-8 h-8"
-                    />
-                    <span>{subject.name}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Section: Step Indicator & Cards in 2 Columns */}
-          <motion.div className="grid grid-cols-2 w-[650px]" variants={fadeIn}>
-            {/* Step Indicator */}
-            <motion.div
-              className="flex flex-col items-center gap-0 mt-9 md:w-[10px] pl-60"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <motion.div
-                className="w-13 h-13 rounded-full border-4 border-blue-500 flex justify-center items-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
-              >
-                <motion.div
-                  className="w-10 h-10 rounded-full bg-blue-500 flex justify-center items-center text-white text-lg"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                ></motion.div>
-              </motion.div>
-              <motion.div
-                className="w-1 h-34 bg-blue-500"
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ delay: 0.9, duration: 0.5 }}
-              ></motion.div>
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gray-400 flex justify-center items-center text-white text-lg"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 1.0, type: "spring", stiffness: 200 }}
-              ></motion.div>
-              <motion.div
-                className="w-1 h-34 bg-blue-500"
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-              ></motion.div>
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gray-400 flex justify-center items-center text-white text-lg"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
-              ></motion.div>
-            </motion.div>
-
-            {/* Cards */}
-            <motion.div
-              className="flex flex-col gap-2"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-            >
-              <motion.div
-                className="flex justify-between w-full h-40 bg-[#007AFF] rounded-4xl p-5 text-white"
-                variants={popIn}
-                whileHover={{
-                  scale: 1.03,
-                  boxShadow:
-                    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                }}
-              >
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-2xl font-semibold">Choose Subjects</h3>
-                  <p className="font-semibold">
-                    Select the Subjects and Difficulty
-                  </p>
-                </div>
-                <motion.img
-                  src="book.png"
-                  alt="Books Icon"
-                  className="w-20 h-22"
-                  animate={{ rotate: [0, 5, 0, -5, 0] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 5,
-                    ease: "easeInOut",
-                  }}
-                />
-              </motion.div>
-
-              <motion.div
-                className="p-4 bg-yellow-400 text-white flex justify-between items-center w-full h-40 rounded-[25px]"
-                variants={popIn}
-                whileHover={{
-                  scale: 1.03,
-                  boxShadow:
-                    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                }}
-              >
-                <div>
-                  <h3 className="text-xl font-semibold">
-                    Please select chapters and other Details
-                  </h3>
-                  <p className="text-sm">
-                    You can select chapters of different subjects and select
-                    dedicated questions of each chapter
-                  </p>
-                </div>
-                <motion.img
-                  src="book.png"
-                  alt="Books Icon"
-                  className="w-20"
-                  animate={{ rotate: [0, 5, 0, -5, 0] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 5,
-                    ease: "easeInOut",
-                    delay: 0.5,
-                  }}
-                />
-              </motion.div>
-
-              <motion.div
-                className="flex justify-between w-full h-40 bg-yellow-400 rounded-4xl p-5 text-white"
-                variants={popIn}
-                whileHover={{
-                  scale: 1.03,
-                  boxShadow:
-                    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                }}
-              >
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-2xl font-semibold">Completed!!</h3>
-                  <p className="font-semibold">
-                    Woah you have created a new Test
-                  </p>
-                </div>
-                <motion.img
-                  src="book.png"
-                  alt="Books Icon"
-                  className="w-20 h-22"
-                  animate={{ rotate: [0, 5, 0, -5, 0] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 5,
-                    ease: "easeInOut",
-                    delay: 1,
-                  }}
-                />
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Positive and Negative Marks Section */}
-        <motion.div
-          className="absolute lg:block hidden left-[55%] transform -translate-x-[45%] top-[830px] w-[583px] h-fit bg-[#FFBB38] rounded-[38px] p-6 shadow-lg border border-[#FBB03B]"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3, duration: 0.5 }}
-        >
-          <h2 className="text-2xl font-medium text-center text-white">
-            Select Marks per Question
-          </h2>
-
-          {/* Positive Marks Input */}
-          <motion.div
-            className="mt-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.4 }}
-          >
-            <label className="block text-xl font-light text-white">
-              Positive marks (per question)
-            </label>
-            <motion.input
+    <div className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Create Test
+            </h1>
+          </div>
+          
+          <div className="max-w-sm mx-auto">
+            <input
               type="text"
-              value={positiveMarks}
-              onChange={handlePositiveMarksChange}
-              className="w-full mt-2 p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
-              whileFocus={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              placeholder="Enter Test Name"
+              value={testName}
+              onChange={(e) => setTestName(e.target.value)}
+              className="w-full px-4 py-3 text-base font-medium bg-white rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none shadow-sm transition-all duration-200 placeholder:text-slate-400"
             />
-          </motion.div>
-
-          {/* Negative Marks Input */}
-          <motion.div
-            className="mt-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.5 }}
-          >
-            <label className="block text-xl font-light text-white">
-              Negative marks (per question)
-            </label>
-            <motion.input
-              type="text"
-              value={negativeMarks}
-              onChange={handleNegativeMarksChange}
-              className="w-full mt-2 p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
-              whileFocus={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            />
-          </motion.div>
-        </motion.div>
-        {/* Question Types */}
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-4">
-            Set Number of Questions per Type
-          </h3>
-          <div className="flex flex-col gap-4">
-            {allQuestionTypes.map((type) => (
-              <div key={type} className="flex items-center gap-4">
-                <label className="w-40 font-medium text-gray-800">{type}</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={questionTypeCounts[type] || 0}
-                  onChange={(e) => {
-                    const updatedCounts = {
-                      ...questionTypeCounts,
-                      [type]: parseInt(e.target.value || 0, 10),
-                    };
-                    setQuestionTypeCounts(updatedCounts);
-                  }}
-                  className="w-24 px-3 py-2 border rounded-md"
-                />
-              </div>
-            ))}
           </div>
         </div>
 
-        {/* Continue Button */}
-        <motion.div
-          className="mt-[440px] mb-5 flex justify-end text-center pr-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6 }}
-        >
-          <motion.button
-            className="bg-blue-500 text-white py-2 px-6 rounded-full flex items-center"
-            onClick={handleContinueClick}
-            whileHover={{ scale: 1.1, backgroundColor: "#3b82f6" }}
-            whileTap={{ scale: 0.9 }}
-          >
-            Continue
-            <motion.div
-              animate={{ x: [0, 5, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Configuration */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Difficulty Selection */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <div className="w-7 h-7 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">1</span>
+                </div>
+                Select Difficulty
+              </h2>
+              
+              <div className="relative">
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="w-full px-4 py-3 text-base font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl appearance-none cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Subject Selection */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-3">
+                  <div className="w-7 h-7 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">2</span>
+                  </div>
+                  Select Subjects
+                </h2>
+                
+                <button
+                  onClick={handleSelectAll}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    allSubjectsSelected
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                  }`}
+                >
+                  {allSubjectsSelected ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+
+              <div className="grid gap-3">
+                {subjects.map((subject) => {
+                  const IconComponent = subject.icon;
+                  const isSelected = selectedSubjects.includes(subject.name);
+                  
+                  return (
+                    <div
+                      key={subject.name}
+                      onClick={() => handleSubjectToggle(subject.name)}
+                      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-105 ${
+                        isSelected
+                          ? `bg-gradient-to-r ${subject.color} text-white border-transparent shadow-lg`
+                          : `${subject.bgColor} ${subject.borderColor} hover:shadow-md`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${isSelected ? 'bg-white/20' : 'bg-white'} shadow-sm`}>
+                          <IconComponent className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-600'}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-slate-800'}`}>
+                            {subject.name}
+                          </h3>
+                        </div>
+                        {isSelected && (
+                          <div className="p-1 bg-white/20 rounded-full">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Question Types */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <div className="w-7 h-7 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">3</span>
+                </div>
+                Question Distribution
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-3">
+                {allQuestionTypes.map((type) => (
+                  <div key={type.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                    <span className="text-xl">{type.icon}</span>
+                    <div className="flex-1">
+                      <label className="font-medium text-slate-700 text-sm">{type.label}</label>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={questionTypeCounts[type.id] || 0}
+                      onChange={(e) => {
+                        setQuestionTypeCounts(prev => ({
+                          ...prev,
+                          [type.id]: parseInt(e.target.value) || 0
+                        }));
+                      }}
+                      className="w-16 px-2 py-1 text-center text-sm border border-slate-300 rounded-md focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Marks Configuration */}
+            <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-6 shadow-lg text-white">
+              <h2 className="text-xl font-bold mb-4">Marks Configuration</h2>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-base font-medium mb-2">Positive Marks (per question)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={positiveMarks}
+                    onChange={(e) => setPositiveMarks(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/90 text-slate-800 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-white/50"
+                    placeholder="e.g., 4"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-base font-medium mb-2">Negative Marks (per question)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={negativeMarks}
+                    onChange={(e) => setNegativeMarks(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/90 text-slate-800 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-white/50"
+                    placeholder="e.g., 1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Progress & Actions */}
+          <div className="space-y-4">
+            {/* Progress Steps */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-bold text-slate-800 mb-4">Progress</h3>
+              
+              <div className="space-y-4">
+                {steps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      step.active 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                        : 'bg-slate-200 text-slate-400'
+                    }`}>
+                      {step.active ? <Check className="w-4 h-4" /> : <span className="font-bold text-sm">{index + 1}</span>}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`font-semibold text-sm ${step.active ? 'text-slate-800' : 'text-slate-400'}`}>
+                        {step.title}
+                      </h4>
+                      <p className={`text-xs ${step.active ? 'text-slate-600' : 'text-slate-400'}`}>
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Test Summary */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+              <h3 className="text-lg font-bold mb-4">Test Summary</h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-indigo-100">Difficulty:</span>
+                  <span className="font-semibold">{difficulty}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-indigo-100">Subjects:</span>
+                  <span className="font-semibold">{selectedSubjects.length}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-indigo-100">Total Questions:</span>
+                  <span className="font-semibold">
+                    {Object.values(questionTypeCounts).reduce((sum, count) => sum + count, 0)}
+                  </span>
+                </div>
+                
+                {positiveMarks && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-indigo-100">Positive Marks:</span>
+                    <span className="font-semibold">+{positiveMarks}</span>
+                  </div>
+                )}
+                
+                {negativeMarks && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-indigo-100">Negative Marks:</span>
+                    <span className="font-semibold">-{negativeMarks}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Continue Button */}
+            <button
+              onClick={handleContinue}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
             >
-              <FaArrowRight className="ml-2 text-white text-xl" />
-            </motion.div>
-          </motion.button>
-        </motion.div>
+              Continue to Chapters
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
