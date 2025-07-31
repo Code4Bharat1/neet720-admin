@@ -25,7 +25,7 @@ export default function BiologyChapterList() {
   /*  STEP‑1  Fetch lightweight metadata → build skeleton               */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const meta = await axios.get(`${API_BASE}/Chemistry/metadata`)
         /* meta.data = { chapters: [ { chapter_name, topics:[{topic_name,…}] } ] } */
@@ -63,41 +63,39 @@ export default function BiologyChapterList() {
   /*  STEP‑2  Stream questions page‑by‑page until backend says stop      */
   /* ------------------------------------------------------------------ */
   const streamAllQuestions = async (setter) => {
-    let page = 1,
-      more = true
-    while (more) {
-      const res = await axios.get(`${API_BASE}/chemistry/questions`, {
-        params: { page, limit: PAGE_SIZE },
-      })
-      const { questions, pagination } = res.data
+    try {
+      const res = await axios.get(`${API_BASE}/physics/questions`);
+      const questions = res.data.questions || [];
+
+      console.log(`Fetched all questions at once: ${questions.length}`);
+
       setter((prev) => {
-        const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) }
+        const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) };
         questions.forEach((q) => {
-          const ch = map[q.chapter_name]
-          if (!ch) return // safety guard if backend has an unknown chapter
-          /* ensure topic exists */
+          const ch = map[q.chapter_name];
+          if (!ch) return;
           if (!ch.topics[q.topic_name]) {
-            ch.topics[q.topic_name] = { name: q.topic_name, questions: [] }
-            ch.topicsList.push(q.topic_name)
+            ch.topics[q.topic_name] = { name: q.topic_name, questions: [] };
+            ch.topicsList.push(q.topic_name);
           }
-          /* push question */
           const qObj = {
             id: q.id,
-            subject: "chemistry",
+            subject: "Physics",
             question: q.question_text,
             topicName: q.topic_name,
-          }
-          ch.topics[q.topic_name].questions.push(qObj)
-          ch.allQuestions.push(qObj)
-        })
-        // recompute maxQuestions for each chapter
-        Object.values(map).forEach((c) => (c.maxQuestions = c.allQuestions.length))
-        return Object.values(map) // keep original order
-      })
-      more = pagination.has_next_page
-      page += 1
+            questionType: q.question_type,
+          };
+          ch.topics[q.topic_name].questions.push(qObj);
+          ch.allQuestions.push(qObj);
+        });
+        Object.values(map).forEach((c) => (c.maxQuestions = c.allQuestions.length));
+        return Object.values(map);
+      });
+
+    } catch (err) {
+      console.error("Error fetching all questions at once:", err);
     }
-  }
+  };
 
   /* ------------------------------------------------------------------ */
   /*  LocalStorage helpers (kept identical to your original logic)      */
@@ -153,18 +151,18 @@ export default function BiologyChapterList() {
         const rows =
           s.questions && s.questions.length
             ? s.questions.map((q) => ({
-                ...q,
-                originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
-              }))
+              ...q,
+              originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
+            }))
             : pool.slice(0, num).map((q, idx) => ({
-                id: q.id,
-                subject: "Chemistry",
-                question: q.question,
-                originalIndex: idx,
-                chapterName: ch.name,
-                unitName: ch.unit,
-                topicName: q.topicName,
-              }))
+              id: q.id,
+              subject: "Chemistry",
+              question: q.question,
+              originalIndex: idx,
+              chapterName: ch.name,
+              unitName: ch.unit,
+              topicName: q.topicName,
+            }))
         return {
           ...ch,
           isChecked: true,
@@ -233,16 +231,16 @@ export default function BiologyChapterList() {
   }
 
   const handleSelectAllChapters = () => {
-  const allSelected = chapters.every((chapter) => chapter.isChecked);
-  setChapters((prev) =>
-    prev.map((chapter) => ({
-      ...chapter,
-      isChecked: !allSelected,
-      // Optional: If selecting, you can also select all topics
-      selectedTopics: !allSelected ? [...chapter.topicsList] : [],
-    }))
-  );
-};
+    const allSelected = chapters.every((chapter) => chapter.isChecked);
+    setChapters((prev) =>
+      prev.map((chapter) => ({
+        ...chapter,
+        isChecked: !allSelected,
+        // Optional: If selecting, you can also select all topics
+        selectedTopics: !allSelected ? [...chapter.topicsList] : [],
+      }))
+    );
+  };
 
 
   const toggleTopicDropdown = (chapterId) => {
@@ -311,15 +309,15 @@ export default function BiologyChapterList() {
           variants={itemVariants}
         >
           <div>
-          <h2 className="text-xl font-semibold">Chemistry Chapters</h2>
-          <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
+            <h2 className="text-xl font-semibold">Chemistry Chapters</h2>
+            <p className="text-sm text-purple-100">Select chapters, topics and specify the number of questions</p>
           </div>
           <button
-  onClick={handleSelectAllChapters}
-  className="bg-[#B1CEFB] text-white px-4 py-2 rounded-xs cursor-pointer font-semibold hover:bg-[#97b5e2] transition"
->
-  {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
-</button>
+            onClick={handleSelectAllChapters}
+            className="bg-[#B1CEFB] text-white px-4 py-2 rounded-xs cursor-pointer font-semibold hover:bg-[#97b5e2] transition"
+          >
+            {chapters.every((c) => c.isChecked) ? "Deselect All" : "Select All"}
+          </button>
         </motion.div>
         {/* Rows */}
         {chapters.map((chapter, index) => {
@@ -568,8 +566,8 @@ export default function BiologyChapterList() {
                                                 whileTap={{ scale: 0.9 }}
                                                 animate={
                                                   refreshing &&
-                                                  refreshing.chapterId === chapter.id &&
-                                                  refreshing.rowIndex === idx
+                                                    refreshing.chapterId === chapter.id &&
+                                                    refreshing.rowIndex === idx
                                                     ? { rotate: 360 }
                                                     : { rotate: 0 }
                                                 }
@@ -636,14 +634,14 @@ function toggleChapterCheck(prev, id, cb) {
   const upd = prev.map((ch) =>
     ch.id === id
       ? {
-          ...ch,
-          isChecked: !ch.isChecked,
-          numQuestions: !ch.isChecked ? 0 : ch.numQuestions,
-          totalMarks: !ch.isChecked ? 0 : ch.totalMarks,
-          rows: !ch.isChecked ? [] : ch.rows,
-          selectedTopics: !ch.isChecked ? [] : ch.selectedTopics, // Reset selectedTopics on uncheck
-          isQuestionsPreviewOpen: !ch.isChecked ? false : ch.isQuestionsPreviewOpen, // Close preview on uncheck
-        }
+        ...ch,
+        isChecked: !ch.isChecked,
+        numQuestions: !ch.isChecked ? 0 : ch.numQuestions,
+        totalMarks: !ch.isChecked ? 0 : ch.totalMarks,
+        rows: !ch.isChecked ? [] : ch.rows,
+        selectedTopics: !ch.isChecked ? [] : ch.selectedTopics, // Reset selectedTopics on uncheck
+        isQuestionsPreviewOpen: !ch.isChecked ? false : ch.isQuestionsPreviewOpen, // Close preview on uncheck
+      }
       : ch,
   )
   cb(upd)

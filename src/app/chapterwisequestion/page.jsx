@@ -118,7 +118,7 @@ const Page = () => {
       const formData = new FormData()
       formData.append("image", mcqImage)
 
-      const res = await fetch("http://localhost:6004/api/extract-mcqs", {
+      const res = await fetch("https://mcq-extractor.neet720.com/api/extract-mcqs", {
         method: "POST",
         body: formData,
       })
@@ -195,7 +195,7 @@ const Page = () => {
     try {
       updateQuestionField(idx, "evaluating", true)
 
-      const res = await fetch(`http://127.0.0.1:6004/api/assess-difficulty`, {
+      const res = await fetch(`https://mcq-extractor.neet720.com/api/assess-difficulty`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -352,7 +352,10 @@ const Page = () => {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/question`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${localStorage.getItem("adminAuthToken")}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -424,6 +427,24 @@ const Page = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   }
+
+  const handleEvaluateAllSequentially = async () => {
+    for (let i = 0; i < extractedQuestions.length; i++) {
+      if (!extractedQuestions[i].evaluated) {
+        await handleEvaluateDifficulty(i);
+      }
+    }
+  };
+
+  const handleSubmitAllSequentially = async () => {
+    for (let i = 0; i < extractedQuestions.length; i++) {
+      if (!extractedQuestions[i].submitted) {
+        await handleCreateQuestion(i);
+      }
+    }
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900 p-4 sm:p-6">
@@ -643,6 +664,28 @@ const Page = () => {
           )}
         </motion.div>
 
+        <motion.button
+          onClick={handleEvaluateAllSequentially}
+          className="bg-purple-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2 mb-4"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Lightbulb className="w-5 h-5" />
+          Evaluate All One-by-One
+        </motion.button>
+
+        <motion.button
+          onClick={handleSubmitAllSequentially}
+          className="bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 mb-4 ml-4"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <PlusCircle className="w-5 h-5" />
+          Submit All One-by-One
+        </motion.button>
+
+
+
         {extractedQuestions.length > 0 && (
           <motion.div variants={itemVariants}>
             <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
@@ -652,14 +695,21 @@ const Page = () => {
             {extractedQuestions.map((q, idx) => (
               <motion.div
                 key={idx}
-                className="mb-6 bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+                className={`mb-6 p-6 rounded-lg shadow-lg border-2 transition-all duration-300 ${q.evaluated
+                  ? "bg-green-50 border-green-500"
+                  : q.evaluating
+                    ? "bg-yellow-50 border-yellow-400 animate-pulse"
+                    : "bg-white border-gray-200"
+                  }`}
                 variants={itemVariants}
               >
+
                 <div
                   className="flex items-center justify-between mb-4 cursor-pointer"
                   onClick={() => updateQuestionField(idx, "showDetails", !q.showDetails)}
                 >
-                  <div className="font-bold text-lg text-blue-700 flex items-center gap-2">
+                  <div className={`font-bold text-lg flex items-center gap-2 ${q.evaluated ? "text-green-700" : "text-blue-700"
+                    }`}>
                     Question {idx + 1}
                     {q.submitted && <CheckCircle className="w-5 h-5 text-green-600" />}
                   </div>
@@ -820,8 +870,8 @@ const Page = () => {
                     )}
                     <motion.button
                       className={`px-6 py-3 rounded-md font-semibold mt-6 flex items-center gap-2 ${q.submitted
-                          ? "bg-green-300 text-gray-700 cursor-not-allowed"
-                          : "bg-green-600 text-white hover:bg-green-700"
+                        ? "bg-green-300 text-gray-700 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700"
                         } transition-colors duration-200 disabled:opacity-50`}
                       onClick={() => handleCreateQuestion(idx)}
                       disabled={uploading || q.submitted}

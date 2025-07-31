@@ -107,47 +107,40 @@ export default function PhysicsChapterList() {
   /*  STEP‑2  Stream questions page‑by‑page until backend says stop      */
   /* ------------------------------------------------------------------ */
   const streamAllQuestions = async (setter) => {
-    let page = 1, more = true;
-    while (more) {
-      const res = await axios.get(`${API_BASE}/physics/questions`, {
-        params: { page, limit: PAGE_SIZE },
-      });
-      const { questions, pagination } = res.data;
-      console.log(`Fetched page ${page} with ${questions.length} questions`)
+    try {
+      const res = await axios.get(`${API_BASE}/physics/questions`);
+      const questions = res.data.questions || [];
+
+      console.log(`Fetched all questions at once: ${questions.length}`);
 
       setter((prev) => {
         const map = { ...prev.reduce((m, c) => ((m[c.name] = c), m), {}) };
         questions.forEach((q) => {
           const ch = map[q.chapter_name];
-          if (!ch) return; // safety guard if backend has an unknown chapter
-          // ensure topic exists
+          if (!ch) return;
           if (!ch.topics[q.topic_name]) {
             ch.topics[q.topic_name] = { name: q.topic_name, questions: [] };
             ch.topicsList.push(q.topic_name);
           }
-          // push question (now with questionType)
           const qObj = {
             id: q.id,
             subject: "Physics",
             question: q.question_text,
             topicName: q.topic_name,
-            questionType: q.question_type, // <-- HERE
+            questionType: q.question_type,
           };
           ch.topics[q.topic_name].questions.push(qObj);
           ch.allQuestions.push(qObj);
         });
-        // recompute maxQuestions for each chapter
         Object.values(map).forEach((c) => (c.maxQuestions = c.allQuestions.length));
-        return Object.values(map); // keep original order
+        return Object.values(map);
       });
 
-      // --- FIX HERE ---
-      more = pagination && typeof pagination.has_next_page !== "undefined"
-        ? pagination.has_next_page
-        : false;
-      page += 1;
+    } catch (err) {
+      console.error("Error fetching all questions at once:", err);
     }
   };
+
 
 
 
