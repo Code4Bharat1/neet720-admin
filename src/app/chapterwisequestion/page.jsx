@@ -118,7 +118,7 @@ const Page = () => {
       const formData = new FormData()
       formData.append("image", mcqImage)
 
-      const res = await fetch("http://localhost:5000/api/extract-mcqs", {
+      const res = await fetch("http://localhost:6004/api/extract-mcqs", {
         method: "POST",
         body: formData,
       })
@@ -195,7 +195,7 @@ const Page = () => {
     try {
       updateQuestionField(idx, "evaluating", true)
 
-      const res = await fetch(`http://127.0.0.1:5000/api/assess-difficulty`, {
+      const res = await fetch(`http://127.0.0.1:6004/api/assess-difficulty`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -306,65 +306,80 @@ const Page = () => {
 
   // Submit a single question (upload pasted diagram if any)
   const handleCreateQuestion = async (idx) => {
-    const q = extractedQuestions[idx]
-    let diagramUrl = q.diagramPath
+    const q = extractedQuestions[idx];
+    let diagramUrl = q.diagramPath;
 
-    // If there's a diagram file but no URL (meaning it was pasted/uploaded but not yet sent to backend)
+    // Step 1: Upload diagram if required
     if (!diagramUrl && q.diagramFile) {
-      const formData = new FormData()
-      formData.append("file", q.diagramFile)
+      const formData = new FormData();
+      formData.append("file", q.diagramFile);
       try {
-        setUploading(true)
+        setUploading(true);
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`, {
           method: "POST",
           body: formData,
-        })
+        });
 
         if (!res.ok) {
-          const errorData = await res.json()
-          throw new Error(errorData.error || "Failed to upload diagram")
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to upload diagram");
         }
 
-        const data = await res.json()
-        diagramUrl = data.url
+        const data = await res.json();
+        diagramUrl = data.url;
       } catch (err) {
-        alert("Failed to upload diagram for question: " + (err.message || "Unknown error"))
-        setUploading(false)
-        return
+        alert("Failed to upload diagram for question: " + (err.message || "Unknown error"));
+        setUploading(false);
+        return;
       } finally {
-        setUploading(false)
+        setUploading(false);
       }
     }
 
+    // Step 2: Transform & Send Data
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chatper-wise-question`, {
+      const payload = {
+        teacherId: "demo-teacher-id", // Replace this with actual teacherId
+        subject: subject,
+        chapter: chapter,
+        topic: q.topic || topics[0] || "",
+        question: q.question,
+        options: q.options.map((opt) => opt.option_text),
+        answer: q.options.find((opt) => opt.is_correct)?.option_text || "",
+        difficulty: q.difficulty_level,
+        explanation: q.solution || "",
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...q, diagramPath: diagramUrl }),
-      })
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to create question")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create question");
       }
 
-      alert(`Question ${idx + 1} created successfully.`)
+      alert(`Question ${idx + 1} created successfully.`);
+
       // Mark question as submitted
       setExtractedQuestions((prev) => {
-        const updated = [...prev]
-        updated[idx].submitted = true
-        return updated
-      })
-      // Update submitted count
+        const updated = [...prev];
+        updated[idx].submitted = true;
+        return updated;
+      });
+
       setSubmittedCount((c) => {
-        const newCount = c + 1
-        localStorage.setItem("mcq_submitted_count", newCount.toString())
-        return newCount
-      })
+        const newCount = c + 1;
+        localStorage.setItem("mcq_submitted_count", newCount.toString());
+        return newCount;
+      });
     } catch (error) {
-      alert("Error creating question: " + (error.message || "Unknown error"))
+      alert("Error creating question: " + (error.message || "Unknown error"));
     }
-  }
+  };
+
 
   // Step 1: PDF creation
   const handleCreatePdf = async () => {
@@ -804,11 +819,10 @@ const Page = () => {
                       </motion.div>
                     )}
                     <motion.button
-                      className={`px-6 py-3 rounded-md font-semibold mt-6 flex items-center gap-2 ${
-                        q.submitted
+                      className={`px-6 py-3 rounded-md font-semibold mt-6 flex items-center gap-2 ${q.submitted
                           ? "bg-green-300 text-gray-700 cursor-not-allowed"
                           : "bg-green-600 text-white hover:bg-green-700"
-                      } transition-colors duration-200 disabled:opacity-50`}
+                        } transition-colors duration-200 disabled:opacity-50`}
                       onClick={() => handleCreateQuestion(idx)}
                       disabled={uploading || q.submitted}
                       whileHover={{ scale: 1.05 }}
