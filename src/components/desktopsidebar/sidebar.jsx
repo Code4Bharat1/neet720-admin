@@ -97,7 +97,7 @@ const Sidebar = () => {
             </li>
           );
         })}
-      </ul>
+      </ul>  
     </div>
   );
 };
