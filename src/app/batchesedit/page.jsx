@@ -1,46 +1,11 @@
-// app/batchesedit/page.jsx  (or wherever your route is)
-"use client";
+// app/batchesedit/page.js
+import { Suspense } from "react";
+import EditClientPage from "../../components/batchesedit/EditPage.jsx"
 
-import React from "react";
-import { useSearchParams } from "next/navigation";
-
-import MobileNavbar from "@/components/mobilenav/mobilenav";
-import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
-import Sidebar from "@/components/desktopsidebar/sidebar";
-import Desktopnav from "@/components/desktopnav/nav";
-import Batchesedit from "@/components/batchesedit/batchesedit";
-
-export default function Page() {
-  const searchParams = useSearchParams();
-  const batchId = searchParams.get("batchId");
-
-  if (!batchId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">No batch selected.</p>
-      </div>
-    );
-  }
-
+export default function BatchesEditPage() {
   return (
-    <div className="min-h-screen md:flex bg-white">
-      {/* Mobile nav */}
-      <div className="md:hidden block">
-        <MobileNavbar />
-        <MobilebottomNavbar />
-      </div>
-
-      {/* Sidebar */}
-      <div className="md:w-1/6">
-        <Sidebar />
-      </div>
-
-      {/* Main content */}
-      <div className="w-full md:w-5/6 flex-1 h-screen bg-white">
-        <Desktopnav />
-        {/* Pass batchId into your edit form */}
-        <Batchesedit batchId={batchId} />
-      </div>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditClientPage />
+    </Suspense>
   );
 }
