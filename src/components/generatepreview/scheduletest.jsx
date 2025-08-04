@@ -84,6 +84,7 @@ function Scheduletest() {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "batch") {
@@ -237,7 +238,7 @@ function Scheduletest() {
     <div className="relative overflow-hidden py-2">
       <div className="flex justify-between items-center sm:mx-8 mt-10rem mb-15rem">
         <button className="flex items-center px-8 py-2 bg-[#FFBB38] text-white rounded-full hover:bg-[#FFBB38] transition">
-          <FaArrowLeft className="mr-2 font-bold" /> Back
+          <FaArrowLeft className="mr-2 font-bold" onClick={()=>{router.back()}} /> Back
         </button>
         <button
           onClick={openModal}
