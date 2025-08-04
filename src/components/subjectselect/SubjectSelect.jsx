@@ -7,17 +7,57 @@ import { MdScience } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { FaFlask, FaDumbbell, FaArrowRight } from "react-icons/fa";
+import { GiFruitBowl } from "react-icons/gi";
+import { MdScience } from "react-icons/md";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 const SelectSubjectPage = () => {
   const [difficulty, setDifficulty] = useState("Medium");
+  const [marks, setMarks] = useState([]);
   const [marks, setMarks] = useState([]);
   const [testName, setTestName] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [positiveMarks, setPositiveMarks] = useState("");
   const [negativeMarks, setNegativeMarks] = useState("");
   const router = useRouter();
+  const router = useRouter();
   const [questionTypeCounts, setQuestionTypeCounts] = useState({});
 
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3,
+      },
+    },
+  };
+
+  const popIn = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 15,
+      },
+    },
+  };
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -88,6 +128,7 @@ const SelectSubjectPage = () => {
     if (savedCounts) setQuestionTypeCounts(savedCounts);
   }, []);
 
+  // Save question type counts to localStorage whenever they change
   // Save question type counts to localStorage whenever they change
   useEffect(() => {
     let question_type = {
@@ -179,8 +220,21 @@ const SelectSubjectPage = () => {
       toast.error("Test name is required!", {
         duration: 5000,
       });
+      toast.error("Test name is required!", {
+        duration: 5000,
+      });
       return;
     }
+
+    if (selectedSubjects.length > 0) {
+      const subject = selectedSubjects[0].toLowerCase(); // Get the first selected subject and convert it to lowercase
+      router.push(`/select_chapters_${subject}`); // Route to the first selected subject's page
+    } else {
+      toast.error("Please select at least one subject!", {
+        duration: 5000,
+      });
+    }
+  };
 
     if (selectedSubjects.length > 0) {
       const subject = selectedSubjects[0].toLowerCase(); // Get the first selected subject and convert it to lowercase
@@ -601,6 +655,7 @@ const SelectSubjectPage = () => {
           </motion.button>
         </motion.div>
       </div>
+    </motion.div>
     </motion.div>
   );
 };

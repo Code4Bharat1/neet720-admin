@@ -152,9 +152,9 @@ export default function BiologyChapterList() {
         const rows =
           s.questions && s.questions.length
             ? s.questions.map((q) => ({
-                ...q,
-                originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
-              }))
+              ...q,
+              originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
+            }))
             : pool.slice(0, num).map((q, idx) => ({
                 id: q.id,
                 subject: "biology",

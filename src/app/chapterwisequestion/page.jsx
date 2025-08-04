@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { motion } from "framer-motion"
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+
 import {
   Upload,
   Clipboard,
@@ -21,8 +22,8 @@ import {
   ImageIcon,
   PlusCircle,
   RefreshCcw,
-} from "lucide-react"
-import Sidebar from "@/components/desktopsidebar/sidebar"
+} from "lucide-react";
+import Sidebar from "@/components/desktopsidebar/sidebar";
 
 const Page = () => {
   // PDF form state
@@ -30,106 +31,166 @@ const Page = () => {
     chapterName: "",
     subject: "",
     topicTags: "",
-  })
-  const [pdfId, setPdfId] = useState(null)
-  const [uploading, setUploading] = useState(false)
+  });
+  const [pdfId, setPdfId] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [submittedCount, setSubmittedCount] = useState(() => {
     if (typeof window !== "undefined") {
-      return Number.parseInt(localStorage.getItem("mcq_submitted_count") || "0", 10)
+      return Number.parseInt(
+        localStorage.getItem("mcq_submitted_count") || "0",
+        10
+      );
     }
-    return 0
-  })
+    return 0;
+  });
 
-  const [chapter, setChapter] = useState("")
-  const [subject, setSubject] = useState("Physics")
-  const [topics, setTopics] = useState([])
-  const [topicInput, setTopicInput] = useState("")
-  const [showEdit, setShowEdit] = useState(true)
+  const [chapter, setChapter] = useState("");
+  const [subject, setSubject] = useState("Physics");
+
+  const [topics, setTopics] = useState([]);
+
+  const [topicInput, setTopicInput] = useState("");
+  const [showEdit, setShowEdit] = useState(true);
 
   // MCQ Extraction state
-  const [mcqImage, setMcqImage] = useState(null)
-  const [extracting, setExtracting] = useState(false)
-  const [extractError, setExtractError] = useState(null)
-  const [extractedQuestions, setExtractedQuestions] = useState([])
-  const pasteBoxRef = useRef(null)
+  const [mcqImage, setMcqImage] = useState(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState(null);
+  const [extractedQuestions, setExtractedQuestions] = useState([]);
+  const pasteBoxRef = useRef(null);
+
+  const [chapterData, setChapterData] = useState({}); // All JSON data
+  const [availableChapters, setAvailableChapters] = useState([]); // Based on selected subject
+  const [availableTopics, setAvailableTopics] = useState([]); // Based on selected chapter
+  const [selectedTopic, setSelectedTopic] = useState("");
+  const [topicId, setTopicId] = useState("");
+  const [topicname, setTopicName] = useState("");
+  //--fetch the topic and chapter data
+  useEffect(() => {
+    const fetchChapterData = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/chapterData`
+        );
+        const data = await res.json();
+        setChapterData(data);
+      } catch (error) {
+        console.error("Failed to load chapter data", error);
+      }
+    };
+
+    fetchChapterData();
+  }, []);
+
+  useEffect(() => {
+    if (subject && chapterData[subject]) {
+      setAvailableChapters(Object.keys(chapterData[subject]));
+      setChapter(""); // reset chapter
+      setAvailableTopics([]);
+      setSelectedTopic("");
+    }
+  }, [subject, chapterData]);
+
+  useEffect(() => {
+    if (subject && chapter && chapterData[subject]?.[chapter]) {
+      // ✅ This returns [{ name, topic_id }, ...]
+      const topicObjects = chapterData[subject][chapter];
+      setAvailableTopics(topicObjects); // <-- store full objects
+      setSelectedTopic(topicObjects[0]?.name || "");
+      console.log(topicObjects[0]?.topic_id);
+      setTopicId(topicObjects[0]?.topic_id);
+    } else {
+      setAvailableTopics([]);
+      setSelectedTopic("");
+      setTopicId("none");
+    }
+  }, [chapter]);
 
   // --- Local Storage Effects ---
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedChapter = localStorage.getItem("mcq_chapter") || ""
-      const storedSubject = localStorage.getItem("mcq_subject") || "Physics"
-      const storedTopics = JSON.parse(localStorage.getItem("mcq_topics") || "[]")
-      setChapter(storedChapter)
-      setSubject(storedSubject)
-      setTopics(storedTopics)
-      setTopicInput(storedTopics.join("\n"))
-      setShowEdit(!(storedChapter && storedTopics.length > 0))
+      const storedChapter = localStorage.getItem("mcq_chapter") || "";
+      const storedSubject = localStorage.getItem("mcq_subject") || "Physics";
+      const storedTopics = JSON.parse(
+        localStorage.getItem("mcq_topics") || "[]"
+      );
+      setChapter(storedChapter);
+      setSubject(storedSubject);
+      setTopics(storedTopics);
+      setTopicInput(
+        typeof storedTopics[0] === "string"
+          ? storedTopics.join("\n")
+          : storedTopics.map((t) => t.name).join("\n")
+      );
+      setShowEdit(!(storedChapter && storedTopics.length > 0));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    const savedForm = JSON.parse(localStorage.getItem("pdf_form") || "{}")
+    const savedForm = JSON.parse(localStorage.getItem("pdf_form") || "{}");
     setPdfForm({
       chapterName: savedForm.chapterName || "",
       subject: savedForm.subject || "",
       topicTags: savedForm.topicTags || "",
-    })
-  }, [])
+    });
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("pdf_form", JSON.stringify(pdfForm))
-  }, [pdfForm])
-
+    localStorage.setItem("pdf_form", JSON.stringify(pdfForm));
+  }, [pdfForm]);
   // --- Handlers ---
 
   // Handler for image paste (extract MCQs)
   const handlePasteImage = (e) => {
-    const items = e.clipboardData.items
+    const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf("image") !== -1) {
-        const file = items[i].getAsFile()
+        const file = items[i].getAsFile();
         if (file) {
-          setMcqImage(file)
-          setExtractError(null)
-          break
+          setMcqImage(file);
+          setExtractError(null);
+          break;
         }
       }
     }
-  }
+  };
 
   // Handler for image upload (extract MCQs)
   const handleMcqImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setMcqImage(e.target.files[0])
+      setMcqImage(e.target.files[0]);
     }
-  }
+  };
 
   // Extract MCQs from the image
   const handleExtractMcqs = async () => {
     if (!mcqImage) {
-      alert("Please paste or upload an image first.")
-      return
+      alert("Please paste or upload an image first.");
+      return;
     }
-    setExtracting(true)
-    setExtractError(null)
-    setExtractedQuestions([])
+    setExtracting(true);
+    setExtractError(null);
+    setExtractedQuestions([]);
 
     try {
-      const formData = new FormData()
-      formData.append("image", mcqImage)
+      const formData = new FormData();
+      formData.append("image", mcqImage);
 
-      const res = await fetch("http://localhost:5000/api/extract-mcqs", {
-        method: "POST",
-        body: formData,
-      })
+      const res = await fetch(
+        "https://mcq-extractor.neet720.com/api/extract-mcqs",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || "Failed to extract MCQs")
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to extract MCQs");
       }
 
-      const data = await res.json()
-      const mcqs = data.mcqs
+      const data = await res.json();
+      const mcqs = data.mcqs;
 
       if (Array.isArray(mcqs)) {
         setExtractedQuestions(
@@ -150,221 +211,279 @@ const Page = () => {
             diagramPreview: "",
             submitted: false, // New field to track submission status
             showDetails: false, // For accordion-like behavior
-          })),
-        )
+          }))
+        );
       } else {
-        setExtractError("No MCQs found in response.")
+        setExtractError("No MCQs found in response.");
       }
     } catch (err) {
-      setExtractError("Failed to extract MCQs: " + (err.message || "Unknown error"))
+      setExtractError(
+        "Failed to extract MCQs: " + (err.message || "Unknown error")
+      );
     } finally {
-      setExtracting(false)
+      setExtracting(false);
     }
-  }
+  };
 
   // Update question field
   const updateQuestionField = (idx, field, value) => {
     setExtractedQuestions((prev) => {
-      const arr = [...prev]
-      arr[idx] = { ...arr[idx], [field]: value }
-      return arr
-    })
-  }
+      const arr = [...prev];
+      arr[idx] = { ...arr[idx], [field]: value };
+      return arr;
+    });
+  };
 
   // Update an option field
   const updateOptionField = (qIdx, optIdx, field, value) => {
     setExtractedQuestions((prev) => {
-      const arr = [...prev]
+      const arr = [...prev];
       arr[qIdx].options = arr[qIdx].options.map((opt, i) =>
         i === optIdx
           ? { ...opt, [field]: value }
           : field === "is_correct"
-            ? { ...opt, is_correct: false } // Only one correct option
-            : opt,
-      )
-      return arr
-    })
-  }
+          ? { ...opt, is_correct: false } // Only one correct option
+          : opt
+      );
+      return arr;
+    });
+  };
 
   // Evaluate difficulty for a question and fetch topic/topic_id
   const handleEvaluateDifficulty = async (idx) => {
-    const q = extractedQuestions[idx]
+    const q = extractedQuestions[idx];
     const mcqText =
-      `${q.question}\n` + q.options.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt.option_text}`).join("\n")
+      `${q.question}\n` +
+      q.options
+        .map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt.option_text}`)
+        .join("\n");
 
     try {
-      updateQuestionField(idx, "evaluating", true)
+      updateQuestionField(idx, "evaluating", true);
 
-      const res = await fetch(`http://127.0.0.1:5000/api/assess-difficulty`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mcq: mcqText,
-          chapter: chapter,
-          topics: topics,
-          subject: subject,
-        }),
-      })
+      const res = await fetch(
+        `https://mcq-extractor.neet720.com/api/assess-difficulty`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mcq: mcqText,
+            chapter: chapter,
+            topics: topics,
+            subject: subject,
+          }),
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || "Failed to assess difficulty")
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to assess difficulty");
       }
 
-      const { difficulty, answer, explanation, topic, topic_id } = await res.json()
+      const { difficulty, answer, explanation, topic, topic_id } =
+        await res.json();
 
-      updateQuestionField(idx, "difficulty_level", difficulty === "easy" ? "simple" : difficulty)
-      updateQuestionField(idx, "solution", explanation)
+      updateQuestionField(
+        idx,
+        "difficulty_level",
+        difficulty === "easy" ? "simple" : difficulty
+      );
+      updateQuestionField(idx, "solution", explanation);
       updateQuestionField(
         idx,
         "options",
         q.options.map((opt, i) => ({
           ...opt,
-          is_correct: String.fromCharCode(65 + i) === (answer || "").toUpperCase(),
-        })),
-      )
-      updateQuestionField(idx, "evaluated", true)
-      updateQuestionField(idx, "topic", topic || "")
-      updateQuestionField(idx, "pdfId", topic_id || "") // Treat topic_id as pdfId
+          is_correct:
+            String.fromCharCode(65 + i) === (answer || "").toUpperCase(),
+        }))
+      );
+      updateQuestionField(idx, "evaluated", true);
+      updateQuestionField(idx, "topic", topic || "");
+      updateQuestionField(idx, "topicId", topic_id || "");
     } catch (error) {
-      alert("Failed to evaluate difficulty: " + (error.message || "Unknown error"))
+      alert(
+        "Failed to evaluate difficulty: " + (error.message || "Unknown error")
+      );
     } finally {
-      updateQuestionField(idx, "evaluating", false)
+      updateQuestionField(idx, "evaluating", false);
     }
-  }
+  };
 
   // Paste handler (diagram): uploads immediately, sets diagramPath to AWS url
   const handleDiagramPaste = async (e, idx) => {
-    const items = e.clipboardData.items
+    const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf("image") !== -1) {
-        const file = items[i].getAsFile()
+        const file = items[i].getAsFile();
         if (file) {
-          const formData = new FormData()
-          formData.append("file", file)
+          const formData = new FormData();
+          formData.append("file", file);
           try {
-            setUploading(true)
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`, {
-              method: "POST",
-              body: formData,
-            })
+            setUploading(true);
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
 
             if (!res.ok) {
-              const errorData = await res.json()
-              throw new Error(errorData.error || "Failed to upload image")
+              const errorData = await res.json();
+              throw new Error(errorData.error || "Failed to upload image");
             }
 
-            const data = await res.json()
-            const imageUrl = data.url
-            updateQuestionField(idx, "diagramPath", imageUrl)
-            updateQuestionField(idx, "diagramPreview", URL.createObjectURL(file)) // For immediate preview
+            const data = await res.json();
+            const imageUrl = data.url;
+            updateQuestionField(idx, "diagramPath", imageUrl);
+            updateQuestionField(
+              idx,
+              "diagramPreview",
+              URL.createObjectURL(file)
+            ); // For immediate preview
           } catch (err) {
-            alert("Failed to upload pasted image: " + (err.message || "Unknown error"))
+            alert(
+              "Failed to upload pasted image: " +
+                (err.message || "Unknown error")
+            );
           } finally {
-            setUploading(false)
+            setUploading(false);
           }
-          break
+          break;
         }
       }
     }
-  }
+  };
 
   const handleDiagramUpload = async (e, idx) => {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
 
-    const formData = new FormData()
-    formData.append("file", file)
+    const formData = new FormData();
+    formData.append("file", file);
     try {
-      setUploading(true)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`, {
-        method: "POST",
-        body: formData,
-      })
+      setUploading(true);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || "Failed to upload image")
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to upload image");
       }
 
-      const data = await res.json()
-      const imageUrl = data.url
-      updateQuestionField(idx, "diagramPath", imageUrl)
-      updateQuestionField(idx, "diagramPreview", URL.createObjectURL(file)) // For immediate preview
+      const data = await res.json();
+      const imageUrl = data.url;
+      updateQuestionField(idx, "diagramPath", imageUrl);
+      updateQuestionField(idx, "diagramPreview", URL.createObjectURL(file)); // For immediate preview
     } catch (err) {
-      alert("Failed to upload image: " + (err.message || "Unknown error"))
+      alert("Failed to upload image: " + (err.message || "Unknown error"));
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   const handleRemoveDiagram = (idx) => {
-    updateQuestionField(idx, "diagramPath", "")
-    updateQuestionField(idx, "diagramFile", null)
-    updateQuestionField(idx, "diagramPreview", "")
-  }
+    updateQuestionField(idx, "diagramPath", "");
+    updateQuestionField(idx, "diagramFile", null);
+    updateQuestionField(idx, "diagramPreview", "");
+  };
 
   // Submit a single question (upload pasted diagram if any)
   const handleCreateQuestion = async (idx) => {
-    const q = extractedQuestions[idx]
-    let diagramUrl = q.diagramPath
+    const q = extractedQuestions[idx];
+    let diagramUrl = q.diagramPath;
 
-    // If there's a diagram file but no URL (meaning it was pasted/uploaded but not yet sent to backend)
+    // Step 1: Upload diagram if required
     if (!diagramUrl && q.diagramFile) {
-      const formData = new FormData()
-      formData.append("file", q.diagramFile)
+      const formData = new FormData();
+      formData.append("file", q.diagramFile);
       try {
-        setUploading(true)
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`, {
-          method: "POST",
-          body: formData,
-        })
+        setUploading(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!res.ok) {
-          const errorData = await res.json()
-          throw new Error(errorData.error || "Failed to upload diagram")
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to upload diagram");
         }
 
-        const data = await res.json()
-        diagramUrl = data.url
+        const data = await res.json();
+        diagramUrl = data.url;
       } catch (err) {
-        alert("Failed to upload diagram for question: " + (err.message || "Unknown error"))
-        setUploading(false)
-        return
+        alert(
+          "Failed to upload diagram for question: " +
+            (err.message || "Unknown error")
+        );
+        setUploading(false);
+        return;
       } finally {
-        setUploading(false)
+        setUploading(false);
       }
     }
 
+    // Step 2: Transform & Send Data
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chatper-wise-question`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...q, diagramPath: diagramUrl }),
-      })
+      const raw = localStorage.getItem("mcq_topics");
+      const parsed = JSON.parse(raw); // converts '["Simple Harmonic motion"]' to ["Simple Harmonic motion"]
+      const topic = parsed.join("\n"); // joins array elements without brackets or quotes
+      const payload = {
+        subject: subject,
+        chapter: localStorage.getItem("mcq_chapter"),
+        topic: topic,
+        topicID: localStorage.getItem("topic_id") || "", // <-- ✅ send topicId
+        question: q.question,
+        options: q.options.map((opt) => opt.option_text),
+        answer: q.options.find((opt) => opt.is_correct)?.option_text || "",
+        difficulty: q.difficulty_level,
+        explanation: q.solution || "",
+      };
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/question`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("adminAuthToken")}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to create question")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create question");
       }
 
-      alert(`Question ${idx + 1} created successfully.`)
+      alert(`Question ${idx + 1} created successfully.`);
+
       // Mark question as submitted
       setExtractedQuestions((prev) => {
-        const updated = [...prev]
-        updated[idx].submitted = true
-        return updated
-      })
-      // Update submitted count
+        const updated = [...prev];
+        updated[idx].submitted = true;
+        return updated;
+      });
+
       setSubmittedCount((c) => {
-        const newCount = c + 1
-        localStorage.setItem("mcq_submitted_count", newCount.toString())
-        return newCount
-      })
+        const newCount = c + 1;
+        localStorage.setItem("mcq_submitted_count", newCount.toString());
+        return newCount;
+      });
     } catch (error) {
-      alert("Error creating question: " + (error.message || "Unknown error"))
+      alert("Error creating question: " + (error.message || "Unknown error"));
     }
-  }
+  };
 
   // Step 1: PDF creation
   const handleCreatePdf = async () => {
@@ -377,21 +496,23 @@ const Page = () => {
           subject: pdfForm.subject,
           topicTags: pdfForm.topicTags.split(",").map((tag) => tag.trim()),
         }),
-      })
+      });
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || "Failed to create PDF")
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create PDF");
       }
 
-      const data = await res.json()
-      setPdfId(data.pdfId)
-      setExtractedQuestions((prev) => prev.map((q) => ({ ...q, pdfId: data.pdfId })))
-      alert("PDF Created. PDF ID: " + data.pdfId)
+      const data = await res.json();
+      setPdfId(data.pdfId);
+      setExtractedQuestions((prev) =>
+        prev.map((q) => ({ ...q, pdfId: data.pdfId }))
+      );
+      alert("PDF Created. PDF ID: " + data.pdfId);
     } catch (error) {
-      alert(error.message || "Error creating PDF")
+      alert(error.message || "Error creating PDF");
     }
-  }
+  };
 
   // Framer Motion Variants
   const containerVariants = {
@@ -403,12 +524,28 @@ const Page = () => {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
-  }
+  };
+
+  const handleEvaluateAllSequentially = async () => {
+    for (let i = 0; i < extractedQuestions.length; i++) {
+      if (!extractedQuestions[i].evaluated) {
+        await handleEvaluateDifficulty(i);
+      }
+    }
+  };
+
+  const handleSubmitAllSequentially = async () => {
+    for (let i = 0; i < extractedQuestions.length; i++) {
+      if (!extractedQuestions[i].submitted) {
+        await handleCreateQuestion(i);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900 p-4 sm:p-6">
@@ -438,10 +575,12 @@ const Page = () => {
           <motion.button
             className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
             onClick={() => {
-              const confirmReset = window.confirm("Are you sure you want to reset the submitted count?")
+              const confirmReset = window.confirm(
+                "Are you sure you want to reset the submitted count?"
+              );
               if (confirmReset) {
-                localStorage.setItem("mcq_submitted_count", "0")
-                setSubmittedCount(0)
+                localStorage.setItem("mcq_submitted_count", "0");
+                setSubmittedCount(0);
               }
             }}
             whileHover={{ scale: 1.05 }}
@@ -453,26 +592,23 @@ const Page = () => {
         </motion.div>
 
         {/* Chapter/Topics/Subjects section */}
-        <motion.div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200" variants={itemVariants}>
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+          variants={itemVariants}
+        >
           <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
             <Book className="w-5 h-5" />
             Set Chapter, Topics, and Subject
           </h2>
           {showEdit ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <input
-                className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                placeholder="Chapter Name (e.g., Human Physiology)"
-                value={chapter}
-                onChange={(e) => setChapter(e.target.value)}
-              />
               <div className="relative my-2">
                 <select
                   className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
                   value={subject}
                   onChange={(e) => {
-                    setSubject(e.target.value)
-                    localStorage.setItem("mcq_subject", e.target.value)
+                    setSubject(e.target.value);
+                    localStorage.setItem("mcq_subject", e.target.value);
                   }}
                 >
                   <option value="Physics">Physics</option>
@@ -481,26 +617,58 @@ const Page = () => {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
               </div>
-              <textarea
+              <select
                 className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                placeholder="Enter topics, one per line (e.g., Digestion and Absorption)"
-                value={topicInput}
-                onChange={(e) => setTopicInput(e.target.value)}
-                rows={4}
-              />
+                value={chapter}
+                onChange={(e) => setChapter(e.target.value)}
+              >
+                <option value="">Select Chapter</option>
+                {availableChapters.map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                value={selectedTopic}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  setSelectedTopic(selected);
+
+                  if (selected === "") {
+                    setTopicId("none");
+                    // setTopicName("none") // None selected
+                  } else {
+                    const matched = availableTopics.find(
+                      (t) => t.name === selected
+                    );
+                    console.log(matched?.topic_id);
+                    setTopicId(matched?.topic_id || "");
+                    console.log(matched?.name);
+                    setTopicName(matched?.name);
+                  }
+                }}
+              >
+                <option value="">None</option>
+                {availableTopics.map((topic) => (
+                  <option key={topic.name} value={topic.name}>
+                    {topic.name}
+                  </option>
+                ))}
+              </select>
+
               <motion.button
                 className="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
-                  const topicsArr = topicInput
-                    .split("\n")
-                    .map((t) => t.trim())
-                    .filter(Boolean)
-                  setTopics(topicsArr)
-                  setShowEdit(false)
-                  localStorage.setItem("mcq_chapter", chapter)
-                  localStorage.setItem("mcq_topics", JSON.stringify(topicsArr))
+                  const topicsArr = selectedTopic ? [selectedTopic] : [];
+                  setTopics(topicsArr);
+                  localStorage.setItem("mcq_chapter", chapter);
+                  localStorage.setItem("mcq_topics", JSON.stringify(topicsArr));
+                  localStorage.setItem("topic_id", JSON.stringify(topicId));
+                  setShowEdit(false);
                 }}
-                disabled={!chapter || !topicInput.trim()}
+                disabled={!chapter}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -517,24 +685,40 @@ const Page = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Book className="w-4 h-4 text-blue-600" />
-                  <span className="font-semibold text-gray-700">Chapter:</span> {chapter}
+                  <span className="font-semibold text-gray-700">
+                    Chapter:
+                  </span>{" "}
+                  {chapter}
                 </div>
                 <div className="flex items-center gap-2 mb-1">
-                  {subject === "Physics" && <Atom className="w-4 h-4 text-purple-600" />}
-                  {subject === "Chemistry" && <FlaskConical className="w-4 h-4 text-green-600" />}
-                  {subject === "Biology" && <Book className="w-4 h-4 text-red-600" />}
-                  <span className="font-semibold text-gray-700">Subject:</span> {subject}
+                  {subject === "Physics" && (
+                    <Atom className="w-4 h-4 text-purple-600" />
+                  )}
+                  {subject === "Chemistry" && (
+                    <FlaskConical className="w-4 h-4 text-green-600" />
+                  )}
+                  {subject === "Biology" && (
+                    <Book className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className="font-semibold text-gray-700">Subject:</span>{" "}
+                  {subject}
                 </div>
                 <div className="flex items-start gap-2 flex-wrap">
                   <Tag className="w-4 h-4 text-yellow-600 mt-1" />
-                  <span className="font-semibold text-gray-700">Topics:</span>{" "}
+                  <span className="font-semibold text-gray-700">
+                    Topics:
+                  </span>{" "}
                   <div className="flex flex-wrap gap-2">
-                    {topics.map((t) => (
+                    {topics.map((t, i) => (
                       <span
-                        key={t}
-                        className="inline-block bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm shadow-sm"
+                        key={`${t}-${i}`}
+                        className={`inline-block px-3 py-1 rounded-full text-sm shadow-sm ${
+                          t === ""
+                            ? "bg-gray-200 text-gray-700"
+                            : "bg-blue-200 text-blue-800"
+                        }`}
                       >
-                        {t}
+                        {t === "" ? "None" : t}
                       </span>
                     ))}
                   </div>
@@ -543,8 +727,8 @@ const Page = () => {
               <motion.button
                 className="bg-gray-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2"
                 onClick={() => {
-                  setShowEdit(true)
-                  setTopicInput(topics.join("\n"))
+                  setShowEdit(true);
+                  setTopicInput(topics.join("\n"));
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -557,7 +741,10 @@ const Page = () => {
         </motion.div>
 
         {/* MCQ Extraction and Question Forms */}
-        <motion.div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200" variants={itemVariants}>
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+          variants={itemVariants}
+        >
           <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
             <Lightbulb className="w-5 h-5" />
             Step 2: Paste/Upload MCQ Image & Extract
@@ -581,7 +768,12 @@ const Page = () => {
               <label className="inline-flex items-center cursor-pointer text-blue-600 hover:text-blue-800">
                 <Upload className="w-4 h-4 mr-1" />
                 upload file
-                <input type="file" accept="image/*" onChange={handleMcqImageChange} className="hidden" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMcqImageChange}
+                  className="hidden"
+                />
               </label>
             </span>
           </motion.div>
@@ -628,6 +820,26 @@ const Page = () => {
           )}
         </motion.div>
 
+        <motion.button
+          onClick={handleEvaluateAllSequentially}
+          className="bg-purple-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2 mb-4"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Lightbulb className="w-5 h-5" />
+          Evaluate All One-by-One
+        </motion.button>
+
+        <motion.button
+          onClick={handleSubmitAllSequentially}
+          className="bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 mb-4 ml-4"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <PlusCircle className="w-5 h-5" />
+          Submit All One-by-One
+        </motion.button>
+
         {extractedQuestions.length > 0 && (
           <motion.div variants={itemVariants}>
             <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
@@ -637,16 +849,30 @@ const Page = () => {
             {extractedQuestions.map((q, idx) => (
               <motion.div
                 key={idx}
-                className="mb-6 bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+                className={`mb-6 p-6 rounded-lg shadow-lg border-2 transition-all duration-300 ${
+                  q.evaluated
+                    ? "bg-green-50 border-green-500"
+                    : q.evaluating
+                    ? "bg-yellow-50 border-yellow-400 animate-pulse"
+                    : "bg-white border-gray-200"
+                }`}
                 variants={itemVariants}
               >
                 <div
                   className="flex items-center justify-between mb-4 cursor-pointer"
-                  onClick={() => updateQuestionField(idx, "showDetails", !q.showDetails)}
+                  onClick={() =>
+                    updateQuestionField(idx, "showDetails", !q.showDetails)
+                  }
                 >
-                  <div className="font-bold text-lg text-blue-700 flex items-center gap-2">
+                  <div
+                    className={`font-bold text-lg flex items-center gap-2 ${
+                      q.evaluated ? "text-green-700" : "text-blue-700"
+                    }`}
+                  >
                     Question {idx + 1}
-                    {q.submitted && <CheckCircle className="w-5 h-5 text-green-600" />}
+                    {q.submitted && (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    )}
                   </div>
                   {q.showDetails ? (
                     <ChevronDown className="w-5 h-5 text-gray-500" />
@@ -662,33 +888,57 @@ const Page = () => {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <label className="block text-gray-700 text-sm mb-1">PDF ID:</label>
+                    <label className="block text-gray-700 text-sm mb-1">
+                      PDF ID:
+                    </label>
                     <input
                       placeholder="PDF ID"
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={q.pdfId || pdfId || ""}
-                      onChange={(e) => updateQuestionField(idx, "pdfId", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(idx, "pdfId", e.target.value)
+                      }
                     />
-                    <label className="block text-gray-700 text-sm mb-1">Question Text:</label>
+                    <label className="block text-gray-700 text-sm mb-1">
+                      Question Text:
+                    </label>
                     <textarea
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={q.question}
-                      onChange={(e) => updateQuestionField(idx, "question", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(idx, "question", e.target.value)
+                      }
                       rows={4}
                     />
-                    <h3 className="font-semibold mt-4 text-blue-700">Options:</h3>
+                    <h3 className="font-semibold mt-4 text-blue-700">
+                      Options:
+                    </h3>
                     {q.options.map((opt, i) => (
                       <div key={i} className="flex items-center gap-2 my-2">
                         <input
                           className="flex-1 bg-gray-50 text-gray-900 border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                           value={opt.option_text}
-                          onChange={(e) => updateOptionField(idx, i, "option_text", e.target.value)}
+                          onChange={(e) =>
+                            updateOptionField(
+                              idx,
+                              i,
+                              "option_text",
+                              e.target.value
+                            )
+                          }
                         />
                         <label className="flex items-center gap-1 text-gray-700 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={opt.is_correct}
-                            onChange={(e) => updateOptionField(idx, i, "is_correct", e.target.checked)}
+                            onChange={(e) =>
+                              updateOptionField(
+                                idx,
+                                i,
+                                "is_correct",
+                                e.target.checked
+                              )
+                            }
                             className="form-checkbox h-5 w-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500"
                           />
                           Correct
@@ -704,7 +954,8 @@ const Page = () => {
                     >
                       {q.evaluating ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" /> Evaluating...
+                          <Loader2 className="w-5 h-5 animate-spin" />{" "}
+                          Evaluating...
                         </>
                       ) : q.evaluated ? (
                         <>
@@ -716,30 +967,46 @@ const Page = () => {
                         </>
                       )}
                     </motion.button>
-                    <label className="block text-gray-700 text-sm mb-1 mt-4">Difficulty Level:</label>
+                    <label className="block text-gray-700 text-sm mb-1 mt-4">
+                      Difficulty Level:
+                    </label>
                     <select
                       value={q.difficulty_level}
-                      onChange={(e) => updateQuestionField(idx, "difficulty_level", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(
+                          idx,
+                          "difficulty_level",
+                          e.target.value
+                        )
+                      }
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
                     >
                       <option value="simple">Simple</option>
                       <option value="medium">Medium</option>
                       <option value="hard">Hard</option>
                     </select>
-                    <label className="block text-gray-700 text-sm mb-1">Solution:</label>
+                    <label className="block text-gray-700 text-sm mb-1">
+                      Solution:
+                    </label>
                     <textarea
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       placeholder="Solution"
                       value={q.solution}
-                      onChange={(e) => updateQuestionField(idx, "solution", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(idx, "solution", e.target.value)
+                      }
                       rows={4}
                     />
-                    <label className="block text-gray-700 text-sm mb-1 mt-4">Topic Suggestion:</label>
+                    <label className="block text-gray-700 text-sm mb-1 mt-4">
+                      Topic Suggestion:
+                    </label>
                     <input
                       placeholder="Topic (suggested, editable)"
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={q.topic || ""}
-                      onChange={(e) => updateQuestionField(idx, "topic", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(idx, "topic", e.target.value)
+                      }
                     />
 
                     <h3 className="font-semibold mt-4 text-blue-700 flex items-center gap-2">
@@ -773,12 +1040,16 @@ const Page = () => {
                         </label>
                       </span>
                     </motion.div>
-                    <label className="block text-gray-700 text-sm mb-1">Diagram URL:</label>
+                    <label className="block text-gray-700 text-sm mb-1">
+                      Diagram URL:
+                    </label>
                     <input
                       placeholder="Diagram URL"
                       className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       value={q.diagramPath}
-                      onChange={(e) => updateQuestionField(idx, "diagramPath", e.target.value)}
+                      onChange={(e) =>
+                        updateQuestionField(idx, "diagramPath", e.target.value)
+                      }
                     />
                     {(q.diagramPreview || q.diagramPath) && (
                       <motion.div
@@ -800,7 +1071,11 @@ const Page = () => {
                         >
                           <XCircle className="w-4 h-4" />
                         </motion.button>
-                        {q.diagramPath && <p className="text-xs break-all text-gray-600 mt-2">URL: {q.diagramPath}</p>}
+                        {q.diagramPath && (
+                          <p className="text-xs break-all text-gray-600 mt-2">
+                            URL: {q.diagramPath}
+                          </p>
+                        )}
                       </motion.div>
                     )}
                     <motion.button
@@ -820,7 +1095,8 @@ const Page = () => {
                         </>
                       ) : uploading ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" /> Uploading...
+                          <Loader2 className="w-5 h-5 animate-spin" />{" "}
+                          Uploading...
                         </>
                       ) : (
                         <>
@@ -836,7 +1112,7 @@ const Page = () => {
         )}
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
