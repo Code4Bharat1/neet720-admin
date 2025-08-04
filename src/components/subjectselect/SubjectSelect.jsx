@@ -656,7 +656,6 @@ const SelectSubjectPage = () => {
         </motion.div>
       </div>
     </motion.div>
-    </motion.div>
   );
 };
 
