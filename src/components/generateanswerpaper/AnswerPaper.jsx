@@ -40,6 +40,7 @@ export default function AnswerPaper() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
         { testid }
       );
+      console.log("this is my response : " , response.data.data)
       setQuestions(response.data.data);
     } catch (error) {
       console.error("Failed to fetch questions:", error);

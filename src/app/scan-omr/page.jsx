@@ -1,24 +1,41 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import axios from "axios"
-import { motion, AnimatePresence } from "framer-motion"
-import { FileText, CheckCircle, XCircle, Loader2, Send, Trash2, Zap, Key, HelpCircle, QrCode } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FileText,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Send,
+  Trash2,
+  Zap,
+  Key,
+  HelpCircle,
+  QrCode,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // File Upload Component
-const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon }) => {
-  const fileInputRef = useRef(null)
+const FileUploadZone = ({
+  onFileSelect,
+  files,
+  label,
+  color = "blue",
+  icon: Icon,
+}) => {
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files)
-    onFileSelect(selectedFiles)
-  }
+    const selectedFiles = Array.from(e.target.files);
+    onFileSelect(selectedFiles);
+  };
 
   const handleRemoveFile = (index) => {
-    const updatedFiles = files.filter((_, i) => i !== index)
-    onFileSelect(updatedFiles)
-  }
+    const updatedFiles = files.filter((_, i) => i !== index);
+    onFileSelect(updatedFiles);
+  };
 
   return (
     <div className="space-y-3">
@@ -41,8 +58,12 @@ const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon
           whileTap={{ scale: 0.98 }}
         >
           <Icon className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-          <p className="text-gray-600 font-medium text-sm sm:text-base">Click to upload {label.toLowerCase()}</p>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">Or drag and drop files here</p>
+          <p className="text-gray-600 font-medium text-sm sm:text-base">
+            Click to upload {label.toLowerCase()}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            Or drag and drop files here
+          </p>
           {files.length > 0 && (
             <motion.p
               className={`text-${color}-600 font-semibold mt-2 text-sm`}
@@ -90,41 +111,110 @@ const FileUploadZone = ({ onFileSelect, files, label, color = "blue", icon: Icon
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 const OMRScannerSimplified = () => {
-  const router = useRouter()
-  const [answerKeyFiles, setAnswerKeyFiles] = useState([])
-  const [questionPaperFiles, setQuestionPaperFiles] = useState([])
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [submitLoading, setSubmitLoading] = useState(false)
+  const router = useRouter();
+  const [answerKeyFiles, setAnswerKeyFiles] = useState([]);
+  const [questionPaperFiles, setQuestionPaperFiles] = useState([]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [tests, setTests] = useState([]);
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [selectedTestQuestions, setSelectedTestQuestions] = useState([]);
 
+  // Fetch tests on mount
+  useEffect(() => {
+    const fetchTests = async () => {
+      try {
+        const token = localStorage.getItem("adminAuthToken");
+        if (!token) {
+          console.error("Admin auth token not found.");
+          setTestData([]);
+          setTestCount(0);
+          return;
+        }
+
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const adminId = payload.id;
+        const res = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/admin-tests`,
+          {
+            adminId,
+          }
+        );
+        if (res.data?.tests) setTests(res.data.tests);
+      } catch (err) {
+        console.error("Error fetching tests:", err);
+      }
+    };
+    fetchTests();
+  }, []);
+
+  // Inside OMRScannerSimplified component
+  useEffect(() => {
+    if (!selectedTest?.id) return;
+
+    const fetchTestQuestions = async () => {
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
+          { testid: selectedTest.id }
+        );
+        console.log(response.data);
+        if (Array.isArray(response.data?.data)) {
+          setSelectedTestQuestions(response.data?.data); // Define state for this
+        } else {
+          console.error("Unexpected response format for test questions");
+        }
+      } catch (err) {
+        console.error("Error fetching test questions:", err);
+      }
+    };
+
+    fetchTestQuestions();
+  }, [selectedTest]);
+
+  // Handler
+  const handleTestSelect = (e) => {
+    const selectedId = parseInt(e.target.value);
+    const test = tests.find((t) => t.id === selectedId);
+    setSelectedTest(test);
+  };
   const handleEvaluate = async (e) => {
-    e.preventDefault()
-    if (answerKeyFiles.length === 0 || questionPaperFiles.length === 0) {
-      alert("Please upload both OMR answer key and question paper files.")
-      return
-    }
+    e.preventDefault();
+    // if (answerKeyFiles.length === 0 || questionPaperFiles.length === 0) {
+    //   alert("Please upload both OMR answer key and question paper files.");
+    //   return;
+    // }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       // Step 1: Process OMR Answer Key
-      const answerKeyOmrFormData = new FormData()
-      answerKeyFiles.forEach((file) => answerKeyOmrFormData.append("omrfile", file))
-      console.log("Processing OMR Answer Key...")
-      const answerKeyOmrResponse = await axios.post("https://omr.neet720.com/api/process-omr", answerKeyOmrFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      // const answerKeyOmrFormData = new FormData();
+      // answerKeyFiles.forEach((file) =>
+      //   answerKeyOmrFormData.append("omrfile", file)
+      // );
+      // console.log("Processing OMR Answer Key...");
+      // const answerKeyOmrResponse = await axios.post(
+      //   "https://omr.neet720.com/api/process-omr",
+      //   answerKeyOmrFormData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
 
       // Step 2: Process OMR Question Paper
-      const questionPaperOmrFormData = new FormData()
-      questionPaperFiles.forEach((file) => questionPaperOmrFormData.append("omrfile", file))
-      console.log("Processing OMR Question Paper...")
+      const questionPaperOmrFormData = new FormData();
+      questionPaperFiles.forEach((file) =>
+        questionPaperOmrFormData.append("omrfile", file)
+      );
+      console.log("Processing OMR Question Paper...");
       const questionPaperOmrResponse = await axios.post(
         "https://omr.neet720.com/api/process-omr",
         questionPaperOmrFormData,
@@ -132,207 +222,176 @@ const OMRScannerSimplified = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        },
-      )
+        }
+      );
+      console.log(questionPaperOmrResponse.data);
 
       // Step 3: Process QR Code for Answer Key
-      const answerKeyQrFormData = new FormData()
-      answerKeyFiles.forEach((file) => answerKeyQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
-      console.log("Processing QR Code for Answer Key...")
-      const answerKeyQrResponse = await axios.post("https://omr.neet720.com/api/scan_qr", answerKeyQrFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      // const answerKeyQrFormData = new FormData();
+      // answerKeyFiles.forEach((file) =>
+      //   answerKeyQrFormData.append("file", file)
+      // ); // Assuming 'qrfile' is the expected field name
+      // console.log("Processing QR Code for Answer Key...");
+      // const answerKeyQrResponse = await axios.post(
+      //   "https://omr.neet720.com/api/scan_qr",
+      //   answerKeyQrFormData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
 
       // Step 4: Process QR Code for Question Paper
-      const questionPaperQrFormData = new FormData()
-      questionPaperFiles.forEach((file) => questionPaperQrFormData.append("file", file)) // Assuming 'qrfile' is the expected field name
-      console.log("Processing QR Code for Question Paper...")
-      const questionPaperQrResponse = await axios.post(
-        "https://omr.neet720.com/api/scan_qr",
-        questionPaperQrFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      )
+      // const questionPaperQrFormData = new FormData();
+      // questionPaperFiles.forEach((file) =>
+      //   questionPaperQrFormData.append("file", file)
+      // ); // Assuming 'qrfile' is the expected field name
+      // console.log("Processing QR Code for Question Paper...");
+      // const questionPaperQrResponse = await axios.post(
+      //   "https://omr.neet720.com/api/scan_qr",
+      //   questionPaperQrFormData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
 
       // Step 5: Compare both OMR and QR responses
-      console.log("Comparing OMR and QR responses...")
+      console.log("Comparing OMR and QR responses...");
       const comparisonResult = compareOMRResponses(
-        answerKeyOmrResponse.data,
         questionPaperOmrResponse.data,
-        answerKeyQrResponse.data,
-        questionPaperQrResponse.data,
-      )
-      setResult(comparisonResult)
+        questionPaperOmrResponse.data,
+        selectedTestQuestions
+      );
+      setResult(comparisonResult);
     } catch (error) {
-      console.error("Error evaluating:", error.response?.data || error.message)
-      alert(`Evaluation failed: ${error.response?.data?.message || error.message}`)
+      console.error("Error evaluating:", error.response?.data || error.message);
+      alert(
+        `Evaluation failed: ${error.response?.data?.message || error.message}`
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Function to compare answer key and question paper responses
-  const compareOMRResponses = (answerKeyOmrData, questionPaperOmrData, answerKeyQrData, questionPaperQrData) => {
-    console.log("Answer Key OMR Data:", answerKeyOmrData)
-    console.log("Question Paper OMR Data:", questionPaperOmrData)
-    console.log("Answer Key QR Data:", answerKeyQrData)
-    console.log("Question Paper QR Data:", questionPaperQrData)
-
-    if (!answerKeyOmrData.success || !questionPaperOmrData.success) {
-      throw new Error("Invalid OMR response format from one or both APIs")
-    }
-    if (!answerKeyOmrData.results || !questionPaperOmrData.results) {
-      throw new Error("Missing OMR results data from one or both APIs")
-    }
-
-    // QR Code Comparison
-    let qrComparisonStatus = "matched"
-    let qrComparisonMessage = "QR codes match."
-    if (!answerKeyQrData.success || !questionPaperQrData.success) {
-      qrComparisonStatus = "error"
-      qrComparisonMessage = "Failed to read QR code from one or both sheets."
-    } else if (
-      answerKeyQrData.data?.testName !== questionPaperQrData.data?.testName ||
-      answerKeyQrData.data?.testId !== questionPaperQrData.data?.testId
+  const compareOMRResponses = (
+    questionPaperOmrData,
+    questionPaperQrData,
+    testQuestions
+  ) => {
+    if (
+      !questionPaperOmrData.success ||
+      !Array.isArray(questionPaperOmrData.results)
     ) {
-      qrComparisonStatus = "mismatch"
-      qrComparisonMessage = "Test Name or Test ID mismatch between sheets."
+      throw new Error("Invalid or missing OMR result data");
     }
 
-    const answerKey = answerKeyOmrData.results
-    const studentAnswers = questionPaperOmrData.results
+    const omrResults = questionPaperOmrData.results;
+    const optionLabels = ["A", "B", "C", "D"];
 
-    // Create a map of correct answers from answer key
-    const correctAnswersMap = {}
-    answerKey.forEach((item) => {
-      if (item.marked === 1) {
-        // Only consider marked answers as correct
-        correctAnswersMap[item.question] = item.option
+    // Map question number to first marked student option
+    const studentAnswerMap = {};
+    for (const entry of omrResults) {
+      const qNo = entry.question;
+      const selectedOption = entry.option;
+      const marked = entry.marked;
+
+      if (marked === 1 && !studentAnswerMap[qNo]) {
+        studentAnswerMap[qNo] = selectedOption;
       }
-    })
+    }
 
-    // Create a map of student answers
-    const studentAnswersMap = {}
-    studentAnswers.forEach((item) => {
-      if (item.marked === 1) {
-        // Only consider marked answers
-        studentAnswersMap[item.question] = item.option
+    const comparedResults = [];
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let unansweredCount = 0;
+
+    testQuestions.forEach((q, i) => {
+      const qNum = i + 1; // Assuming testQuestions[0] = Question 1
+      const correctAnswerText = q.correctanswer?.trim();
+      const correctOptionIndex = q.options.findIndex(
+        (opt) => opt.trim() === correctAnswerText
+      );
+      const correctLabel = optionLabels[correctOptionIndex] || "N/A";
+
+      const studentAnswer = studentAnswerMap[qNum] || null;
+      let status = "unanswered";
+
+      if (!studentAnswer) {
+        unansweredCount++;
+      } else if (studentAnswer === correctLabel) {
+        correctCount++;
+        status = "correct";
+      } else {
+        incorrectCount++;
+        status = "incorrect";
       }
-    })
 
-    // Get all question numbers (union of both sets)
-    const allQuestions = new Set([
-      ...answerKey.map((item) => item.question),
-      ...studentAnswers.map((item) => item.question),
-    ])
+      comparedResults.push({
+        question: qNum,
+        questionText: q.question_text,
+        correctAnswer: correctLabel,
+        correctText: correctAnswerText,
+        studentAnswer: studentAnswer || "N/A",
+        status,
+      });
+    });
 
-    const comparedResults = []
-    let correctCount = 0
-    let incorrectCount = 0
-    let unansweredCount = 0
-
-    // Compare each question
-    Array.from(allQuestions)
-      .sort((a, b) => a - b)
-      .forEach((questionNum) => {
-        const correctAnswer = correctAnswersMap[questionNum] || null
-        const studentAnswer = studentAnswersMap[questionNum] || null
-
-        let status = "unanswered"
-        if (studentAnswer === null) {
-          unansweredCount++
-          status = "unanswered"
-        } else if (correctAnswer === null) {
-          // If no correct answer is provided, mark as incorrect (or unanswerable)
-          incorrectCount++
-          status = "incorrect" // Or a new status like "no_correct_answer"
-        } else if (studentAnswer === correctAnswer) {
-          correctCount++
-          status = "correct"
-        } else {
-          incorrectCount++
-          status = "incorrect"
-        }
-
-        comparedResults.push({
-          question: questionNum,
-          correctAnswer: correctAnswer || "N/A",
-          studentAnswer: studentAnswer || "N/A",
-          status: status,
-        })
-      })
-
-    // Group questions by pages (45 questions per page)
-    const questionsPerPage = 45
-    const pages = []
-    const totalQuestions = comparedResults.length
-    const pageCount = Math.ceil(totalQuestions / questionsPerPage)
+    const questionsPerPage = 45;
+    const pages = [];
+    const totalQuestions = comparedResults.length;
+    const pageCount = Math.ceil(totalQuestions / questionsPerPage);
 
     for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
-      const startIdx = (pageNum - 1) * questionsPerPage
-      const endIdx = Math.min(startIdx + questionsPerPage, totalQuestions)
-      const pageQuestions = comparedResults.slice(startIdx, endIdx)
-
-      const pageCorrect = pageQuestions.filter((q) => q.status === "correct").length
-      const pageIncorrect = pageQuestions.filter((q) => q.status === "incorrect").length
-      const pageUnanswered = pageQuestions.filter((q) => q.status === "unanswered").length
+      const start = (pageNum - 1) * questionsPerPage;
+      const pageItems = comparedResults.slice(start, start + questionsPerPage);
 
       pages.push({
         page: pageNum,
-        questions: pageQuestions,
-        score: pageCorrect,
-        maxScore: pageQuestions.length,
-        correct: pageCorrect,
-        incorrect: pageIncorrect,
-        unanswered: pageUnanswered,
-      })
+        questions: pageItems,
+        correct: pageItems.filter((q) => q.status === "correct").length,
+        incorrect: pageItems.filter((q) => q.status === "incorrect").length,
+        unanswered: pageItems.filter((q) => q.status === "unanswered").length,
+        score: pageItems.filter((q) => q.status === "correct").length,
+        maxScore: pageItems.length,
+      });
     }
 
-    const accuracy = totalQuestions > 0 ? ((correctCount / totalQuestions) * 100).toFixed(1) : 0
+    const accuracy =
+      totalQuestions > 0
+        ? ((correctCount / totalQuestions) * 100).toFixed(1)
+        : "0";
 
     return {
       success: true,
-      message: "OMR comparison completed successfully",
-      answerKeySummary: answerKeyOmrData.summary,
-      questionPaperSummary: questionPaperOmrData.summary,
-      answerKeyImage: answerKeyOmrData.processed_image,
-      questionPaperImage: questionPaperOmrData.processed_image,
-      answerKeyQrData: answerKeyQrData.data,
-      questionPaperQrData: questionPaperQrData.data,
-      qrComparisonStatus: qrComparisonStatus,
-      qrComparisonMessage: qrComparisonMessage,
-      pages: pages,
+      message: "Evaluation completed using test master data",
+      pages,
       totalScore: correctCount,
       maxScore: totalQuestions,
-      totalQuestions: totalQuestions,
+      totalQuestions,
       correctAnswers: correctCount,
       incorrectAnswers: incorrectCount,
       unansweredQuestions: unansweredCount,
-      accuracy: accuracy,
-      comparisonDetails: {
-        totalAnswerKeyQuestions: answerKey.length,
-        totalStudentQuestions: studentAnswers.length,
-        answerKeyMarked: answerKey.filter((item) => item.marked === 1).length,
-        studentMarked: studentAnswers.filter((item) => item.marked === 1).length,
-      },
-    }
-  }
+      accuracy,
+      questionPaperQrData,
+    };
+  };
 
   const handleSubmitMarks = async () => {
     if (!result) {
-      alert("Please evaluate the OMR first.")
-      return
+      alert("Please evaluate the OMR first.");
+      return;
     }
 
     try {
-      setSubmitLoading(true)
-      const allQuestions = result.pages.flatMap((page) => page.questions)
-      const answers = allQuestions.map((q) => (q.studentAnswer === "N/A" ? null : q.studentAnswer))
+      setSubmitLoading(true);
+      const allQuestions = result.pages.flatMap((page) => page.questions);
+      const answers = allQuestions.map((q) =>
+        q.studentAnswer === "N/A" ? null : q.studentAnswer
+      );
 
       await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/omr-marks`, {
         answers,
@@ -349,15 +408,18 @@ const OMRScannerSimplified = () => {
         answerKeyQrData: result.answerKeyQrData, // Include QR data
         questionPaperQrData: result.questionPaperQrData, // Include QR data
         qrComparisonStatus: result.qrComparisonStatus, // Include QR comparison status
-      })
-      alert("Result saved successfully!")
+      });
+      alert("Result saved successfully!");
     } catch (error) {
-      console.error("Error saving marks:", error.response?.data || error.message)
-      alert("Saving marks failed.")
+      console.error(
+        "Error saving marks:",
+        error.response?.data || error.message
+      );
+      alert("Saving marks failed.");
     } finally {
-      setSubmitLoading(false)
+      setSubmitLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
@@ -365,7 +427,7 @@ const OMRScannerSimplified = () => {
         {/* Back Button */}
         <button
           type="button"
-          onClick={() => router.push('/admindashboard')}
+          onClick={() => router.push("/admindashboard")}
           className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium shadow transition-all"
         >
           <svg
@@ -394,7 +456,8 @@ const OMRScannerSimplified = () => {
             OMR & QR Scanner Comparator
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            Upload OMR answer key and question paper for comparison and evaluation, including QR code verification.
+            Upload OMR answer key and question paper for comparison and
+            evaluation, including QR code verification.
           </p>
         </motion.div>
 
@@ -410,17 +473,117 @@ const OMRScannerSimplified = () => {
             {/* File Upload Section */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* OMR Answer Key Upload */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                <FileUploadZone
-                  onFileSelect={setAnswerKeyFiles}
-                  files={answerKeyFiles}
-                  label="OMR Answer Key"
-                  color="blue"
-                  icon={Key}
-                />
-              </motion.div>
+              <div className="space-y-4">
+                {/* Dropdown Selector of tests */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <Key className="w-4 h-4 mr-2" />
+                    Select Test
+                  </label>
+                  <select
+                    onChange={handleTestSelect}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">-- Choose a Test --</option>
+                    {tests.map((test) => (
+                      <option key={test.id} value={test.id}>
+                        {test.testname} ({test.subject})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Display Selected Test Details */}
+                {selectedTest && (
+                  <motion.div
+                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <h3 className="text-lg font-bold text-blue-700">
+                      {selectedTest.testname}
+                    </h3>
+                    <p className="text-sm text-gray-700">
+                      <b>Subjects:</b> {selectedTest.subject}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <b>Batch:</b> {selectedTest.batch_name}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <b>Duration:</b> {selectedTest.duration} min
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <b>Marks:</b> {selectedTest.marks} ( +
+                      {selectedTest.positivemarks} / -
+                      {selectedTest.negativemarks} )
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <b>Status:</b> {selectedTest.status}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <b>Instruction:</b> {selectedTest.instruction}
+                    </p>
+
+                    {/* Topics List */}
+                    {selectedTest.topic_name && (
+                      <div className="text-sm text-gray-700">
+                        <b>Topics:</b>
+                        <ul className="list-disc ml-5">
+                          {JSON.parse(
+                            selectedTest.topic_name
+                          )[0].topic_names.map((topic, idx) => (
+                            <li key={idx}>{topic}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+              {selectedTestQuestions.length > 0 && (
+                <motion.div
+                  className="bg-white border border-gray-200 rounded-lg p-4 mt-4 shadow"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <h4 className="text-lg font-semibold mb-3 text-blue-700">
+                    Test Questions
+                  </h4>
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                    {selectedTestQuestions.map((q, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-blue-50 border border-blue-100 rounded p-3"
+                      >
+                        <p className="font-semibold text-gray-800">
+                          Q{idx + 1}: {q.question_text}
+                        </p>
+                        <ul className="list-disc ml-5 text-sm text-gray-700">
+                          {q.options.map((opt, i) => (
+                            <li
+                              key={i}
+                              className={
+                                opt === q.correctanswer
+                                  ? "text-green-600 font-medium"
+                                  : ""
+                              }
+                            >
+                              {opt}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
               {/* Question Paper Upload */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
                 <FileUploadZone
                   onFileSelect={setQuestionPaperFiles}
                   files={questionPaperFiles}
@@ -472,25 +635,37 @@ const OMRScannerSimplified = () => {
               <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 text-white">
                 <div className="flex flex-col space-y-4">
                   <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">OMR & QR Comparison Complete!</h2>
-                    <p className="text-green-100 text-sm sm:text-base">{result.message}</p>
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+                      OMR & QR Comparison Complete!
+                    </h2>
+                    <p className="text-green-100 text-sm sm:text-base">
+                      {result.message}
+                    </p>
                   </div>
                   {/* Summary Statistics */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
                     <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-green-200">{result.correctAnswers}</div>
+                      <div className="text-2xl font-bold text-green-200">
+                        {result.correctAnswers}
+                      </div>
                       <div className="text-xs opacity-90">Correct</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-red-200">{result.incorrectAnswers}</div>
+                      <div className="text-2xl font-bold text-red-200">
+                        {result.incorrectAnswers}
+                      </div>
                       <div className="text-xs opacity-90">Incorrect</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-gray-200">{result.unansweredQuestions}</div>
+                      <div className="text-2xl font-bold text-gray-200">
+                        {result.unansweredQuestions}
+                      </div>
                       <div className="text-xs opacity-90">Unanswered</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold">{result.accuracy}%</div>
+                      <div className="text-2xl font-bold">
+                        {result.accuracy}%
+                      </div>
                       <div className="text-xs opacity-90">Accuracy</div>
                     </div>
                     <div className="bg-white/20 rounded-lg p-3">
@@ -504,11 +679,14 @@ const OMRScannerSimplified = () => {
                   {result.comparisonDetails && (
                     <div className="text-center text-sm text-green-100">
                       <p>
-                        Answer Key OMR: {result.comparisonDetails.answerKeyMarked}/
-                        {result.comparisonDetails.totalAnswerKeyQuestions} marked
+                        Answer Key OMR:{" "}
+                        {result.comparisonDetails.answerKeyMarked}/
+                        {result.comparisonDetails.totalAnswerKeyQuestions}{" "}
+                        marked
                       </p>
                       <p>
-                        Student Paper OMR: {result.comparisonDetails.studentMarked}/
+                        Student Paper OMR:{" "}
+                        {result.comparisonDetails.studentMarked}/
                         {result.comparisonDetails.totalStudentQuestions} marked
                       </p>
                     </div>
@@ -519,26 +697,51 @@ const OMRScannerSimplified = () => {
                       <QrCode className="w-5 h-5 mr-2" /> QR Code Verification
                     </h3>
                     <p
-                      className={`font-semibold ${result.qrComparisonStatus === "matched" ? "text-green-200" : "text-red-200"}`}
+                      className={`font-semibold ${
+                        result.qrComparisonStatus === "matched"
+                          ? "text-green-200"
+                          : "text-red-200"
+                      }`}
                     >
                       Status: {result.qrComparisonMessage}
                     </p>
                     {result.answerKeyQrData && (
                       <div className="mt-2">
-                        <p className="font-semibold text-green-100">Answer Key QR:</p>
-                        <p>Test Name: {result.answerKeyQrData.testName || "N/A"}</p>
+                        <p className="font-semibold text-green-100">
+                          Answer Key QR:
+                        </p>
+                        <p>
+                          Test Name: {result.answerKeyQrData.testName || "N/A"}
+                        </p>
                         <p>Test ID: {result.answerKeyQrData.testId || "N/A"}</p>
-                        <p>Batch Name: {result.answerKeyQrData.batchName || "N/A"}</p>
+                        <p>
+                          Batch Name:{" "}
+                          {result.answerKeyQrData.batchName || "N/A"}
+                        </p>
                       </div>
                     )}
                     {result.questionPaperQrData && (
                       <div className="mt-2">
-                        <p className="font-semibold text-green-100">Student Paper QR:</p>
-                        <p>Student ID: {result.questionPaperQrData.studentId || "N/A"}</p>
-                        <p>Test Name: {result.questionPaperQrData.testName || "N/A"}</p>
-                        <p>Test ID: {result.questionPaperQrData.testId || "N/A"}</p>
-                        <p>Subject: {result.questionPaperQrData.subject || "N/A"}</p>
-                        <p>Chapter: {result.questionPaperQrData.chapter || "N/A"}</p>
+                        <p className="font-semibold text-green-100">
+                          Student Paper QR:
+                        </p>
+                        <p>
+                          Student ID:{" "}
+                          {result.questionPaperQrData.studentId || "N/A"}
+                        </p>
+                        <p>
+                          Test Name:{" "}
+                          {result.questionPaperQrData.testName || "N/A"}
+                        </p>
+                        <p>
+                          Test ID: {result.questionPaperQrData.testId || "N/A"}
+                        </p>
+                        <p>
+                          Subject: {result.questionPaperQrData.subject || "N/A"}
+                        </p>
+                        <p>
+                          Chapter: {result.questionPaperQrData.chapter || "N/A"}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -557,7 +760,9 @@ const OMRScannerSimplified = () => {
                       transition={{ delay: 0.3 }}
                     >
                       <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-                        <h3 className="text-lg font-bold">Answer Key (Processed)</h3>
+                        <h3 className="text-lg font-bold">
+                          Answer Key (Processed)
+                        </h3>
                       </div>
                       <div className="p-4">
                         <img
@@ -577,7 +782,9 @@ const OMRScannerSimplified = () => {
                       transition={{ delay: 0.4 }}
                     >
                       <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-4 text-white">
-                        <h3 className="text-lg font-bold">Student Paper (Processed)</h3>
+                        <h3 className="text-lg font-bold">
+                          Student Paper (Processed)
+                        </h3>
                       </div>
                       <div className="p-4">
                         <img
@@ -604,18 +811,26 @@ const OMRScannerSimplified = () => {
                     {/* Page Header */}
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 sm:p-6 text-white">
                       <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">Page {page.page}</h3>
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">
+                          Page {page.page}
+                        </h3>
                         <div className="flex space-x-4 text-center">
                           <div>
-                            <div className="text-xl font-bold text-green-200">{page.correct}</div>
+                            <div className="text-xl font-bold text-green-200">
+                              {page.correct}
+                            </div>
                             <div className="text-xs opacity-90">Correct</div>
                           </div>
                           <div>
-                            <div className="text-xl font-bold text-red-200">{page.incorrect}</div>
+                            <div className="text-xl font-bold text-red-200">
+                              {page.incorrect}
+                            </div>
                             <div className="text-xs opacity-90">Incorrect</div>
                           </div>
                           <div>
-                            <div className="text-xl font-bold text-gray-200">{page.unanswered}</div>
+                            <div className="text-xl font-bold text-gray-200">
+                              {page.unanswered}
+                            </div>
                             <div className="text-xs opacity-90">Unanswered</div>
                           </div>
                         </div>
@@ -649,8 +864,8 @@ const OMRScannerSimplified = () => {
                                   q.status === "correct"
                                     ? "bg-green-50 hover:bg-green-100"
                                     : q.status === "incorrect"
-                                      ? "bg-red-50 hover:bg-red-100"
-                                      : "bg-gray-50 hover:bg-gray-100"
+                                    ? "bg-red-50 hover:bg-red-100"
+                                    : "bg-gray-50 hover:bg-gray-100"
                                 }`}
                               >
                                 <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">
@@ -665,8 +880,8 @@ const OMRScannerSimplified = () => {
                                       q.status === "correct"
                                         ? "text-green-600"
                                         : q.status === "incorrect"
-                                          ? "text-red-600"
-                                          : "text-gray-600"
+                                        ? "text-red-600"
+                                        : "text-gray-600"
                                     }
                                   >
                                     {q.studentAnswer}
@@ -676,19 +891,25 @@ const OMRScannerSimplified = () => {
                                   {q.status === "correct" ? (
                                     <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-xs">
                                       <CheckCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">Correct</span>
+                                      <span className="hidden sm:inline">
+                                        Correct
+                                      </span>
                                       <span className="sm:hidden">✓</span>
                                     </span>
                                   ) : q.status === "incorrect" ? (
                                     <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold text-xs">
                                       <XCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">Incorrect</span>
+                                      <span className="hidden sm:inline">
+                                        Incorrect
+                                      </span>
                                       <span className="sm:hidden">✗</span>
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold text-xs">
                                       <XCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">Unanswered</span>
+                                      <span className="hidden sm:inline">
+                                        Unanswered
+                                      </span>
                                       <span className="sm:hidden">-</span>
                                     </span>
                                   )}
@@ -733,7 +954,7 @@ const OMRScannerSimplified = () => {
         </AnimatePresence>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OMRScannerSimplified
+export default OMRScannerSimplified;
