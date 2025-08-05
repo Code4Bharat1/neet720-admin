@@ -292,17 +292,29 @@ const OMRScannerSimplified = () => {
     const omrResults = questionPaperOmrData.results;
     const optionLabels = ["A", "B", "C", "D"];
 
-    // Map question number to first marked student option
-    const studentAnswerMap = {};
-    for (const entry of omrResults) {
-      const qNo = entry.question;
-      const selectedOption = entry.option;
-      const marked = entry.marked;
+    console.log("🔍 OMR Results (raw):", omrResults);
 
-      if (marked === 1 && !studentAnswerMap[qNo]) {
-        studentAnswerMap[qNo] = selectedOption;
+    // Step 1: Clean & Map the OMR results
+    const studentAnswerMap = {}; // question number → selected option
+
+    for (const entry of omrResults) {
+      const { question, option, marked } = entry;
+
+      if (typeof question !== "number" || !option || marked !== 1) {
+        console.warn("⚠️ Invalid or unmarked entry skipped:", entry);
+        continue;
+      }
+
+      if (!studentAnswerMap[question]) {
+        studentAnswerMap[question] = option;
+      } else {
+        console.warn(
+          `⚠️ Duplicate marked entry for Q${question}: already ${studentAnswerMap[question]}, ignored ${option}`
+        );
       }
     }
+
+    console.log("📋 Student Answer Map:", studentAnswerMap);
 
     const comparedResults = [];
     let correctCount = 0;
@@ -310,17 +322,18 @@ const OMRScannerSimplified = () => {
     let unansweredCount = 0;
 
     testQuestions.forEach((q, i) => {
-      const qNum = i + 1; // Assuming testQuestions[0] = Question 1
+      const qNum = i + 1;
       const correctAnswerText = q.correctanswer?.trim();
-      const correctOptionIndex = q.options.findIndex(
+      const correctIndex = q.options.findIndex(
         (opt) => opt.trim() === correctAnswerText
       );
-      const correctLabel = optionLabels[correctOptionIndex] || "N/A";
+      const correctLabel = optionLabels[correctIndex] || "N/A";
 
       const studentAnswer = studentAnswerMap[qNum] || null;
       let status = "unanswered";
 
       if (!studentAnswer) {
+        console.warn(`⚠️ No answer found for Q${qNum}`);
         unansweredCount++;
       } else if (studentAnswer === correctLabel) {
         correctCount++;

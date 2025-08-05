@@ -2,38 +2,388 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-
 import {
   Upload,
   Clipboard,
   CheckCircle,
   XCircle,
-  Edit,
-  Save,
-  ChevronRight,
-  ChevronDown,
   Book,
-  FlaskConical,
-  Atom,
-  Tag,
   Lightbulb,
   Send,
   Loader2,
-  ImageIcon,
   PlusCircle,
-  RefreshCcw,
+  RefreshCw,
+  Eye,
+  Edit3,
 } from "lucide-react";
 import Sidebar from "@/components/desktopsidebar/sidebar";
 
+// Separate Evaluation Step Component
+const EvaluationStep = ({ 
+  extractedQuestions, 
+  setExtractedQuestions, 
+  selectedTest, 
+  submittedCount, 
+  setSubmittedCount 
+}) => {
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editedQuestion, setEditedQuestion] = useState({});
+
+  // Handle editing a question
+  const handleEditQuestion = (idx) => {
+    setEditingQuestion(idx);
+    setEditedQuestion({
+      question: extractedQuestions[idx].question,
+      options: [...extractedQuestions[idx].options],
+      solution: extractedQuestions[idx].solution || "",
+      difficulty_level: extractedQuestions[idx].difficulty_level || "medium"
+    });
+  };
+
+  // Save edited question
+  const handleSaveEdit = (idx) => {
+    setExtractedQuestions((prev) => {
+      const updated = [...prev];
+      updated[idx] = {
+        ...updated[idx],
+        question: editedQuestion.question,
+        options: editedQuestion.options,
+        solution: editedQuestion.solution,
+        difficulty_level: editedQuestion.difficulty_level
+      };
+      return updated;
+    });
+    setEditingQuestion(null);
+    setEditedQuestion({});
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditedQuestion({});
+  };
+
+  // Update option text
+  const handleOptionChange = (optionIdx, value) => {
+    setEditedQuestion(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => 
+        i === optionIdx ? { ...opt, option_text: value } : opt
+      )
+    }));
+  };
+
+  // Toggle correct answer
+  const handleCorrectAnswerChange = (optionIdx) => {
+    setEditedQuestion(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => ({
+        ...opt,
+        is_correct: i === optionIdx
+      }))
+    }));
+  };
+
+  // Submit a question to backend
+  const handleSubmitQuestion = async (idx) => {
+    if (!selectedTest) {
+      alert("Please select a test first.");
+      return;
+    }
+
+    const q = extractedQuestions[idx];
+
+    try {
+      const payload = {
+        testId: selectedTest,
+        questionText: q.question,
+        options: q.options.map((opt) => opt.option_text),
+        correctAnswer: q.options.find((opt) => opt.is_correct)
+          ? String.fromCharCode(
+              65 + q.options.findIndex((opt) => opt.is_correct)
+            )
+          : "",
+        explanation: q.solution || "",
+        marks: 4,
+        negativeMarks: 1,
+        difficulty: q.difficulty_level || "medium",
+        questionType: "MCQ",
+      };
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/test-series/question`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("adminAuthToken")}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create question");
+      }
+
+      alert(`✅ Question ${idx + 1} added to test successfully.`);
+
+      setExtractedQuestions((prev) => {
+        const updated = [...prev];
+        updated[idx].submitted = true;
+        return updated;
+      });
+
+      setSubmittedCount((c) => {
+        const newCount = c + 1;
+        localStorage.setItem("mcq_submitted_count", newCount.toString());
+        return newCount;
+      });
+    } catch (error) {
+      alert(
+        "❌ Error creating question: " + (error.message || "Unknown error")
+      );
+    }
+  };
+
+  // Submit all questions at once
+  const handleSubmitAllQuestions = async () => {
+    if (!selectedTest) {
+      alert("Please select a test first.");
+      return;
+    }
+
+    const unsubmittedQuestions = extractedQuestions.filter(q => !q.submitted);
+    if (unsubmittedQuestions.length === 0) {
+      alert("All questions have already been submitted.");
+      return;
+    }
+
+    const confirmSubmit = window.confirm(
+      `Are you sure you want to submit all ${unsubmittedQuestions.length} remaining questions?`
+    );
+    
+    if (!confirmSubmit) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < extractedQuestions.length; i++) {
+      if (extractedQuestions[i].submitted) continue;
+
+      try {
+        await handleSubmitQuestion(i);
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    alert(`✅ ${successCount} questions submitted successfully. ${failCount > 0 ? `❌ ${failCount} failed.` : ''}`);
+  };
+
+  if (extractedQuestions.length === 0) return null;
+
+  return (
+    <motion.div
+      className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-blue-700 flex items-center gap-2">
+          <Eye className="w-5 h-5" />
+          Step 3: Review & Submit Questions ({extractedQuestions.length} found)
+        </h3>
+        <div className="flex gap-2">
+          <span className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
+            {extractedQuestions.filter(q => q.submitted).length} submitted
+          </span>
+          {extractedQuestions.some(q => !q.submitted) && (
+            <button
+              onClick={handleSubmitAllQuestions}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Submit All
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4 max-h-96 overflow-y-auto">
+        {extractedQuestions.map((q, idx) => (
+          <motion.div
+            key={idx}
+            className={`border rounded-lg p-4 ${
+              q.submitted 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-gray-50 border-gray-200'
+            }`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1 }}
+          >
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="font-medium text-gray-800">Question {idx + 1}</h4>
+              <div className="flex gap-2">
+                {!q.submitted && (
+                  <button
+                    onClick={() => editingQuestion === idx ? handleCancelEdit() : handleEditQuestion(idx)}
+                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                    title={editingQuestion === idx ? "Cancel editing" : "Edit question"}
+                  >
+                    {editingQuestion === idx ? <XCircle className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+                  </button>
+                )}
+                {q.submitted ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                )}
+              </div>
+            </div>
+
+            {editingQuestion === idx ? (
+              // Edit Mode
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Question Text:</label>
+                  <textarea
+                    value={editedQuestion.question}
+                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, question: e.target.value }))}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Options:</label>
+                  {editedQuestion.options?.map((opt, i) => (
+                    <div key={i} className="flex items-center gap-2 mb-2">
+                      <input
+                        type="radio"
+                        name={`correct-${idx}`}
+                        checked={opt.is_correct}
+                        onChange={() => handleCorrectAnswerChange(i)}
+                        className="text-blue-600"
+                      />
+                      <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                      <input
+                        type="text"
+                        value={opt.option_text}
+                        onChange={(e) => handleOptionChange(i, e.target.value)}
+                        className="flex-1 p-1 border rounded"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Solution/Explanation:</label>
+                  <textarea
+                    value={editedQuestion.solution}
+                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, solution: e.target.value }))}
+                    className="w-full p-2 border rounded-md"
+                    rows={2}
+                    placeholder="Optional explanation..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Difficulty Level:</label>
+                  <select
+                    value={editedQuestion.difficulty_level}
+                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, difficulty_level: e.target.value }))}
+                    className="p-2 border rounded-md"
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSaveEdit(idx)}
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // View Mode
+              <div>
+                <p className="text-gray-800 mb-3">{q.question}</p>
+                <ul className="space-y-1 mb-3">
+                  {q.options.map((opt, i) => (
+                    <li 
+                      key={i} 
+                      className={`flex items-center gap-2 ${
+                        opt.is_correct ? 'text-green-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                      <span>{opt.option_text}</span>
+                      {opt.is_correct && (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {q.solution && (
+                  <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded mb-3">
+                    <strong>Solution:</strong> {q.solution}
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    Difficulty: {q.difficulty_level || 'medium'}
+                  </span>
+                  <button
+                    onClick={() => handleSubmitQuestion(idx)}
+                    disabled={q.submitted}
+                    className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                      q.submitted 
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    {q.submitted ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Submitted
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Submit Question
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+// Main Page Component
 const Page = () => {
-  // PDF form state
-  const [pdfForm, setPdfForm] = useState({
-    chapterName: "",
-    subject: "",
-    topicTags: "",
-  });
-  const [pdfId, setPdfId] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [submittedCount, setSubmittedCount] = useState(() => {
     if (typeof window !== "undefined") {
       return Number.parseInt(
@@ -44,13 +394,11 @@ const Page = () => {
     return 0;
   });
 
-  const [chapter, setChapter] = useState("");
-  const [subject, setSubject] = useState("Physics");
-
-  const [topics, setTopics] = useState([]);
-
-  const [topicInput, setTopicInput] = useState("");
-  const [showEdit, setShowEdit] = useState(true);
+  // Test Series & Test Dropdown states
+  const [testSeriesList, setTestSeriesList] = useState([]);
+  const [selectedSeries, setSelectedSeries] = useState("");
+  const [testsList, setTestsList] = useState([]);
+  const [selectedTest, setSelectedTest] = useState("");
 
   // MCQ Extraction state
   const [mcqImage, setMcqImage] = useState(null);
@@ -59,88 +407,44 @@ const Page = () => {
   const [extractedQuestions, setExtractedQuestions] = useState([]);
   const pasteBoxRef = useRef(null);
 
-  const [chapterData, setChapterData] = useState({}); // All JSON data
-  const [availableChapters, setAvailableChapters] = useState([]); // Based on selected subject
-  const [availableTopics, setAvailableTopics] = useState([]); // Based on selected chapter
-  const [selectedTopic, setSelectedTopic] = useState("");
-  const [topicId, setTopicId] = useState("");
-  const [topicname, setTopicName] = useState("");
-  //--fetch the topic and chapter data
+  //--fetch test series
   useEffect(() => {
-    const fetchChapterData = async () => {
+    const fetchSeries = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/chapterData`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series`
         );
         const data = await res.json();
-        setChapterData(data);
+        if (data.success) {
+          setTestSeriesList(data.data);
+        }
       } catch (error) {
-        console.error("Failed to load chapter data", error);
+        console.error("Failed to load test series", error);
       }
     };
-
-    fetchChapterData();
+    fetchSeries();
   }, []);
 
+  //--fetch tests for selected series
   useEffect(() => {
-    if (subject && chapterData[subject]) {
-      setAvailableChapters(Object.keys(chapterData[subject]));
-      setChapter(""); // reset chapter
-      setAvailableTopics([]);
-      setSelectedTopic("");
-    }
-  }, [subject, chapterData]);
+    if (!selectedSeries) return;
+    const fetchTests = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/test-series-test/${selectedSeries}/tests`
+        );
+        const data = await res.json();
+        if (data.success) {
+          setTestsList(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to load tests", error);
+      }
+    };
+    fetchTests();
+  }, [selectedSeries]);
 
-  useEffect(() => {
-    if (subject && chapter && chapterData[subject]?.[chapter]) {
-      // ✅ This returns [{ name, topic_id }, ...]
-      const topicObjects = chapterData[subject][chapter];
-      setAvailableTopics(topicObjects); // <-- store full objects
-      setSelectedTopic(topicObjects[0]?.name || "");
-      console.log(topicObjects[0]?.topic_id);
-      setTopicId(topicObjects[0]?.topic_id);
-    } else {
-      setAvailableTopics([]);
-      setSelectedTopic("");
-      setTopicId("none");
-    }
-  }, [chapter]);
-
-  // --- Local Storage Effects ---
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedChapter = localStorage.getItem("mcq_chapter") || "";
-      const storedSubject = localStorage.getItem("mcq_subject") || "Physics";
-      const storedTopics = JSON.parse(
-        localStorage.getItem("mcq_topics") || "[]"
-      );
-      setChapter(storedChapter);
-      setSubject(storedSubject);
-      setTopics(storedTopics);
-      setTopicInput(
-        typeof storedTopics[0] === "string"
-          ? storedTopics.join("\n")
-          : storedTopics.map((t) => t.name).join("\n")
-      );
-      setShowEdit(!(storedChapter && storedTopics.length > 0));
-    }
-  }, []);
-
-  useEffect(() => {
-    const savedForm = JSON.parse(localStorage.getItem("pdf_form") || "{}");
-    setPdfForm({
-      chapterName: savedForm.chapterName || "",
-      subject: savedForm.subject || "",
-      topicTags: savedForm.topicTags || "",
-    });
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("pdf_form", JSON.stringify(pdfForm));
-  }, [pdfForm]);
-  // --- Handlers ---
-
-  // Handler for image paste (extract MCQs)
+  // Handle image paste/upload
   const handlePasteImage = (e) => {
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -155,14 +459,14 @@ const Page = () => {
     }
   };
 
-  // Handler for image upload (extract MCQs)
   const handleMcqImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setMcqImage(e.target.files[0]);
+      setExtractError(null);
     }
   };
 
-  // Extract MCQs from the image
+  // Extract MCQs from image
   const handleExtractMcqs = async () => {
     if (!mcqImage) {
       alert("Please paste or upload an image first.");
@@ -200,17 +504,7 @@ const Page = () => {
               option_text: opt,
               is_correct: mcq.answer?.toLowerCase() === "abcd"[i],
             })),
-            solution: "",
-            difficulty_level: "medium",
-            evaluating: false,
-            evaluated: false,
-            pdfId: pdfId || "",
-            topic: "", // For topic suggestion
-            diagramPath: "",
-            diagramFile: null,
-            diagramPreview: "",
-            submitted: false, // New field to track submission status
-            showDetails: false, // For accordion-like behavior
+            submitted: false,
           }))
         );
       } else {
@@ -225,326 +519,18 @@ const Page = () => {
     }
   };
 
-  // Update question field
-  const updateQuestionField = (idx, field, value) => {
-    setExtractedQuestions((prev) => {
-      const arr = [...prev];
-      arr[idx] = { ...arr[idx], [field]: value };
-      return arr;
-    });
-  };
-
-  // Update an option field
-  const updateOptionField = (qIdx, optIdx, field, value) => {
-    setExtractedQuestions((prev) => {
-      const arr = [...prev];
-      arr[qIdx].options = arr[qIdx].options.map((opt, i) =>
-        i === optIdx
-          ? { ...opt, [field]: value }
-          : field === "is_correct"
-          ? { ...opt, is_correct: false } // Only one correct option
-          : opt
-      );
-      return arr;
-    });
-  };
-
-  // Evaluate difficulty for a question and fetch topic/topic_id
-  const handleEvaluateDifficulty = async (idx) => {
-    const q = extractedQuestions[idx];
-    const mcqText =
-      `${q.question}\n` +
-      q.options
-        .map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt.option_text}`)
-        .join("\n");
-
-    try {
-      updateQuestionField(idx, "evaluating", true);
-
-      const res = await fetch(
-        `https://mcq-extractor.neet720.com/api/assess-difficulty`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mcq: mcqText,
-            chapter: chapter,
-            topics: topics,
-            subject: subject,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to assess difficulty");
-      }
-
-      const { difficulty, answer, explanation, topic, topic_id } =
-        await res.json();
-
-      updateQuestionField(
-        idx,
-        "difficulty_level",
-        difficulty === "easy" ? "simple" : difficulty
-      );
-      updateQuestionField(idx, "solution", explanation);
-      updateQuestionField(
-        idx,
-        "options",
-        q.options.map((opt, i) => ({
-          ...opt,
-          is_correct:
-            String.fromCharCode(65 + i) === (answer || "").toUpperCase(),
-        }))
-      );
-      updateQuestionField(idx, "evaluated", true);
-      updateQuestionField(idx, "topic", topic || "");
-      updateQuestionField(idx, "topicId", topic_id || "");
-    } catch (error) {
-      alert(
-        "Failed to evaluate difficulty: " + (error.message || "Unknown error")
-      );
-    } finally {
-      updateQuestionField(idx, "evaluating", false);
-    }
-  };
-
-  // Paste handler (diagram): uploads immediately, sets diagramPath to AWS url
-  const handleDiagramPaste = async (e, idx) => {
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf("image") !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          const formData = new FormData();
-          formData.append("file", file);
-          try {
-            setUploading(true);
-            const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
-              {
-                method: "POST",
-                body: formData,
-              }
-            );
-
-            if (!res.ok) {
-              const errorData = await res.json();
-              throw new Error(errorData.error || "Failed to upload image");
-            }
-
-            const data = await res.json();
-            const imageUrl = data.url;
-            updateQuestionField(idx, "diagramPath", imageUrl);
-            updateQuestionField(
-              idx,
-              "diagramPreview",
-              URL.createObjectURL(file)
-            ); // For immediate preview
-          } catch (err) {
-            alert(
-              "Failed to upload pasted image: " +
-                (err.message || "Unknown error")
-            );
-          } finally {
-            setUploading(false);
-          }
-          break;
-        }
-      }
-    }
-  };
-
-  const handleDiagramUpload = async (e, idx) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      setUploading(true);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to upload image");
-      }
-
-      const data = await res.json();
-      const imageUrl = data.url;
-      updateQuestionField(idx, "diagramPath", imageUrl);
-      updateQuestionField(idx, "diagramPreview", URL.createObjectURL(file)); // For immediate preview
-    } catch (err) {
-      alert("Failed to upload image: " + (err.message || "Unknown error"));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemoveDiagram = (idx) => {
-    updateQuestionField(idx, "diagramPath", "");
-    updateQuestionField(idx, "diagramFile", null);
-    updateQuestionField(idx, "diagramPreview", "");
-  };
-
-  // Submit a single question (upload pasted diagram if any)
-  const handleCreateQuestion = async (idx) => {
-    const q = extractedQuestions[idx];
-    let diagramUrl = q.diagramPath;
-
-    // Step 1: Upload diagram if required
-    if (!diagramUrl && q.diagramFile) {
-      const formData = new FormData();
-      formData.append("file", q.diagramFile);
-      try {
-        setUploading(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Failed to upload diagram");
-        }
-
-        const data = await res.json();
-        diagramUrl = data.url;
-      } catch (err) {
-        alert(
-          "Failed to upload diagram for question: " +
-            (err.message || "Unknown error")
-        );
-        setUploading(false);
-        return;
-      } finally {
-        setUploading(false);
-      }
-    }
-
-    // Step 2: Transform & Send Data
-    try {
-      const raw = localStorage.getItem("mcq_topics");
-      const parsed = JSON.parse(raw); // converts '["Simple Harmonic motion"]' to ["Simple Harmonic motion"]
-      const topic = parsed.join("\n"); // joins array elements without brackets or quotes
-      const payload = {
-        subject: subject,
-        chapter: localStorage.getItem("mcq_chapter"),
-        topic: topic,
-        topicID: localStorage.getItem("topic_id") || "", // <-- ✅ send topicId
-        question: q.question,
-        options: q.options.map((opt) => opt.option_text),
-        answer: q.options.find((opt) => opt.is_correct)?.option_text || "",
-        difficulty: q.difficulty_level,
-        explanation: q.solution || "",
-      };
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/teacher/question`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("adminAuthToken")}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create question");
-      }
-
-      alert(`Question ${idx + 1} created successfully.`);
-
-      // Mark question as submitted
-      setExtractedQuestions((prev) => {
-        const updated = [...prev];
-        updated[idx].submitted = true;
-        return updated;
-      });
-
-      setSubmittedCount((c) => {
-        const newCount = c + 1;
-        localStorage.setItem("mcq_submitted_count", newCount.toString());
-        return newCount;
-      });
-    } catch (error) {
-      alert("Error creating question: " + (error.message || "Unknown error"));
-    }
-  };
-
-  // Step 1: PDF creation
-  const handleCreatePdf = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/pdfid`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chapterName: pdfForm.chapterName,
-          subject: pdfForm.subject,
-          topicTags: pdfForm.topicTags.split(",").map((tag) => tag.trim()),
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create PDF");
-      }
-
-      const data = await res.json();
-      setPdfId(data.pdfId);
-      setExtractedQuestions((prev) =>
-        prev.map((q) => ({ ...q, pdfId: data.pdfId }))
-      );
-      alert("PDF Created. PDF ID: " + data.pdfId);
-    } catch (error) {
-      alert(error.message || "Error creating PDF");
-    }
-  };
-
   // Framer Motion Variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1 },
     },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
-  };
-
-  const handleEvaluateAllSequentially = async () => {
-    for (let i = 0; i < extractedQuestions.length; i++) {
-      if (!extractedQuestions[i].evaluated) {
-        await handleEvaluateDifficulty(i);
-      }
-    }
-  };
-
-  const handleSubmitAllSequentially = async () => {
-    for (let i = 0; i < extractedQuestions.length; i++) {
-      if (!extractedQuestions[i].submitted) {
-        await handleCreateQuestion(i);
-      }
-    }
   };
 
   return (
@@ -558,556 +544,142 @@ const Page = () => {
         animate="visible"
         variants={containerVariants}
       >
-        {/* Header */}
-        <motion.h1 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-800 drop-shadow-lg mb-8">
-          NEET MCQ Admin Panel
-        </motion.h1>
-
-        {/* Submitted Count */}
-        <motion.div
-          className="flex items-center justify-between bg-white p-4 rounded-lg shadow-lg border border-gray-200"
-          variants={itemVariants}
-        >
-          <div className="flex items-center gap-2 text-green-700 font-medium">
-            <CheckCircle className="w-5 h-5" />
-            Total Questions Submitted: {submittedCount}
-          </div>
-          <motion.button
-            className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
-            onClick={() => {
-              const confirmReset = window.confirm(
-                "Are you sure you want to reset the submitted count?"
-              );
-              if (confirmReset) {
-                localStorage.setItem("mcq_submitted_count", "0");
-                setSubmittedCount(0);
-              }
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <RefreshCcw className="w-4 h-4" />
-            Reset Count
-          </motion.button>
-        </motion.div>
-
-        {/* Chapter/Topics/Subjects section */}
+        {/* Step 1: Dropdowns */}
         <motion.div
           className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
           variants={itemVariants}
         >
           <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-            <Book className="w-5 h-5" />
-            Set Chapter, Topics, and Subject
+            <Book className="w-5 h-5" /> Step 1: Select Test Series & Test
           </h2>
-          {showEdit ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="relative my-2">
-                <select
-                  className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
-                  value={subject}
-                  onChange={(e) => {
-                    setSubject(e.target.value);
-                    localStorage.setItem("mcq_subject", e.target.value);
-                  }}
-                >
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Biology">Biology</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Test Series</label>
               <select
-                className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                value={chapter}
-                onChange={(e) => setChapter(e.target.value)}
-              >
-                <option value="">Select Chapter</option>
-                {availableChapters.map((ch) => (
-                  <option key={ch} value={ch}>
-                    {ch}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                value={selectedTopic}
+                value={selectedSeries}
                 onChange={(e) => {
-                  const selected = e.target.value;
-                  setSelectedTopic(selected);
-
-                  if (selected === "") {
-                    setTopicId("none");
-                    // setTopicName("none") // None selected
-                  } else {
-                    const matched = availableTopics.find(
-                      (t) => t.name === selected
-                    );
-                    console.log(matched?.topic_id);
-                    setTopicId(matched?.topic_id || "");
-                    console.log(matched?.name);
-                    setTopicName(matched?.name);
-                  }
+                  setSelectedSeries(e.target.value);
+                  setSelectedTest("");
                 }}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">None</option>
-                {availableTopics.map((topic) => (
-                  <option key={topic.name} value={topic.name}>
-                    {topic.name}
+                <option value="">Select Test Series</option>
+                {testSeriesList.map((series) => (
+                  <option key={series.id} value={series.id}>
+                    {series.name}
                   </option>
                 ))}
               </select>
-
-              <motion.button
-                className="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => {
-                  const topicsArr = selectedTopic ? [selectedTopic] : [];
-                  setTopics(topicsArr);
-                  localStorage.setItem("mcq_chapter", chapter);
-                  localStorage.setItem("mcq_topics", JSON.stringify(topicsArr));
-                  localStorage.setItem("topic_id", JSON.stringify(topicId));
-                  setShowEdit(false);
-                }}
-                disabled={!chapter}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Test</label>
+              <select
+                value={selectedTest}
+                onChange={(e) => setSelectedTest(e.target.value)}
+                disabled={!selectedSeries}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
               >
-                <Save className="w-5 h-5" />
-                Save
-              </motion.button>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Book className="w-4 h-4 text-blue-600" />
-                  <span className="font-semibold text-gray-700">
-                    Chapter:
-                  </span>{" "}
-                  {chapter}
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  {subject === "Physics" && (
-                    <Atom className="w-4 h-4 text-purple-600" />
-                  )}
-                  {subject === "Chemistry" && (
-                    <FlaskConical className="w-4 h-4 text-green-600" />
-                  )}
-                  {subject === "Biology" && (
-                    <Book className="w-4 h-4 text-red-600" />
-                  )}
-                  <span className="font-semibold text-gray-700">Subject:</span>{" "}
-                  {subject}
-                </div>
-                <div className="flex items-start gap-2 flex-wrap">
-                  <Tag className="w-4 h-4 text-yellow-600 mt-1" />
-                  <span className="font-semibold text-gray-700">
-                    Topics:
-                  </span>{" "}
-                  <div className="flex flex-wrap gap-2">
-                    {topics.map((t, i) => (
-                      <span
-                        key={`${t}-${i}`}
-                        className={`inline-block px-3 py-1 rounded-full text-sm shadow-sm ${
-                          t === ""
-                            ? "bg-gray-200 text-gray-700"
-                            : "bg-blue-200 text-blue-800"
-                        }`}
-                      >
-                        {t === "" ? "None" : t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <motion.button
-                className="bg-gray-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2"
-                onClick={() => {
-                  setShowEdit(true);
-                  setTopicInput(topics.join("\n"));
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Edit className="w-5 h-5" />
-                Edit
-              </motion.button>
-            </motion.div>
-          )}
+                <option value="">Select Test</option>
+                {testsList.map((test) => (
+                  <option key={test.id} value={test.id}>
+                    {test.testName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </motion.div>
 
-        {/* MCQ Extraction and Question Forms */}
+        {/* Step 2: MCQ Extraction */}
         <motion.div
           className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
           variants={itemVariants}
         >
           <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" />
-            Step 2: Paste/Upload MCQ Image & Extract
+            <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ Image
           </h2>
-          <motion.div
-            ref={pasteBoxRef}
-            tabIndex={0}
-            onPaste={handlePasteImage}
-            className="border-2 border-dashed border-blue-500 rounded-lg p-8 text-center mb-4 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 transition-all duration-200 flex flex-col items-center justify-center gap-3"
-            style={{ minHeight: "120px" }}
-            onClick={() => pasteBoxRef.current && pasteBoxRef.current.focus()}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <Clipboard className="w-8 h-8 text-blue-600" />
-            <span className="text-gray-700 text-lg">
-              <b>Paste</b> your image snippet here (Ctrl+V or ⌘+V)
-            </span>
-            <span className="text-gray-600 text-sm">
-              or click to focus and paste, or{" "}
-              <label className="inline-flex items-center cursor-pointer text-blue-600 hover:text-blue-800">
-                <Upload className="w-4 h-4 mr-1" />
-                upload file
+          
+          <div className="space-y-4">
+            <div
+              ref={pasteBoxRef}
+              tabIndex={0}
+              onPaste={handlePasteImage}
+              className="border-2 border-dashed border-blue-300 bg-blue-50 p-8 text-center rounded-lg hover:border-blue-400 transition-colors"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <Clipboard className="w-12 h-12 text-blue-600" />
+                <div>
+                  <p className="text-lg font-medium text-blue-800">
+                    Paste or Upload MCQ Image
+                  </p>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Paste with Ctrl+V or click to browse files
+                  </p>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleMcqImageChange}
-                  className="hidden"
+                  className="mt-2"
                 />
-              </label>
-            </span>
-          </motion.div>
-          <motion.button
-            className="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleExtractMcqs}
-            disabled={extracting || !mcqImage}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {extracting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Extracting...
-              </>
-            ) : (
-              <>
-                <Send className="w-5 h-5" /> Extract MCQs
-              </>
+              </div>
+            </div>
+
+            {mcqImage && (
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
+                <CheckCircle className="w-5 h-5" />
+                <span>Image loaded: {mcqImage.name}</span>
+              </div>
             )}
-          </motion.button>
-          {extractError && (
-            <motion.p
-              className="text-red-600 mt-4 flex items-center gap-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+
+            <button
+              onClick={handleExtractMcqs}
+              disabled={extracting || !mcqImage}
+              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              <XCircle className="w-5 h-5" />
-              {extractError}
-            </motion.p>
-          )}
-          {mcqImage && (
-            <motion.div
-              className="mt-4 p-3 bg-gray-100 rounded-md border border-gray-300"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <h3 className="text-gray-700 text-sm mb-2">Image Preview:</h3>
-              <img
-                src={URL.createObjectURL(mcqImage) || "/placeholder.svg"}
-                alt="MCQ upload preview"
-                className="max-w-full h-auto rounded-md shadow-md border border-gray-400"
-              />
-            </motion.div>
-          )}
+              {extracting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Extracting MCQs...
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="w-4 h-4" />
+                  Extract MCQs
+                </>
+              )}
+            </button>
+
+            {extractError && (
+              <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
+                <XCircle className="w-5 h-5" />
+                <span>{extractError}</span>
+              </div>
+            )}
+          </div>
         </motion.div>
 
-        <motion.button
-          onClick={handleEvaluateAllSequentially}
-          className="bg-purple-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2 mb-4"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Lightbulb className="w-5 h-5" />
-          Evaluate All One-by-One
-        </motion.button>
+        {/* Step 3: Evaluation Step (Separate Component) */}
+        <EvaluationStep
+          extractedQuestions={extractedQuestions}
+          setExtractedQuestions={setExtractedQuestions}
+          selectedTest={selectedTest}
+          submittedCount={submittedCount}
+          setSubmittedCount={setSubmittedCount}
+        />
 
-        <motion.button
-          onClick={handleSubmitAllSequentially}
-          className="bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 mb-4 ml-4"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <PlusCircle className="w-5 h-5" />
-          Submit All One-by-One
-        </motion.button>
-
-        {extractedQuestions.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
+        {/* Stats */}
+        {submittedCount > 0 && (
+          <motion.div
+            className="bg-green-50 border border-green-200 p-4 rounded-lg"
+            variants={itemVariants}
+          >
+            <div className="flex items-center gap-2 text-green-800">
               <CheckCircle className="w-5 h-5" />
-              Step 3: Review, Evaluate & Submit Each MCQ
-            </h2>
-            {extractedQuestions.map((q, idx) => (
-              <motion.div
-                key={idx}
-                className={`mb-6 p-6 rounded-lg shadow-lg border-2 transition-all duration-300 ${
-                  q.evaluated
-                    ? "bg-green-50 border-green-500"
-                    : q.evaluating
-                    ? "bg-yellow-50 border-yellow-400 animate-pulse"
-                    : "bg-white border-gray-200"
-                }`}
-                variants={itemVariants}
-              >
-                <div
-                  className="flex items-center justify-between mb-4 cursor-pointer"
-                  onClick={() =>
-                    updateQuestionField(idx, "showDetails", !q.showDetails)
-                  }
-                >
-                  <div
-                    className={`font-bold text-lg flex items-center gap-2 ${
-                      q.evaluated ? "text-green-700" : "text-blue-700"
-                    }`}
-                  >
-                    Question {idx + 1}
-                    {q.submitted && (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
-                  {q.showDetails ? (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-
-                {q.showDetails && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <label className="block text-gray-700 text-sm mb-1">
-                      PDF ID:
-                    </label>
-                    <input
-                      placeholder="PDF ID"
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      value={q.pdfId || pdfId || ""}
-                      onChange={(e) =>
-                        updateQuestionField(idx, "pdfId", e.target.value)
-                      }
-                    />
-                    <label className="block text-gray-700 text-sm mb-1">
-                      Question Text:
-                    </label>
-                    <textarea
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      value={q.question}
-                      onChange={(e) =>
-                        updateQuestionField(idx, "question", e.target.value)
-                      }
-                      rows={4}
-                    />
-                    <h3 className="font-semibold mt-4 text-blue-700">
-                      Options:
-                    </h3>
-                    {q.options.map((opt, i) => (
-                      <div key={i} className="flex items-center gap-2 my-2">
-                        <input
-                          className="flex-1 bg-gray-50 text-gray-900 border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                          value={opt.option_text}
-                          onChange={(e) =>
-                            updateOptionField(
-                              idx,
-                              i,
-                              "option_text",
-                              e.target.value
-                            )
-                          }
-                        />
-                        <label className="flex items-center gap-1 text-gray-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={opt.is_correct}
-                            onChange={(e) =>
-                              updateOptionField(
-                                idx,
-                                i,
-                                "is_correct",
-                                e.target.checked
-                              )
-                            }
-                            className="form-checkbox h-5 w-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          Correct
-                        </label>
-                      </div>
-                    ))}
-                    <motion.button
-                      onClick={() => handleEvaluateDifficulty(idx)}
-                      className="bg-purple-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                      disabled={q.evaluating}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {q.evaluating ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />{" "}
-                          Evaluating...
-                        </>
-                      ) : q.evaluated ? (
-                        <>
-                          <CheckCircle className="w-5 h-5" /> Evaluated
-                        </>
-                      ) : (
-                        <>
-                          <Lightbulb className="w-5 h-5" /> Evaluate
-                        </>
-                      )}
-                    </motion.button>
-                    <label className="block text-gray-700 text-sm mb-1 mt-4">
-                      Difficulty Level:
-                    </label>
-                    <select
-                      value={q.difficulty_level}
-                      onChange={(e) =>
-                        updateQuestionField(
-                          idx,
-                          "difficulty_level",
-                          e.target.value
-                        )
-                      }
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
-                    >
-                      <option value="simple">Simple</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </select>
-                    <label className="block text-gray-700 text-sm mb-1">
-                      Solution:
-                    </label>
-                    <textarea
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      placeholder="Solution"
-                      value={q.solution}
-                      onChange={(e) =>
-                        updateQuestionField(idx, "solution", e.target.value)
-                      }
-                      rows={4}
-                    />
-                    <label className="block text-gray-700 text-sm mb-1 mt-4">
-                      Topic Suggestion:
-                    </label>
-                    <input
-                      placeholder="Topic (suggested, editable)"
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      value={q.topic || ""}
-                      onChange={(e) =>
-                        updateQuestionField(idx, "topic", e.target.value)
-                      }
-                    />
-
-                    <h3 className="font-semibold mt-4 text-blue-700 flex items-center gap-2">
-                      <ImageIcon className="w-5 h-5" />
-                      Paste or Upload Diagram:
-                    </h3>
-                    <motion.div
-                      tabIndex={0}
-                      onPaste={(e) => handleDiagramPaste(e, idx)}
-                      className="border-2 border-dashed border-green-500 rounded-lg p-6 text-center mb-2 cursor-pointer hover:bg-green-50 focus:bg-green-50 transition-all duration-200 flex flex-col items-center justify-center gap-2"
-                      style={{ minHeight: "100px" }}
-                      title="Paste a diagram image here (Ctrl+V)"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <Clipboard className="w-6 h-6 text-green-600" />
-                      <span className="text-gray-700 text-sm">
-                        <b>Paste</b> your diagram here (Ctrl+V or ⌘+V)
-                      </span>
-                      <span className="text-gray-600 text-xs">
-                        or{" "}
-                        <label className="inline-flex items-center cursor-pointer text-green-600 hover:text-green-800">
-                          <Upload className="w-3 h-3 mr-1" />
-                          upload file
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleDiagramUpload(e, idx)}
-                            className="hidden"
-                          />
-                        </label>
-                      </span>
-                    </motion.div>
-                    <label className="block text-gray-700 text-sm mb-1">
-                      Diagram URL:
-                    </label>
-                    <input
-                      placeholder="Diagram URL"
-                      className="bg-gray-50 text-gray-900 border border-gray-300 p-3 w-full my-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      value={q.diagramPath}
-                      onChange={(e) =>
-                        updateQuestionField(idx, "diagramPath", e.target.value)
-                      }
-                    />
-                    {(q.diagramPreview || q.diagramPath) && (
-                      <motion.div
-                        className="mt-4 p-3 bg-gray-100 rounded-md border border-gray-300 relative w-fit"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <img
-                          src={q.diagramPreview || q.diagramPath}
-                          alt="Diagram preview"
-                          className="max-w-full h-auto rounded-md shadow-md border border-gray-400"
-                        />
-                        <motion.button
-                          onClick={() => handleRemoveDiagram(idx)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 text-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                          title="Remove image"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </motion.button>
-                        {q.diagramPath && (
-                          <p className="text-xs break-all text-gray-600 mt-2">
-                            URL: {q.diagramPath}
-                          </p>
-                        )}
-                      </motion.div>
-                    )}
-                    <motion.button
-                      className={`px-6 py-3 rounded-md font-semibold mt-6 flex items-center gap-2 ${
-                        q.submitted
-                          ? "bg-green-300 text-gray-700 cursor-not-allowed"
-                          : "bg-green-600 text-white hover:bg-green-700"
-                      } transition-colors duration-200 disabled:opacity-50`}
-                      onClick={() => handleCreateQuestion(idx)}
-                      disabled={uploading || q.submitted}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {q.submitted ? (
-                        <>
-                          <CheckCircle className="w-5 h-5" /> Submitted
-                        </>
-                      ) : uploading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />{" "}
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <PlusCircle className="w-5 h-5" /> Submit Question
-                        </>
-                      )}
-                    </motion.button>
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
+              <span className="font-medium">
+                Total Questions Submitted: {submittedCount}
+              </span>
+            </div>
           </motion.div>
         )}
       </motion.div>
