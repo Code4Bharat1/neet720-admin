@@ -111,7 +111,7 @@ const EvaluationStep = ({
       };
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/test-series/question`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/question/create`,
         {
           method: "POST",
           headers: {
