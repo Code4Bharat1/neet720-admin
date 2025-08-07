@@ -226,46 +226,47 @@ export default function TestDetails() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-7xl">
         {/* Header Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 sm:mb-6">
-            <button
-              onClick={() => router.push(`/test-series`)}
-              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
-            >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <div className="w-full flex justify-center">
-              <div className="flex flex-col items-center text-center gap-1 sm:gap-2 mb-6">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                  Test Details
-                </h1>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Review test information and questions
-                </p>
-              </div>
+        <button
+          onClick={() => router.push(`/test-series`)}
+          className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
+        >
+          <svg
+            className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <div className="mb-6 mt-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 sm:mb-6">
+            {/* Header Section */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                Test Details
+              </h1>
+              <p className="text-gray-600 text-base sm:text-lg">
+                Review test information and questions
+              </p>
             </div>
 
-            <div className="sm:ml-auto">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
+              {/* Create Question Button */}
               <button
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium text-sm sm:text-base"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base order-1 sm:order-1"
                 onClick={() =>
                   router.push(`/test-series/test/${testId}/create`)
                 }
               >
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -278,6 +279,50 @@ export default function TestDetails() {
                   />
                 </svg>
                 Create Question
+              </button>
+
+              {/* Print Question Paper Button */}
+              <button
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base order-2 sm:order-2"
+                onClick={() =>
+                  router.push(`/test-series/test/${testId}/offline-test`)
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                  />
+                </svg>
+                Print Question Paper
+              </button>
+              <button
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base order-2 sm:order-2"
+                onClick={() =>
+                  router.push(`/test-series/test/${testId}/print-omr`)
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                  />
+                </svg>
+                Print OMR Sheet
               </button>
             </div>
           </div>
