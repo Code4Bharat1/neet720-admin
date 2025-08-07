@@ -14,7 +14,7 @@ import { BiSolidDashboard } from "react-icons/bi";
 import { GiTestTubes } from "react-icons/gi";
 import { LuFileInput } from "react-icons/lu";
 import { PiStudent, PiBook } from "react-icons/pi";
-import { Scan } from "lucide-react";
+import { Scan , Layers } from "lucide-react";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -61,8 +61,8 @@ const Sidebar = () => {
     { label: "Generate Test", icon: <LuFileInput className="text-xl" />, href: "/generatetest" },
     { label : "Post Notice", icon : <PiBook className="text-xl" />, href : '/notice'},
     { label : "Scan OMR", icon : <Scan className="text-xl"/>, href : "/scan-omr"},
-    { label : "Chapter-wise question", icon : <Scan className="text-xl"/>, href : "/chapterwisequestion"}
-    
+    { label : "Chapter-wise question", icon : <Scan className="text-xl"/>, href : "/chapterwisequestion"},
+    { label : "Test Series", icon : <Layers className="text-xl"/>, href : "/test-series"},
   ];
 
   return (
