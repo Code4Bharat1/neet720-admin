@@ -75,7 +75,7 @@ export default function TestDetails() {
       console.error("Error updating question", err);
     }
   };
-  // Inside TestDetails component
+
   const deleteQuestion = async (questionId) => {
     if (!confirm("Are you sure you want to delete this question?")) return;
 
@@ -95,48 +95,61 @@ export default function TestDetails() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="container mx-auto px-6 py-8 max-w-6xl">
+        <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-7xl">
           {/* Header Skeleton */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 bg-slate-200 rounded-lg animate-pulse"></div>
-              <div>
-                <div className="h-8 bg-slate-200 rounded-lg w-64 mb-2 animate-pulse"></div>
-                <div className="h-4 bg-slate-200 rounded w-40 animate-pulse"></div>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 sm:mb-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-200 rounded-lg animate-pulse"></div>
+                <div>
+                  <div className="h-6 sm:h-8 bg-slate-200 rounded-lg w-48 sm:w-64 mb-2 animate-pulse"></div>
+                  <div className="h-3 sm:h-4 bg-slate-200 rounded w-32 sm:w-40 animate-pulse"></div>
+                </div>
+              </div>
+              <div className="sm:ml-auto">
+                <div className="h-10 sm:h-12 bg-slate-200 rounded-xl w-36 sm:w-44 animate-pulse"></div>
               </div>
             </div>
           </div>
 
           {/* Test Details Skeleton */}
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200 mb-8 animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-80 mb-4"></div>
-            <div className="space-y-3">
-              <div className="h-5 bg-slate-200 rounded w-60"></div>
-              <div className="h-5 bg-slate-200 rounded w-48"></div>
-              <div className="h-5 bg-slate-200 rounded w-96"></div>
+          <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8 shadow-sm border border-slate-200 mb-6 sm:mb-8 animate-pulse">
+            <div className="h-6 sm:h-8 bg-slate-200 rounded w-60 sm:w-80 mb-4"></div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-slate-50 rounded-lg p-3 sm:p-4">
+                  <div className="h-4 bg-slate-200 rounded w-16 mb-2"></div>
+                  <div className="h-5 bg-slate-200 rounded w-20"></div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Questions Skeleton */}
-          <div className="space-y-6">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 animate-pulse"
-              >
-                <div className="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
-
-                <div className="space-y-2 mb-4">
-                  {[...Array(4)].map((_, j) => (
-                    <div
-                      key={j}
-                      className="h-4 bg-slate-200 rounded w-2/3"
-                    ></div>
-                  ))}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-slate-200 animate-pulse">
+              <div className="h-6 bg-slate-200 rounded w-40 mb-2"></div>
+              <div className="h-4 bg-slate-200 rounded w-32"></div>
+            </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-slate-50 rounded-xl p-4 sm:p-6 animate-pulse"
+                >
+                  <div className="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
+                  <div className="space-y-2 mb-4">
+                    {[...Array(4)].map((_, j) => (
+                      <div
+                        key={j}
+                        className="h-4 bg-slate-200 rounded w-2/3"
+                      ></div>
+                    ))}
+                  </div>
+                  <div className="h-4 bg-slate-200 rounded w-48"></div>
                 </div>
-                <div className="h-4 bg-slate-200 rounded w-48"></div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -145,11 +158,11 @@ export default function TestDetails() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg border border-red-200 p-8 max-w-md mx-4">
-          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg border border-red-200 p-6 sm:p-8 max-w-md w-full">
+          <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 bg-red-100 rounded-full">
             <svg
-              className="w-8 h-8 text-red-600"
+              className="w-6 h-6 sm:w-8 sm:h-8 text-red-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -165,10 +178,12 @@ export default function TestDetails() {
           <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
             Error Loading Test
           </h3>
-          <p className="text-gray-600 text-center mb-4">{error}</p>
+          <p className="text-gray-600 text-center mb-4 text-sm sm:text-base">
+            {error}
+          </p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base"
           >
             Try Again
           </button>
@@ -179,11 +194,11 @@ export default function TestDetails() {
 
   if (!test) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 max-w-md mx-4">
-          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 sm:p-8 max-w-md w-full">
+          <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 bg-gray-100 rounded-full">
             <svg
-              className="w-8 h-8 text-gray-400"
+              className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -199,7 +214,7 @@ export default function TestDetails() {
           <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
             Test Not Found
           </h3>
-          <p className="text-gray-600 text-center">
+          <p className="text-gray-600 text-center text-sm sm:text-base">
             The requested test could not be found.
           </p>
         </div>
@@ -209,16 +224,16 @@ export default function TestDetails() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
+      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-7xl">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 sm:mb-6">
             <button
-              onClick={() => window.history.back()}
-              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
+              onClick={() => router.push(`/test-series`)}
+              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
             >
               <svg
-                className="w-5 h-5 text-gray-600"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -231,21 +246,26 @@ export default function TestDetails() {
                 />
               </svg>
             </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Test Details</h1>
-              <p className="text-gray-600 mt-1">
-                Review test information and questions
-              </p>
+            <div className="w-full flex justify-center">
+              <div className="flex flex-col items-center text-center gap-1 sm:gap-2 mb-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                  Test Details
+                </h1>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Review test information and questions
+                </p>
+              </div>
             </div>
-            <div className="flex justify-end">
+
+            <div className="sm:ml-auto">
               <button
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium text-sm sm:text-base"
                 onClick={() =>
                   router.push(`/test-series/test/${testId}/create`)
                 }
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -264,11 +284,11 @@ export default function TestDetails() {
         </div>
 
         {/* Test Details Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
-          <div className="flex items-start gap-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 mx-auto lg:mx-0">
               <svg
-                className="w-8 h-8 text-white"
+                className="w-6 h-6 sm:w-8 sm:h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -281,17 +301,17 @@ export default function TestDetails() {
                 />
               </svg>
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <div className="flex-1 text-center lg:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 break-words">
                 {test.testName}
               </h2>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col items-center lg:items-start gap-2 mb-2">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-4 h-4 text-blue-600"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -304,20 +324,20 @@ export default function TestDetails() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 text-center lg:text-left">
                       Subject
                     </span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-sm sm:text-lg font-semibold text-gray-900 text-center lg:text-left break-words">
                     {test.subject || "N/A"}
                   </p>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col items-center lg:items-start gap-2 mb-2">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-4 h-4 text-green-600"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-green-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -330,20 +350,20 @@ export default function TestDetails() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 text-center lg:text-left">
                       Duration
                     </span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-sm sm:text-lg font-semibold text-gray-900 text-center lg:text-left">
                     {test.durationMinutes} mins
                   </p>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col items-center lg:items-start gap-2 mb-2">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-amber-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-4 h-4 text-amber-600"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -356,22 +376,22 @@ export default function TestDetails() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 text-center lg:text-left">
                       Opens
                     </span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-sm sm:text-lg font-semibold text-gray-900 text-center lg:text-left">
                     {test.openDate
                       ? new Date(test.openDate).toLocaleDateString()
                       : "N/A"}
                   </p>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col items-center lg:items-start gap-2 mb-2">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-4 h-4 text-red-600"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-red-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -384,11 +404,11 @@ export default function TestDetails() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 text-center lg:text-left">
                       Closes
                     </span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-sm sm:text-lg font-semibold text-gray-900 text-center lg:text-left">
                     {test.closeDate
                       ? new Date(test.closeDate).toLocaleDateString()
                       : "N/A"}
@@ -402,12 +422,12 @@ export default function TestDetails() {
         {/* Questions Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Section Header */}
-          <div className="px-8 py-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex items-center justify-between">
+          <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -421,10 +441,10 @@ export default function TestDetails() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                     Test Questions
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     {questions.length}{" "}
                     {questions.length === 1 ? "question" : "questions"} in this
                     test
@@ -432,23 +452,24 @@ export default function TestDetails() {
                 </div>
               </div>
               {questions.length > 0 && (
-                <div className="bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200">
-                  <span className="text-2xl font-bold text-gray-900">
+                <div className="bg-white rounded-lg px-3 sm:px-4 py-2 shadow-sm border border-slate-200 text-center sm:text-left">
+                  <span className="text-lg sm:text-2xl font-bold text-gray-900">
                     {questions.length}
                   </span>
-                  <span className="text-sm text-gray-500 ml-1">Questions</span>
+                  <span className="text-xs sm:text-sm text-gray-500 ml-1">
+                    Questions
+                  </span>
                 </div>
               )}
             </div>
           </div>
-
           {/* Questions Content */}
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {questions.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
+              <div className="text-center py-8 sm:py-12">
+                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 bg-gray-100 rounded-full">
                   <svg
-                    className="w-8 h-8 text-gray-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -464,37 +485,37 @@ export default function TestDetails() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No Questions Available
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm sm:text-base">
                   This test doesn't have any questions added yet.
                 </p>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 {questions.map((q, index) => (
                   <div
                     key={q.id}
-                    className="bg-slate-50 rounded-xl p-6 border border-slate-200"
+                    className="bg-slate-50 rounded-xl p-4 sm:p-6 border border-slate-200"
                   >
                     {/* Question Header */}
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mx-auto sm:mx-0">
                         {index + 1}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-lg font-medium text-gray-900 leading-relaxed">
+                      <div className="flex-1 text-center sm:text-left">
+                        <p className="text-base sm:text-lg font-medium text-gray-900 leading-relaxed break-words">
                           {q.questionText}
                         </p>
                       </div>
-                      <div className="flex gap-3 ml-auto">
+                      <div className="flex gap-2 sm:gap-3 justify-center sm:justify-end">
                         <button
                           onClick={() => startEditing(q)}
-                          className="text-blue-600 hover:underline text-sm"
+                          className="text-blue-600 hover:underline text-sm px-2 py-1"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => deleteQuestion(q.id)}
-                          className="text-red-600 hover:underline text-sm"
+                          className="text-red-600 hover:underline text-sm px-2 py-1"
                         >
                           Delete
                         </button>
@@ -502,7 +523,7 @@ export default function TestDetails() {
                     </div>
 
                     {/* Options */}
-                    <div className="ml-12 mb-4">
+                    <div className="sm:ml-12 mb-4">
                       {q.options.length > 0 ? (
                         <div className="grid gap-2">
                           {q.options.map((opt, i) => {
@@ -530,17 +551,17 @@ export default function TestDetails() {
                                   {optionLetter}
                                 </div>
                                 <span
-                                  className={
+                                  className={`text-sm sm:text-base break-words flex-1 ${
                                     isCorrect
                                       ? "text-green-800 font-medium"
                                       : "text-gray-800"
-                                  }
+                                  }`}
                                 >
                                   {opt}
                                 </span>
                                 {isCorrect && (
                                   <svg
-                                    className="w-4 h-4 text-green-600 ml-auto flex-shrink-0"
+                                    className="w-4 h-4 text-green-600 flex-shrink-0"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -559,7 +580,7 @@ export default function TestDetails() {
                         </div>
                       ) : (
                         <div className="p-4 bg-gray-100 rounded-lg">
-                          <p className="text-sm text-gray-500 italic">
+                          <p className="text-sm text-gray-500 italic text-center">
                             No options available
                           </p>
                         </div>
@@ -567,10 +588,10 @@ export default function TestDetails() {
                     </div>
 
                     {/* Answer and Explanation */}
-                    <div className="ml-12 space-y-3">
-                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="sm:ml-12 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
                         <svg
-                          className="w-5 h-5 text-green-600 flex-shrink-0"
+                          className="w-5 h-5 text-green-600 flex-shrink-0 mx-auto sm:mx-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -582,18 +603,18 @@ export default function TestDetails() {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="text-sm font-medium text-green-800">
+                        <span className="text-sm font-medium text-green-800 text-center sm:text-left">
                           Correct Answer:
                         </span>
-                        <span className="text-sm text-green-700 font-medium">
+                        <span className="text-sm text-green-700 font-medium text-center sm:text-left break-words">
                           {q.correctAnswer}
                         </span>
                       </div>
 
                       {q.explanation && (
-                        <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                           <svg
-                            className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                            className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 mx-auto sm:mx-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -605,45 +626,112 @@ export default function TestDetails() {
                               d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                             />
                           </svg>
-                          <div>
-                            <span className="text-sm font-medium text-blue-800">
+                          <div className="text-center sm:text-left flex-1">
+                            <span className="text-sm font-medium text-blue-800 block mb-1">
                               Explanation:
                             </span>
-                            <p className="text-sm text-blue-700 mt-1">
+                            <p className="text-sm text-blue-700 break-words">
                               {q.explanation}
                             </p>
                           </div>
                         </div>
                       )}
+
+                      {/* Additional Question Details */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
+                        {q.marks && (
+                          <div className="bg-white rounded-lg p-2 border border-slate-200 text-center">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Marks
+                            </div>
+                            <div className="text-sm font-semibold text-green-600">
+                              +{q.marks}
+                            </div>
+                          </div>
+                        )}
+                        {q.negativeMarks && (
+                          <div className="bg-white rounded-lg p-2 border border-slate-200 text-center">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Negative
+                            </div>
+                            <div className="text-sm font-semibold text-red-600">
+                              -{q.negativeMarks}
+                            </div>
+                          </div>
+                        )}
+                        {q.difficulty && (
+                          <div className="bg-white rounded-lg p-2 border border-slate-200 text-center">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Difficulty
+                            </div>
+                            <div
+                              className={`text-sm font-semibold capitalize ${
+                                q.difficulty === "easy"
+                                  ? "text-green-600"
+                                  : q.difficulty === "medium"
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {q.difficulty}
+                            </div>
+                          </div>
+                        )}
+                        {q.questionType && (
+                          <div className="bg-white rounded-lg p-2 border border-slate-200 text-center">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Type
+                            </div>
+                            <div className="text-sm font-semibold text-purple-600 capitalize">
+                              {q.questionType.replace("_", " ")}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+          {/* Edit Question Modal */}
           {editingQuestion && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden animate-fadeIn">
                 {/* Header */}
-                <div className="flex justify-between items-center border-b p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
-                  <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-800">
-                    <Edit2Icon size={24} className="text-blue-500" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-semibold text-gray-800">
+                    <Edit2Icon
+                      size={20}
+                      className="text-blue-500 sm:w-6 sm:h-6"
+                    />
                     Edit Question
                   </h2>
-
                   <button
                     onClick={() => setEditingQuestion(null)}
-                    className="text-gray-500 hover:text-red-500 transition"
+                    className="text-gray-500 hover:text-red-500 transition p-1 sm:p-2 self-end sm:self-auto"
                   >
-                    ✕
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
                   </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-6">
+                <div className="overflow-y-auto max-h-[calc(95vh-180px)] p-4 sm:p-6 space-y-6">
                   {/* Question Text */}
                   <div>
-                    <label className="block font-semibold mb-2 text-gray-700">
+                    <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                       Question
                     </label>
                     <textarea
@@ -654,7 +742,7 @@ export default function TestDetails() {
                           questionText: e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 outline-none transition"
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 outline-none transition text-sm sm:text-base"
                       rows={3}
                       placeholder="Enter your question here..."
                     />
@@ -662,33 +750,37 @@ export default function TestDetails() {
 
                   {/* Options */}
                   <div>
-                    <label className="block font-semibold mb-3 text-gray-700">
+                    <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                       Options
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {editingQuestion.options.map((opt, i) => (
-                        <input
-                          key={i}
-                          type="text"
-                          value={opt}
-                          onChange={(e) => {
-                            const updated = [...editingQuestion.options];
-                            updated[i] = e.target.value;
-                            setEditingQuestion({
-                              ...editingQuestion,
-                              options: updated,
-                            });
-                          }}
-                          className="w-full border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition"
-                          placeholder={`Option ${i + 1}`}
-                        />
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-sm font-medium text-gray-600">
+                            {String.fromCharCode(65 + i)}
+                          </div>
+                          <input
+                            type="text"
+                            value={opt}
+                            onChange={(e) => {
+                              const updated = [...editingQuestion.options];
+                              updated[i] = e.target.value;
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                options: updated,
+                              });
+                            }}
+                            className="flex-1 border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition text-sm sm:text-base"
+                            placeholder={`Option ${i + 1}`}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Correct Answer */}
                   <div>
-                    <label className="block font-semibold mb-2 text-gray-700">
+                    <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                       Correct Answer
                     </label>
                     <input
@@ -700,14 +792,14 @@ export default function TestDetails() {
                           correctAnswer: e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-green-500 focus:ring focus:ring-green-200 outline-none transition"
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-green-500 focus:ring focus:ring-green-200 outline-none transition text-sm sm:text-base"
                       placeholder="Enter correct answer"
                     />
                   </div>
 
                   {/* Explanation */}
                   <div>
-                    <label className="block font-semibold mb-2 text-gray-700">
+                    <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                       Explanation
                     </label>
                     <textarea
@@ -718,16 +810,16 @@ export default function TestDetails() {
                           explanation: e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-purple-500 focus:ring focus:ring-purple-200 outline-none transition"
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:border-purple-500 focus:ring focus:ring-purple-200 outline-none transition text-sm sm:text-base"
                       rows={2}
                       placeholder="Explain the correct answer..."
                     />
                   </div>
 
-                  {/* Marks & Negative Marks */}
-                  <div className="grid grid-cols-2 gap-6">
+                  {/* Marks and Negative Marks */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold mb-2 text-gray-700">
+                      <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                         Marks
                       </label>
                       <input
@@ -739,11 +831,11 @@ export default function TestDetails() {
                             marks: Number(e.target.value),
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 outline-none transition"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 outline-none transition text-sm sm:text-base"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-2 text-gray-700">
+                      <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                         Negative Marks
                       </label>
                       <input
@@ -755,15 +847,15 @@ export default function TestDetails() {
                             negativeMarks: Number(e.target.value),
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-red-500 focus:ring focus:ring-red-200 outline-none transition"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-red-500 focus:ring focus:ring-red-200 outline-none transition text-sm sm:text-base"
                       />
                     </div>
                   </div>
 
-                  {/* Difficulty & Question Type */}
-                  <div className="grid grid-cols-2 gap-6">
+                  {/* Difficulty and Question Type */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold mb-2 text-gray-700">
+                      <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                         Difficulty
                       </label>
                       <select
@@ -774,7 +866,7 @@ export default function TestDetails() {
                             difficulty: e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition text-sm sm:text-base"
                       >
                         <option value="">Select Difficulty</option>
                         <option value="easy">Easy</option>
@@ -783,7 +875,7 @@ export default function TestDetails() {
                       </select>
                     </div>
                     <div>
-                      <label className="block font-semibold mb-2 text-gray-700">
+                      <label className="block font-semibold text-sm sm:text-base text-gray-700 mb-2">
                         Question Type
                       </label>
                       <select
@@ -794,7 +886,7 @@ export default function TestDetails() {
                             questionType: e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition"
+                        className="w-full border border-gray-300 rounded-xl p-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition text-sm sm:text-base"
                       >
                         <option value="">Select Type</option>
                         <option value="mcq">MCQ</option>
@@ -806,16 +898,16 @@ export default function TestDetails() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-4 border-t p-6 bg-gray-50 rounded-b-2xl">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 border-t p-4 sm:p-6 bg-gray-50">
                   <button
                     onClick={() => setEditingQuestion(null)}
-                    className="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium transition"
+                    className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium transition text-sm sm:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={updateQuestion}
-                    className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg transition"
+                    className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg transition text-sm sm:text-base"
                   >
                     💾 Save Changes
                   </button>
