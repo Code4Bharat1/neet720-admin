@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ShuffleIcon } from "lucide-react";
+import { ChevronDown, ShuffleIcon , AtomIcon } from "lucide-react";
 
 /* -------------------------------------------------------------------- */
 /*  CONFIG                                                             */
@@ -348,7 +348,7 @@ export default function BiologyChapterList() {
                       <div className="flex items-center">
                         <div className="p-1 bg-purple-100 rounded-full mr-2">
                           <Image
-                            src="/atoms.svg"
+                            src="/Atoms.svg"
                             alt="Physics"
                             width={20}
                             height={20}
@@ -513,7 +513,7 @@ export default function BiologyChapterList() {
                                           <div className="font-Mulish font-semibold flex items-center justify-center space-x-1">
                                             <div className="p-1 bg-purple-100 rounded-full">
                                               <Image
-                                                src="/atoms.svg"
+                                                src="/Atoms.svg"
                                                 alt="Physics"
                                                 width={16}
                                                 height={16}

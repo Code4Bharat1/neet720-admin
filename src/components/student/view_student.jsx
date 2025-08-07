@@ -187,6 +187,18 @@ const Desktop_student = () => {
       return;
     }
 
+    // ✅ Validate phone number format
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      toast.error(
+        "Invalid phone number. It must be 10 digits and start with 6, 7, 8, or 9.",
+        {
+          duration: 5000,
+        }
+      );
+      return;
+    }
+
     const birthYear = new Date(dateOfBirth).getFullYear();
     const password = `${firstName.charAt(0)}${birthYear}`;
 
