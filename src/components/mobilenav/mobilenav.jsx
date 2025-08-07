@@ -16,6 +16,7 @@
     File,
     Archive,
     Scan,
+    BookText
   } from "lucide-react";
   import { PiBook } from "react-icons/pi";
 
@@ -140,6 +141,14 @@
             >
               <PiBook className="w-5 h-5 text-xl" />
               <span className="text-gray-900 ">Post Notice</span>
+            </button>
+
+            <button
+              onClick={() => handleNavigation("/test-series")}
+              className="flex items-center gap-3 p-2 rounded-lg group transition-all hover:bg-gray-300 cursor-pointer"
+            >
+              <BookText className="w-5 h-5 text-xl" />
+              <span className="text-gray-900 ">Test Series</span>
             </button>
 
             <button
