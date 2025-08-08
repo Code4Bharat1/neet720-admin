@@ -135,6 +135,7 @@ export default function BiologyChapterList() {
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (!chapters.length) return;
+
     const saved = JSON.parse(localStorage.getItem("Biology")) || [];
 
     setChapters((prev) =>
@@ -142,22 +143,33 @@ export default function BiologyChapterList() {
         const s = saved.find((x) => x.chapterName === ch.name);
         if (!s) return ch;
 
-        // available pool respecting saved topic (may still be empty)
         const pool =
           s.selectedTopic && ch.topics[s.selectedTopic]
             ? ch.topics[s.selectedTopic].questions
             : ch.allQuestions;
-        const num = Math.min(s.numQuestions, pool.length);
 
         const rows =
           s.questions && s.questions.length
-            ? s.questions.map((q) => ({
-              ...q,
-              originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
-            }))
-            : pool.slice(0, num).map((q, idx) => ({
+            ? s.questions.map((q) => {
+                const match =
+                  pool.find((orig) => orig.id === q.id) ||
+                  ch.allQuestions.find((orig) => orig.id === q.id);
+
+                return {
+                  id: q.id,
+                  subject: "Chemistry",
+                  question: match?.question || q.question,
+                  originalIndex: match
+                    ? pool.findIndex((orig) => orig.id === match.id)
+                    : 0,
+                  chapterName: ch.name,
+                  unitName: ch.unit,
+                  topicName: q.topicName,
+                };
+              })
+            : pool.slice(0, s.numQuestions).map((q, idx) => ({
                 id: q.id,
-                subject: "biology",
+                subject: "Chemistry",
                 question: q.question,
                 originalIndex: idx,
                 chapterName: ch.name,
@@ -168,9 +180,9 @@ export default function BiologyChapterList() {
         return {
           ...ch,
           isChecked: true,
-          selectedTopic: s.selectedTopic,
-          numQuestions: num,
-          totalMarks: num * 4,
+          selectedTopic: s.selectedTopic ?? null,
+          numQuestions: s.numQuestions ?? rows.length,
+          totalMarks: (s.numQuestions ?? rows.length) * 4,
           rows,
         };
       })
@@ -230,6 +242,68 @@ export default function BiologyChapterList() {
     },
   };
 
+  const handleFullLengthTest = () => {
+    const TOTAL_QUESTIONS = 90;
+    const updated = [...chapters];
+    const pool = [];
+
+    // Build global pool with chapter reference
+    updated.forEach((ch) => {
+      const source =
+        ch.selectedTopic && ch.topics[ch.selectedTopic]
+          ? ch.topics[ch.selectedTopic].questions
+          : ch.allQuestions;
+
+      source.forEach((q) => {
+        pool.push({
+          ...q,
+          chapterRef: ch,
+        });
+      });
+    });
+
+    // Shuffle pool and pick 90
+    const shuffled = [...pool]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, TOTAL_QUESTIONS);
+
+    // Reset all chapters
+    const result = updated.map((ch) => ({
+      ...ch,
+      isChecked: false,
+      rows: [],
+      numQuestions: 0,
+      totalMarks: 0,
+    }));
+
+    // Group questions by chapter
+    shuffled.forEach((q, index) => {
+      const chIndex = result.findIndex((r) => r.name === q.chapterRef.name);
+      if (chIndex !== -1) {
+        const ch = result[chIndex];
+        const newRow = {
+          id: q.id,
+          subject: "Biology",
+          question: q.question,
+          originalIndex: index,
+          chapterName: ch.name,
+          unitName: ch.unit,
+          topicName: q.topicName,
+        };
+        result[chIndex] = {
+          ...ch,
+          isChecked: true,
+          rows: [...ch.rows, newRow],
+          numQuestions: ch.numQuestions + 1,
+          totalMarks: (ch.numQuestions + 1) * 4,
+        };
+      }
+    });
+
+    updateLocalStorage(result);
+    setChapters(result);
+  };
+
   /* ------------------------------------------------------------------ */
   /*  Spinner while loading                                             */
   /* ------------------------------------------------------------------ */
@@ -267,13 +341,24 @@ export default function BiologyChapterList() {
       <div className="bg-white hidden md:block w-full max-w-6xl rounded-xl overflow-hidden border-none shadow-lg">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-purple-600 to-purple-800 px-6 py-4 text-white rounded-t-xl"
+          className="bg-gradient-to-r from-green-600 to-green-800 px-6 py-6 text-white rounded-t-xl"
           variants={itemVariants}
         >
-          <h2 className="text-xl font-semibold">Biology Chapters</h2>
-          <p className="text-sm text-purple-100">
-            Select chapters, topics and specify the number of questions
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold">Biology Chapters</h2>
+              <p className="text-sm text-green-100">
+                Select chapters, topics and specify the number of questions
+              </p>
+            </div>
+
+            <button
+              onClick={handleFullLengthTest}
+              className="bg-white text-green-800 font-semibold px-4 py-2 rounded-lg hover:bg-green-100 transition"
+            >
+              Generate Full Length Test (90 Qs)
+            </button>
+          </div>
         </motion.div>
 
         {/* Rows */}
@@ -347,7 +432,7 @@ export default function BiologyChapterList() {
                     <td className="py-4 px-4 text-left font-Mulish font-semibold text-black">
                       <div className="flex items-center">
                         <div className="p-1 bg-purple-100 rounded-full mr-2">
-                          <Bug className="w-5 h-5 text-purple-600" />
+                          <Bug className="w-5 h-5 text-green-700" />
                         </div>
                         <span
                           className="truncate max-w-xs"
@@ -506,7 +591,7 @@ export default function BiologyChapterList() {
                                         <td className="py-3 px-4 text-center">
                                           <div className="font-Mulish font-semibold flex items-center justify-center space-x-1">
                                             <div className="p-1 bg-purple-100 rounded-full">
-                                              <Bug className="w-5 h-5 text-purple-600" />
+                                              <Bug className="w-5 h-5 text-green-700" />
                                             </div>
                                             <span className="text-sm font-semibold">
                                               biology

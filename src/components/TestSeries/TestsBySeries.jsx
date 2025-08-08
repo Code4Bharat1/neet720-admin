@@ -128,24 +128,27 @@ export default function TestsBySeries() {
       <div className="container mx-auto px-6 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push("/test-series")}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="mb-4">
+            <button
+              onClick={() => router.push("/test-series")}
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 font-medium"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Back
+            </button>
+          </div>
           <div className="flex justify-center items-center gap-4 mb-6 mt-6 ">
             <h1 className="text-3xl font-bold text-gray-900 ">
               Test Series Details
