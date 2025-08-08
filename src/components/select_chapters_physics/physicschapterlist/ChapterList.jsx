@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ShuffleIcon , AtomIcon } from "lucide-react";
+import { ChevronDown, ShuffleIcon, AtomIcon } from "lucide-react";
 
 /* -------------------------------------------------------------------- */
 /*  CONFIG                                                             */
@@ -130,52 +130,128 @@ export default function BiologyChapterList() {
     localStorage.setItem("changedQuestions", JSON.stringify(changedQuestions));
   }, []);
 
+  // ✅ Step 1: Add this inside your component, near UI return section, above `return()`
+  const handleFullLengthTest = () => {
+    const TOTAL_QUESTIONS = 45;
+    const updated = [...chapters];
+    const pool = [];
+
+    // Build global pool with chapter reference
+    updated.forEach((ch) => {
+      const source =
+        ch.selectedTopic && ch.topics[ch.selectedTopic]
+          ? ch.topics[ch.selectedTopic].questions
+          : ch.allQuestions;
+
+      source.forEach((q) => {
+        pool.push({
+          ...q,
+          chapterRef: ch,
+        });
+      });
+    });
+
+    // Shuffle pool and pick 45
+    const shuffled = [...pool]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, TOTAL_QUESTIONS);
+
+    // Reset all chapters
+    const result = updated.map((ch) => ({
+      ...ch,
+      isChecked: false,
+      rows: [],
+      numQuestions: 0,
+      totalMarks: 0,
+    }));
+
+    // Group questions by chapter
+    shuffled.forEach((q, index) => {
+      const chIndex = result.findIndex((r) => r.name === q.chapterRef.name);
+      if (chIndex !== -1) {
+        const ch = result[chIndex];
+        const newRow = {
+          id: q.id,
+          subject: "Physics",
+          question: q.question,
+          originalIndex: index,
+          chapterName: ch.name,
+          unitName: ch.unit,
+          topicName: q.topicName,
+        };
+        result[chIndex] = {
+          ...ch,
+          isChecked: true,
+          rows: [...ch.rows, newRow],
+          numQuestions: ch.numQuestions + 1,
+          totalMarks: (ch.numQuestions + 1) * 4,
+        };
+      }
+    });
+
+    updateLocalStorage(result);
+    setChapters(result);
+  };
+
   /* ------------------------------------------------------------------ */
   /*  Restore saved draft (only after skeleton exists)                  */
   /* ------------------------------------------------------------------ */
-  useEffect(() => {
-    if (!chapters.length) return;
-    const saved = JSON.parse(localStorage.getItem("Physics")) || [];
+useEffect(() => {
+  if (!chapters.length) return;
 
-    setChapters((prev) =>
-      prev.map((ch) => {
-        const s = saved.find((x) => x.chapterName === ch.name);
-        if (!s) return ch;
+  const saved = JSON.parse(localStorage.getItem("Physics")) || [];
 
-        // available pool respecting saved topic (may still be empty)
-        const pool =
-          s.selectedTopic && ch.topics[s.selectedTopic]
-            ? ch.topics[s.selectedTopic].questions
-            : ch.allQuestions;
-        const num = Math.min(s.numQuestions, pool.length);
+  setChapters((prev) =>
+    prev.map((ch) => {
+      const s = saved.find((x) => x.chapterName === ch.name);
+      if (!s) return ch;
 
-        const rows =
-          s.questions && s.questions.length
-            ? s.questions.map((q) => ({
-                ...q,
-                originalIndex: pool.findIndex((orig) => orig.id === q.id) || 0,
-              }))
-            : pool.slice(0, num).map((q, idx) => ({
+      const pool =
+        s.selectedTopic && ch.topics[s.selectedTopic]
+          ? ch.topics[s.selectedTopic].questions
+          : ch.allQuestions;
+
+      const rows =
+        s.questions && s.questions.length
+          ? s.questions.map((q) => {
+              const match =
+                pool.find((orig) => orig.id === q.id) ||
+                ch.allQuestions.find((orig) => orig.id === q.id);
+
+              return {
                 id: q.id,
-                subject: "Physics",
-                question: q.question,
-                originalIndex: idx,
+                subject: "Chemistry",
+                question: match?.question || q.question,
+                originalIndex: match
+                  ? pool.findIndex((orig) => orig.id === match.id)
+                  : 0,
                 chapterName: ch.name,
                 unitName: ch.unit,
                 topicName: q.topicName,
-              }));
+              };
+            })
+          : pool.slice(0, s.numQuestions).map((q, idx) => ({
+              id: q.id,
+              subject: "Chemistry",
+              question: q.question,
+              originalIndex: idx,
+              chapterName: ch.name,
+              unitName: ch.unit,
+              topicName: q.topicName,
+            }));
 
-        return {
-          ...ch,
-          isChecked: true,
-          selectedTopic: s.selectedTopic,
-          numQuestions: num,
-          totalMarks: num * 4,
-          rows,
-        };
-      })
-    );
-  }, [chapters.length]);
+      return {
+        ...ch,
+        isChecked: true,
+        selectedTopic: s.selectedTopic ?? null,
+        numQuestions: s.numQuestions ?? rows.length,
+        totalMarks: (s.numQuestions ?? rows.length) * 4,
+        rows,
+      };
+    })
+  );
+}, [chapters.length]);
+
 
   /* ------------------------------------------------------------------ */
   /*  UI Event handlers – delegate to pure helpers                      */
@@ -267,13 +343,24 @@ export default function BiologyChapterList() {
       <div className="bg-white hidden md:block w-full max-w-6xl rounded-xl overflow-hidden border-none shadow-lg">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-purple-600 to-purple-800 px-6 py-4 text-white rounded-t-xl"
+          className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-6 text-white rounded-t-xl"
           variants={itemVariants}
         >
-          <h2 className="text-xl font-semibold">Physics Chapters</h2>
-          <p className="text-sm text-purple-100">
-            Select chapters, topics and specify the number of questions
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold">Physics Chapters</h2>
+              <p className="text-sm text-blue-100">
+                Select chapters, topics and specify the number of questions
+              </p>
+            </div>
+
+            <button
+              onClick={handleFullLengthTest}
+              className="bg-white text-blue-800 font-semibold px-4 py-2 rounded-lg hover:bg-blue-100 transition"
+            >
+              Generate Full Length Test (45 Qs)
+            </button>
+          </div>
         </motion.div>
 
         {/* Rows */}
