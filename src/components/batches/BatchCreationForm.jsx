@@ -17,6 +17,13 @@ const BatchCreationForm = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [showStudentSelector, setShowStudentSelector] = useState(false)
 
+
+  const cleanName = (...parts) => {
+  const raw = parts.map(s => (s ?? '').toString().trim()).filter(Boolean).join(' ');
+  const cleaned = raw.replace(/\b(null|undefined|n\/a|na)\b/gi, '').replace(/\s+/g, ' ').trim();
+  return cleaned || 'Unknown';
+};
+
   // Get admin ID from localStorage or token
   const getAdminId = () => {
     if (typeof window !== "undefined") {
@@ -77,11 +84,15 @@ const BatchCreationForm = () => {
 
       const api = createAxiosInstance()
       
-      const response = await api.post('/studentdata/info', {
-        addedByAdminId: parseInt(adminId)
-      })
+      const response = await api.post('/studentdata/info', { addedByAdminId: parseInt(adminId) });
 
-      setAvailableStudents(response.data.studentInfo || [])
+const sanitized = (response.data.studentInfo || []).map(s => ({
+  ...s,
+  fullName: cleanName(s.fullName, s.firstName, s.lastName),
+  email: s.email ?? s.emailAddress ?? '',   // guard missing email
+}));
+setAvailableStudents(sanitized);
+
     } catch (error) {
       console.error('Error fetching students:', error)
       const errorMessage = error.response?.data?.message || error.message || "Error fetching student data"
@@ -114,10 +125,13 @@ const BatchCreationForm = () => {
     setSelectedStudents(selectedStudents.filter(s => s.id !== studentId))
   }
 
-  const filteredStudents = availableStudents.filter(student =>
-    student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+const filteredStudents = availableStudents.filter(s => {
+  const name = cleanName(s.fullName, s.firstName, s.lastName).toLowerCase();
+  const email = (s.email ?? '').toLowerCase();
+  const q = searchTerm.toLowerCase();
+  return name.includes(q) || email.includes(q);
+});
+
 
   const handleCreateBatch = async (e) => {
     e.preventDefault()
@@ -267,7 +281,9 @@ const BatchCreationForm = () => {
                             <User className="w-4 h-4 text-blue-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-800">{student.fullName}</p>
+                           <p className="text-sm font-medium text-gray-800">
+  {cleanName(student.fullName, student.firstName, student.lastName)}
+</p>
                             <p className="text-xs text-gray-500">{student.email}</p>
                           </div>
                         </div>
@@ -348,7 +364,9 @@ const BatchCreationForm = () => {
                                       <User className="w-4 h-4 text-gray-600" />
                                     </div>
                                     <div className="flex-1">
-                                      <p className="text-sm font-medium text-gray-800">{student.fullName}</p>
+                                     <p className="text-sm font-medium text-gray-800">
+  {cleanName(student.fullName, student.firstName, student.lastName)}
+</p>
                                       <p className="text-xs text-gray-500">{student.email}</p>
                                       <p className="text-xs text-gray-400">
                                         {student.status} • ID: {student.id}
@@ -420,7 +438,7 @@ const BatchCreationForm = () => {
                     className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: indexedDB, y: -10 }}
+                    exit={{ opacity: 0, y: -10 }}
                   >
                     <Check className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm">{successMessage}</span>

@@ -12,6 +12,18 @@ const TestResultDownload = () => {
   const [selectedMode, setSelectedMode] = useState('Practice'); // Mode state (default to 'Practice')
   const [downloadLoading, setDownloadLoading] = useState(false);
 
+
+  const cleanName = (...parts) => {
+  const raw = parts
+    .map((s) => (s ?? "").toString().trim())
+    .filter(Boolean)
+    .join(" ");
+  const cleaned = raw
+    .replace(/\b(null|undefined|n\/a|na)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || "Unknown";
+};
   // Fetch the test results based on the selected mode
   useEffect(() => {
     const fetchTestResults = async () => {
@@ -25,7 +37,7 @@ const TestResultDownload = () => {
         const response = await axios.get(apiUrl); // API URL based on mode
         if (response.data && response.data.results) {
           const results = response.data.results.map((result) => ({
-            name: result.fullName,
+            name: cleanName(result.fullName, result.firstName, result.lastName),
             score: result.marksObtained,
             totalMarks: result.totalMarks,
             percentage: Math.round((result.marksObtained / result.totalMarks) * 100),
@@ -66,14 +78,15 @@ const TestResultDownload = () => {
     setDownloadLoading(true);
     
     try {
-      const data = testResults.map((result) => ({
-        "Student Name": result.name,
-        "Student ID": result.studentId,
-        "Test Name": result.testName,
-        "Score": `${result.score}/${result.totalMarks}`,
-        "Percentage": `${result.percentage}%`,
-        "Date": result.date
-      }));
+     const data = testResults.map((result) => ({
+      "Student Name": cleanName(result.name), // already clean, but safe
+      "Student ID": result.studentId,
+      "Test Name": result.testName,
+      "Score": `${result.score}/${result.totalMarks}`,
+      "Percentage": `${result.percentage}%`,
+      "Date": result.date
+    }));
+
 
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();

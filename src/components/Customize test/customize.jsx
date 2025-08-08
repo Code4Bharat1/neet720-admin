@@ -36,19 +36,37 @@ export default function StudentTestTable() {
   const filterRef = useRef(null);
   const router = useRouter();
 
-  // Fetch data with localStorage caching
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('customTestStudentsData');
-    
-    if (storedStudents) {
-      const parsedData = JSON.parse(storedStudents);
-      setStudents(parsedData);
-      updateStats(parsedData);
-    } else {
-      fetchData();
-    }
+
+  const cleanName = (...parts) => {
+  const raw = parts.map(s => (s ?? '').toString().trim()).filter(Boolean).join(' ');
+  const cleaned = raw.replace(/\b(null|undefined|n\/a|na)\b/gi, '').replace(/\s+/g, ' ').trim();
+  return cleaned || 'Unknown';
+};
+
+const sanitizeRows = (rows = []) =>
+  rows.map(r => ({
+    ...r,
+    fullName: cleanName(r.fullName, r.firstName, r.lastName),
+    studentId: r.studentId ?? r.id ?? '',
+    testName: r.testName ?? '',
+    subject: r.subject ?? '',
+    subjects: Array.isArray(r.subjects) ? r.subjects : [],
+    totalMarks: Number(r.totalMarks || 0),
+    score: Number(r.score || 0),
+  }));
+
+ useEffect(() => {
+  const stored = localStorage.getItem('customTestStudentsData');
+  if (stored) {
+    const parsed = sanitizeRows(JSON.parse(stored));
+    setStudents(parsed);
+    updateStats(parsed);
     setIsLoading(false);
-  }, [filterType]);
+    return;
+  }
+  fetchData();
+}, [filterType]);
+
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -67,23 +85,31 @@ export default function StudentTestTable() {
     };
   }, [filterRef, downloadRef]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/generatetest/customize`, {
-        params: { filterType, studentId: searchTerm }
-      });
-
-      const fetchedStudents = response.data.results;
-      setStudents(fetchedStudents);
-      localStorage.setItem('customTestStudentsData', JSON.stringify(fetchedStudents));
-      updateStats(fetchedStudents);
-    } catch (error) {
-      console.error('Error fetching student data:', error);
-    } finally {
-      setIsLoading(false);
+ const fetchData = async () => {
+  setIsLoading(true);
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/generatetest/customize`,
+      { params: { filterType, studentId: searchTerm } }
+    );
+    const fetched = sanitizeRows(res.data?.results || []);
+    setStudents(fetched);
+    localStorage.setItem('customTestStudentsData', JSON.stringify(fetched));
+    updateStats(fetched);
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      // Treat as no data, not an error
+      setStudents([]);
+      updateStats([]);
+      localStorage.setItem('customTestStudentsData', JSON.stringify([]));
+    } else {
+      console.error('Error fetching student data:', err);
     }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const updateStats = (studentsData) => {
     const physicsCount = studentsData.filter(s => 
@@ -121,61 +147,60 @@ export default function StudentTestTable() {
     setTotalTest(studentsData.length);
   };
 
-  // Filter and sort students
-  const sortedStudents = useMemo(() => {
-    const filtered = students.filter((student) => {
-      const q = searchTerm.toLowerCase();
-      return (
-        student.fullName?.toLowerCase().includes(q) ||
-        String(student.studentId).toLowerCase().includes(q) ||
-        student.testName?.toLowerCase().includes(q) ||
-        student.subject?.toLowerCase().includes(q) ||
-        (student.subjects || []).some(subject => 
-          subject.toLowerCase().includes(q)
-        )
-      );
-    });
+const sortedStudents = useMemo(() => {
+  const q = searchTerm.toLowerCase();
 
-    return [...filtered].sort((a, b) => {
-      if (sortType === 'score') {
-        return sortOrder === 'ascending' ? a.score - b.score : b.score - a.score;
-      } else {
-        return sortOrder === 'ascending' ? a.studentId - b.studentId : b.studentId - a.studentId;
-      }
-    });
-  }, [students, searchTerm, sortType, sortOrder]);
+  const filtered = students.filter((s) => {
+    if (!q) return true;
+    const name = cleanName(s.fullName).toLowerCase();
+    const id = String(s.studentId || '').toLowerCase();
+    const test = (s.testName || '').toLowerCase();
+    const subj = (s.subject || '').toLowerCase();
+    const subjArr = (s.subjects || []).map(x => x.toLowerCase());
+    return (
+      name.includes(q) ||
+      id.includes(q) ||
+      test.includes(q) ||
+      subj.includes(q) ||
+      subjArr.some(x => x.includes(q))
+    );
+  });
+
+  return [...filtered].sort((a, b) => {
+    if (sortType === 'score') {
+      return sortOrder === 'ascending' ? a.score - b.score : b.score - a.score;
+    }
+    // sort by id
+    const aid = Number(a.studentId) || 0;
+    const bid = Number(b.studentId) || 0;
+    return sortOrder === 'ascending' ? aid - bid : bid - aid;
+  });
+}, [students, searchTerm, sortType, sortOrder]);
 
   // Update totalTest when sortedStudents changes
   useEffect(() => {
     setTotalTest(sortedStudents.length);
   }, [sortedStudents]);
 
-  // Function to download the student data as CSV
   const downloadCSV = () => {
-    const headers = ['SR.NO', 'STUDENT NAME', 'STUDENT ID', 'TEST NAME', 'SUBJECT', 'SCORE', 'TOTAL MARKS'];
-    const rows = sortedStudents.map((student, index) => [
-      index + 1,
-      student.fullName,
-      student.studentId,
-      student.testName,
-      student.subject || (student.subjects || []).join(", "),
-      student.score,
-      student.totalMarks
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.setAttribute('href', URL.createObjectURL(blob));
-    link.setAttribute('download', 'students_test_data.csv');
-    link.click();
-    
-    setShowDownloadOptions(false);
-  };
+  const headers = ['SR.NO', 'STUDENT NAME', 'STUDENT ID', 'TEST NAME', 'SUBJECT', 'SCORE', 'TOTAL MARKS'];
+  const rows = sortedStudents.map((s, i) => [
+    i + 1,
+    cleanName(s.fullName),
+    s.studentId,
+    s.testName,
+    s.subject || (s.subjects || []).join(", "),
+    s.score,
+    s.totalMarks
+  ]);
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'students_test_data.csv';
+  link.click();
+  setShowDownloadOptions(false);
+};
   
   // Function to download as PDF
   const downloadPDF = () => {
@@ -538,7 +563,7 @@ export default function StudentTestTable() {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{index + 1}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-700">{student.fullName}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-700">{cleanName(student.fullName)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-gray-700">{student.studentId}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-gray-700">{student.testName}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -555,8 +580,8 @@ export default function StudentTestTable() {
                       <td className="px-4 py-3 whitespace-nowrap text-center">
                         <button
                           className="text-gray-700 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-50"
-                          onClick={() => handleStudentClick(student.studentId)}
-                          aria-label={`View details for ${student.fullName}`}
+  onClick={() => handleStudentClick(student.studentId)}
+  aria-label={`View details for ${cleanName(student.fullName)}`}
                         >
                           <ArrowRightCircle size={20} />
                         </button>

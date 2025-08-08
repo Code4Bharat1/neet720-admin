@@ -11,6 +11,18 @@ const SpotlightOnImprovementTablemobile = ({ selectedMode }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10; // Limit to show only 10 students per page
 
+
+  const cleanName = (...parts) => {
+  const raw = parts
+    .map((s) => (s ?? "").toString().trim())
+    .filter(Boolean)
+    .join(" ");
+  const cleaned = raw
+    .replace(/\b(null|undefined|n\/a|na)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || "Unknown";
+};
   // Fetch the test summaries when the component is mounted
   useEffect(() => {
     const fetchData = async () => {
@@ -21,9 +33,13 @@ const SpotlightOnImprovementTablemobile = ({ selectedMode }) => {
             ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/newresult`
             : `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/customresult`;
 
-        // Fetch the data from the appropriate API
         const response = await axios.get(apiUrl);
-        setData(response.data.results); // Store the results in state
+const sanitized = (response.data.results || []).map((r) => ({
+  ...r,
+  // prefer r.fullName; if it’s empty, try to build from parts if your API sends them
+  fullName: cleanName(r.fullName, r.firstName, r.lastName),
+}));
+setData(sanitized);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch data"); // Handle any errors

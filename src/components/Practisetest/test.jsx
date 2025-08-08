@@ -22,6 +22,20 @@ export default function PracticeTest() {
   const downloadRef = useRef(null);
   const router = useRouter();
 
+
+  const cleanName = (...parts) => {
+  const raw = parts.map(s => (s ?? '').toString().trim()).filter(Boolean).join(' ');
+  const cleaned = raw.replace(/\b(null|undefined|n\/a|na)\b/gi, '').replace(/\s+/g, ' ').trim();
+  return cleaned || 'Unknown';
+};
+
+const safePct = (num, den) => {
+  const n = Number(num || 0), d = Number(den || 0);
+  if (!d) return 0;
+  const p = Math.round((n / d) * 100);
+  return Number.isFinite(p) ? p : 0;
+};
+
   // Categories for search filter
   const searchCategories = [
     { value: "all", label: "All Categories" },
@@ -31,35 +45,49 @@ export default function PracticeTest() {
     { value: "subject", label: "Subject" },
   ];
 
-  // Fetch data from the API once and store it in localStorage to persist it across refreshes
-  useEffect(() => {
-    // Check if students data exists in localStorage
-    const storedStudents = localStorage.getItem('studentsData');
+ useEffect(() => {
+  const storedStudents = localStorage.getItem('studentsData');
 
-    if (storedStudents) {
-      // If data exists in localStorage, set it to state
-      setStudents(JSON.parse(storedStudents));
+  const sanitizeRows = (rows = []) =>
+    rows.map(r => ({
+      ...r,
+      fullName: cleanName(r.fullName, r.firstName, r.lastName),
+      // normalize common fields defensively
+      studentId: r.studentId ?? r.id ?? '',
+      testName: r.testName ?? '',
+      subject: r.subject ?? '',
+      totalMarks: Number(r.totalMarks || 0),
+      marksObtained: Number(r.marksObtained || 0),
+    }));
+
+  if (storedStudents) {
+    setStudents(sanitizeRows(JSON.parse(storedStudents)));
+    setIsLoading(false);
+    return;
+  }
+
+  const fetchStudents = async () => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/practicetest/practice`);
+      const sanitized = sanitizeRows(res.data?.results || []);
+      setStudents(sanitized);
+      localStorage.setItem('studentsData', JSON.stringify(sanitized));
+    } catch (err) {
+      // If endpoint returns 404, just show zero results (no scary error)
+      if (err?.response?.status === 404) {
+        setStudents([]);
+        localStorage.setItem('studentsData', JSON.stringify([]));
+      } else {
+        console.error('Error fetching student data:', err);
+      }
+    } finally {
       setIsLoading(false);
-    } else {
-      // If no data in localStorage, make an API request to fetch students
-      const fetchStudents = async () => {
-        try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/practicetest/practice`);
-          const fetchedData = response.data.results;
-          setStudents(fetchedData);
-
-          // Store the fetched data in localStorage for subsequent page refreshes
-          localStorage.setItem('studentsData', JSON.stringify(fetchedData));
-        } catch (error) {
-          console.error('Error fetching student data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchStudents();
     }
-  }, []); 
+  };
+
+  fetchStudents();
+}, []);
+
 
   // Generate search suggestions based on input and selected category
   useEffect(() => {
@@ -72,23 +100,23 @@ export default function PracticeTest() {
     let suggestions = [];
     const maxSuggestions = 6;
 
-    // Helper function to add suggestions based on field
     const addSuggestionsByField = (field, label) => {
-      const values = [...new Set(students
-        .map(student => student[field])
-        .filter(value => value && value.toString().toLowerCase().includes(query))
-      )];
-      
-      values.slice(0, 3).forEach(value => {
-        if (!suggestions.some(s => s.value === value)) {
-          suggestions.push({
-            value: value,
-            label: `${value} (${label})`,
-            field
-          });
-        }
-      });
-    };
+  const values = [...new Set(
+    students
+      .map(student => field === 'fullName'
+        ? cleanName(student.fullName)              // sanitize here
+        : student[field]
+      )
+      .filter(value => value && value.toString().toLowerCase().includes(query))
+  )];
+
+  values.slice(0, 3).forEach(value => {
+    if (!suggestions.some(s => s.value === value)) {
+      suggestions.push({ value, label: `${value} (${label})`, field });
+    }
+  });
+};
+
 
     // Add suggestions based on selected category
     if (selectedCategory === "all" || selectedCategory === "name") {
@@ -281,32 +309,26 @@ export default function PracticeTest() {
     setSearchSuggestions([]);
   };
 
-  // Filtered students based on search query and selected category
-  const filteredStudents = students.filter(student => {
-    const q = searchQuery.toLowerCase();
-    
-    if (!q) return true;
+ const filteredStudents = students.filter(student => {
+  const q = searchQuery.toLowerCase();
+  if (!q) return true;
 
-    // Filter based on selected category
-    switch (selectedCategory) {
-      case "name":
-        return (student.fullName || "").toLowerCase().includes(q);
-      case "id":
-        return String(student.studentId || "").toLowerCase().includes(q);
-      case "test":
-        return (student.testName || "").toLowerCase().includes(q);
-      case "subject":
-        return (student.subject || "").toLowerCase().includes(q);
-      case "all":
-      default:
-        return (
-          (student.fullName || "").toLowerCase().includes(q) ||
-          String(student.studentId || "").toLowerCase().includes(q) ||
-          (student.testName || "").toLowerCase().includes(q) ||
-          (student.subject || "").toLowerCase().includes(q)
-        );
-    }
-  });
+  const name = cleanName(student.fullName).toLowerCase();
+  const id = String(student.studentId || '').toLowerCase();
+  const test = (student.testName || '').toLowerCase();
+  const subj = (student.subject || '').toLowerCase();
+
+  switch (selectedCategory) {
+    case 'name': return name.includes(q);
+    case 'id': return id.includes(q);
+    case 'test': return test.includes(q);
+    case 'subject': return subj.includes(q);
+    case 'all':
+    default:
+      return name.includes(q) || id.includes(q) || test.includes(q) || subj.includes(q);
+  }
+});
+
 
   // Calculate statistics
   const totalTests = filteredStudents.length;
@@ -541,7 +563,7 @@ export default function PracticeTest() {
                           {index + 1}
                         </td>
                         <td className="py-3 px-4 font-medium border-r border-gray-200">
-                          {student.fullName || "N/A"}
+                          {cleanName(student.fullName)}
                         </td>
                         <td className="py-3 px-4 border-r border-gray-200">
                           <span className="bg-blue-50 text-blue-700 py-1 px-3 rounded-full text-xs font-medium">

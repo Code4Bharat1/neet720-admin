@@ -39,6 +39,16 @@ const UpdateBatchForm = ({ batchId }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showStudentSelector, setShowStudentSelector] = useState(false);
 
+
+  const cleanName = (...parts) => {
+  const raw = parts.map(s => (s ?? '').toString().trim()).filter(Boolean).join(' ');
+  const cleaned = raw.replace(/\b(null|undefined|n\/a|na)\b/gi, '').replace(/\s+/g, ' ').trim();
+  return cleaned || 'Unknown';
+};
+
+const isNotFound = (err) => Number(err?.response?.status) === 404;
+
+
   // Helper: Get admin ID
   const getAdminId = () => {
     if (typeof window === "undefined") return null;
@@ -78,75 +88,103 @@ const UpdateBatchForm = ({ batchId }) => {
     fetchBatchStudents();
   }, [batchId]);
 
-  // Fetch batch details and populate
-  const fetchBatchDetails = async () => {
-    setIsLoadingBatch(true);
-    setError("");
-    try {
-      const api = createAxios();
-      const { data } = await api.get(`/studentdata/batch/${batchId}`);
-      const batch = data.batch;
-      setBatchName(batch.batchName);
-      setStatus(batch.status);
-      const mapped = (batch.Students || []).map((s) => ({
-        id: s.id,
-        fullName: `${s.firstName} ${s.lastName}`,
-        email: s.emailAddress,
-      }));
-      setBatchStudents(mapped);
-      setSelectedStudents(mapped);
-    } catch (err) {
-      console.error(err);
+ const fetchBatchDetails = async () => {
+  setIsLoadingBatch(true);
+  setError("");
+  try {
+    const api = createAxios();
+    const { data } = await api.get(`/studentdata/batch/${batchId}`);
+    const batch = data.batch;
+    setBatchName(batch.batchName);
+    setStatus(batch.status);
+
+    const mapped = (batch.Students || []).map((s) => ({
+      id: s.id,
+      fullName: cleanName(s.fullName, s.firstName, s.lastName),
+      email: s.email ?? s.emailAddress ?? "",
+    }));
+
+    setBatchStudents(mapped);
+    setSelectedStudents(mapped);
+  } catch (err) {
+    console.error(err);
+    if (isNotFound(err)) {
+      // no such batch or empty association — treat as empty, not an error
+      setBatchStudents([]);
+      setSelectedStudents([]);
+      setError(""); // keep UI clean
+    } else {
       setError(err.response?.data?.message || "Failed to load batch");
-    } finally {
-      setIsLoadingBatch(false);
     }
-  };
+  } finally {
+    setIsLoadingBatch(false);
+  }
+};
 
-  // Fetch all students
-  const fetchAllStudents = async () => {
-    setIsLoadingStudents(true);
-    setError("");
-    try {
-      const api = createAxios();
-      const adminId = getAdminId();
-      const { data } = await api.post("/studentdata/info", {
-        addedByAdminId: parseInt(adminId),
-      });
-      setAvailableStudents(data.studentInfo || []);
-    } catch (err) {
-      console.error(err);
+ const fetchAllStudents = async () => {
+  setIsLoadingStudents(true);
+  setError("");
+  try {
+    const api = createAxios();
+    const adminId = getAdminId();
+    const { data } = await api.post("/studentdata/info", {
+      addedByAdminId: parseInt(adminId),
+    });
+
+    const sanitized = (data.studentInfo || []).map(s => ({
+      ...s,
+      fullName: cleanName(s.fullName, s.firstName, s.lastName),
+      email: s.email ?? s.emailAddress ?? "",
+    }));
+
+    setAvailableStudents(sanitized);
+  } catch (err) {
+    console.error(err);
+    if (isNotFound(err)) {
+      setAvailableStudents([]);   // empty list, not an error
+      setError("");               // keep UI clean
+    } else {
       setError("Failed to fetch student list");
-    } finally {
-      setIsLoadingStudents(false);
     }
-  };
+  } finally {
+    setIsLoadingStudents(false);
+  }
+};
 
-  // Fetch batch-specific students
   const fetchBatchStudents = async () => {
-    setIsLoadingStudents(true);
-    setError("");
-    try {
-      const api = createAxios();
-      const adminId = getAdminId();
-      const { data } = await api.post("/studentdata/batch-student", {
-        addedByAdminId: parseInt(adminId),
-        batchId,
-      });
-      const mapped = (data.studentInfo || []).map((s) => ({
-        id: s.id,
-        fullName: s.fullName,
-        email: s.email,
-      }));
-      setBatchStudents(mapped);
-      setSelectedStudents(mapped);
-    } catch (err) {
-      console.error(err);
+  setIsLoadingStudents(true);
+  setError("");
+  try {
+    const api = createAxios();
+    const adminId = getAdminId();
+    const { data } = await api.post("/studentdata/batch-student", {
+      addedByAdminId: parseInt(adminId),
+      batchId,
+    });
+
+    const mapped = (data.studentInfo || []).map((s) => ({
+      id: s.id,
+      fullName: cleanName(s.fullName, s.firstName, s.lastName),
+      email: s.email ?? s.emailAddress ?? "",
+    }));
+
+    setBatchStudents(mapped);
+    setSelectedStudents(mapped);
+  } catch (err) {
+    console.error(err);
+    if (isNotFound(err)) {
+      setBatchStudents([]);
+      setSelectedStudents([]);
+      // Show a friendly, specific message (not an error toast)
+      setSuccessMessage("No students found in this batch.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } else {
       setError("Failed to fetch batch students");
-    } finally {
-      setIsLoadingStudents(false);
     }
-  };
+  } finally {
+    setIsLoadingStudents(false);
+  }
+};
 
   // Toggle student selection
   const handleStudentToggle = (student) => {
@@ -201,13 +239,13 @@ const UpdateBatchForm = ({ batchId }) => {
     );
   }
 
-  // Filter students not already in batch
-  const filteredStudents = availableStudents.filter(
-    (st) =>
-      (st.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        st.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      !batchStudents.some((bs) => bs.id === st.id)
-  );
+ const filteredStudents = availableStudents.filter((st) => {
+  const name = cleanName(st.fullName, st.firstName, st.lastName).toLowerCase();
+  const email = (st.email ?? '').toLowerCase();
+  const q = searchTerm.toLowerCase();
+  return (name.includes(q) || email.includes(q)) && !batchStudents.some((bs) => bs.id === st.id);
+});
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">

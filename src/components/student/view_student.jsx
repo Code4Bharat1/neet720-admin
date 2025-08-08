@@ -42,27 +42,29 @@ const Desktop_student = () => {
 
         const json = XLSX.utils.sheet_to_json(sheet);
 
-        const processedStudents = json.map((student) => {
-          const firstName = student["STUDENT NAME"] || "";
-          const dob = student["DOB "] || "";
-          const yearOfBirth = dob
-            ? dob instanceof Date
-              ? dob.getFullYear()
-              : new Date(dob).getFullYear()
-            : "";
+       const processedStudents = json.map((student) => {
+  const fullNameRaw = student["STUDENT NAME"] || "";
+  const fullName = cleanName(fullNameRaw);     // << sanitize here
 
-          const password = `${firstName.charAt(0)}${yearOfBirth}`;
+  const dob = student["DOB "] || "";
+  const year = dob
+    ? dob instanceof Date ? dob.getFullYear() : new Date(dob).getFullYear()
+    : "";
 
-          return {
-            firstName: firstName,
-            emailAddress: student["EMAIL"] || "",
-            mobileNumber: student["PHONE NUMBER"] || "",
-            gender: student["GENDER"] || "",
-            dateOfBirth: dob || "",
-            password: password, // Auto-generated password
-            addedByAdminId: localAdmin,
-          };
-        });
+  const password = `${fullName.charAt(0) || "X"}${year || "0000"}`;
+
+  return {
+    fullName,                                 // << store clean name
+    firstName: fullName,                      // if backend expects firstName right now
+    emailAddress: student["EMAIL"] || "",
+    mobileNumber: student["PHONE NUMBER"] || "",
+    gender: student["GENDER"] || "",
+    dateOfBirth: dob || "",
+    password,
+    addedByAdminId: localAdmin,
+  };
+});
+
 
         console.log(processedStudents);
         setStudents(processedStudents);
@@ -99,9 +101,14 @@ const Desktop_student = () => {
           }
         );
 
-        if (response.data.studentInfo) {
-          setStudents(response.data.studentInfo);
-        }
+       if (response.data.studentInfo) {
+  const sanitized = response.data.studentInfo.map(s => ({
+    ...s,
+    fullName: cleanName(s.fullName, s.firstName, s.lastName),
+  }));
+  setStudents(sanitized);
+}
+
       } catch (error) {
         console.error("Error fetching student data:", error);
       }
@@ -109,6 +116,20 @@ const Desktop_student = () => {
 
     fetchStudentData();
   }, []);
+
+  // Remove literal "null"/"undefined"/"n/a" tokens, collapse spaces, fallback to "Unknown"
+const cleanName = (...parts) => {
+  const raw = parts
+    .map((s) => (s ?? "").toString().trim())
+    .filter(Boolean)
+    .join(" ");
+  const cleaned = raw
+    .replace(/\b(null|undefined|n\/a|na)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || "Unknown";
+};
+
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
