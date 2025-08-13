@@ -109,7 +109,7 @@ export default function AddStaffPage() {
 
     try {
       const payload = {
-        created_by_admin_id:claims.id,
+        created_by_admin_id: claims.id,
         AdminId: formData.AdminId,
         PassKey: formData.PassKey,
         name: formData.name,
@@ -352,10 +352,8 @@ export default function AddStaffPage() {
                       onChange={handleChange}
                       className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
                     >
-                      <option value="superadmin">Super Admin</option>
-                      <option value="admin">Admin</option>
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="supporter">Supporter</option>
                     </select>
                   </div>
                 </div>
