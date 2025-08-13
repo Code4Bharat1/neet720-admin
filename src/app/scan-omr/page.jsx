@@ -177,6 +177,46 @@ const OMRScannerSimplified = () => {
     fetchTestQuestions();
   }, [selectedTest]);
 
+  // Floating WhatsApp CTA
+  const FloatingWhatsAppCTA = ({
+    phone = "+91XXXXXXXXXX", // <-- put your business WhatsApp number here (with country code, no spaces)
+    message, // string OR function () => string
+    label = "We’ll do this for you — WhatsApp us!",
+  }) => {
+    const buildLink = () => {
+      const base = `https://wa.me/${phone.replace(/\D/g, "")}`;
+      const text = typeof message === "function" ? message() : message;
+      return `${base}?text=${encodeURIComponent(
+        text || "Hi, I need help with OMR/QR scanning and evaluation."
+      )}`;
+    };
+
+    return (
+      <a
+        href={buildLink()}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-5 right-5 z-50 group"
+      >
+        <div className="flex items-center gap-3 rounded-full shadow-xl bg-white pr-4 pl-2 py-2 border border-emerald-200 hover:shadow-2xl transition-all">
+          {/* WhatsApp icon */}
+          <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow">
+            <svg viewBox="0 0 32 32" className="h-6 w-6 fill-white">
+              <path d="M19.11 17.3c-.29-.15-1.68-.83-1.94-.92-.26-.1-.45-.15-.64.15-.19.3-.74.92-.9 1.11-.17.2-.33.22-.62.08-.29-.15-1.23-.45-2.35-1.43-.87-.77-1.46-1.72-1.63-2.01-.17-.3-.02-.46.13-.61.13-.13.29-.33.43-.49.14-.16.19-.27.29-.46.1-.2.05-.36-.02-.5-.07-.15-.64-1.55-.88-2.12-.23-.56-.47-.49-.64-.5l-.55-.01c-.2 0-.5.07-.76.36-.26.3-1 1-1 2.45 0 1.44 1.03 2.83 1.17 3.03.14.2 2.03 3.1 4.92 4.35.69.3 1.22.48 1.63.61.68.22 1.29.19 1.78.11.54-.08 1.68-.69 1.91-1.35.24-.66.24-1.23.17-1.35-.07-.12-.26-.19-.54-.34zM26.67 5.33C23.8 2.46 20.02 1 16.01 1 7.64 1 1 7.64 1 16.01c0 2.65.69 5.2 1.99 7.46L1 31l7.71-1.97c2.21 1.2 4.7 1.84 7.3 1.84h.01c8.37 0 15.01-6.64 15.01-15.01 0-4-1.56-7.78-4.36-10.53zM16.01 28.79h-.01c-2.33 0-4.6-.63-6.59-1.83l-.47-.28-4.58 1.17 1.22-4.46-.3-.46c-1.22-2-1.86-4.3-1.86-6.93 0-7.12 5.8-12.91 12.93-12.91 3.45 0 6.69 1.34 9.13 3.78 2.44 2.44 3.78 5.68 3.78 9.13 0 7.13-5.8 12.92-12.92 12.92z" />
+            </svg>
+          </span>
+          <div className="hidden sm:block">
+            <p className="text-sm font-semibold text-emerald-900">{label}</p>
+            <p className="text-xs text-emerald-700">
+              Fast response on WhatsApp
+            </p>
+          </div>
+        </div>
+      </a>
+    );
+  };
+
   // Handler
   const handleTestSelect = (e) => {
     const selectedId = parseInt(e.target.value);
@@ -966,6 +1006,23 @@ const OMRScannerSimplified = () => {
           )}
         </AnimatePresence>
       </div>
+      <FloatingWhatsAppCTA
+        phone="+91XXXXXXXXXX" // <-- replace with your WhatsApp number
+        message={() => {
+          // Prefill message using current context (selected test, counts, etc.)
+          const testLine = selectedTest
+            ? `\nTest: ${selectedTest.testname} (${selectedTest.subject}) | Batch: ${selectedTest.batch_name}`
+            : "";
+          const qCount = selectedTestQuestions?.length || 0;
+          return (
+            "Hi NEET720 team, I want you to handle OMR + QR comparison and upload results for me." +
+            testLine +
+            (qCount ? `\nQuestions detected: ${qCount}` : "") +
+            "\nPlease contact me."
+          );
+        }}
+        label="We’ll do this for you — WhatsApp us!"
+      />
     </div>
   );
 };

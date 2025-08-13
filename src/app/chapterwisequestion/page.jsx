@@ -19,12 +19,12 @@ import {
 import Sidebar from "@/components/desktopsidebar/sidebar";
 
 // Separate Evaluation Step Component
-const EvaluationStep = ({ 
-  extractedQuestions, 
-  setExtractedQuestions, 
-  selectedTest, 
-  submittedCount, 
-  setSubmittedCount 
+const EvaluationStep = ({
+  extractedQuestions,
+  setExtractedQuestions,
+  selectedTest,
+  submittedCount,
+  setSubmittedCount,
 }) => {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [editedQuestion, setEditedQuestion] = useState({});
@@ -36,7 +36,7 @@ const EvaluationStep = ({
       question: extractedQuestions[idx].question,
       options: [...extractedQuestions[idx].options],
       solution: extractedQuestions[idx].solution || "",
-      difficulty_level: extractedQuestions[idx].difficulty_level || "medium"
+      difficulty_level: extractedQuestions[idx].difficulty_level || "medium",
     });
   };
 
@@ -49,7 +49,7 @@ const EvaluationStep = ({
         question: editedQuestion.question,
         options: editedQuestion.options,
         solution: editedQuestion.solution,
-        difficulty_level: editedQuestion.difficulty_level
+        difficulty_level: editedQuestion.difficulty_level,
       };
       return updated;
     });
@@ -65,22 +65,22 @@ const EvaluationStep = ({
 
   // Update option text
   const handleOptionChange = (optionIdx, value) => {
-    setEditedQuestion(prev => ({
+    setEditedQuestion((prev) => ({
       ...prev,
-      options: prev.options.map((opt, i) => 
+      options: prev.options.map((opt, i) =>
         i === optionIdx ? { ...opt, option_text: value } : opt
-      )
+      ),
     }));
   };
 
   // Toggle correct answer
   const handleCorrectAnswerChange = (optionIdx) => {
-    setEditedQuestion(prev => ({
+    setEditedQuestion((prev) => ({
       ...prev,
       options: prev.options.map((opt, i) => ({
         ...opt,
-        is_correct: i === optionIdx
-      }))
+        is_correct: i === optionIdx,
+      })),
     }));
   };
 
@@ -154,7 +154,7 @@ const EvaluationStep = ({
       return;
     }
 
-    const unsubmittedQuestions = extractedQuestions.filter(q => !q.submitted);
+    const unsubmittedQuestions = extractedQuestions.filter((q) => !q.submitted);
     if (unsubmittedQuestions.length === 0) {
       alert("All questions have already been submitted.");
       return;
@@ -163,7 +163,7 @@ const EvaluationStep = ({
     const confirmSubmit = window.confirm(
       `Are you sure you want to submit all ${unsubmittedQuestions.length} remaining questions?`
     );
-    
+
     if (!confirmSubmit) return;
 
     let successCount = 0;
@@ -180,7 +180,11 @@ const EvaluationStep = ({
       }
     }
 
-    alert(`✅ ${successCount} questions submitted successfully. ${failCount > 0 ? `❌ ${failCount} failed.` : ''}`);
+    alert(
+      `✅ ${successCount} questions submitted successfully. ${
+        failCount > 0 ? `❌ ${failCount} failed.` : ""
+      }`
+    );
   };
 
   if (extractedQuestions.length === 0) return null;
@@ -199,9 +203,9 @@ const EvaluationStep = ({
         </h3>
         <div className="flex gap-2">
           <span className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-            {extractedQuestions.filter(q => q.submitted).length} submitted
+            {extractedQuestions.filter((q) => q.submitted).length} submitted
           </span>
-          {extractedQuestions.some(q => !q.submitted) && (
+          {extractedQuestions.some((q) => !q.submitted) && (
             <button
               onClick={handleSubmitAllQuestions}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
@@ -218,9 +222,9 @@ const EvaluationStep = ({
           <motion.div
             key={idx}
             className={`border rounded-lg p-4 ${
-              q.submitted 
-                ? 'bg-green-50 border-green-200' 
-                : 'bg-gray-50 border-gray-200'
+              q.submitted
+                ? "bg-green-50 border-green-200"
+                : "bg-gray-50 border-gray-200"
             }`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -231,11 +235,23 @@ const EvaluationStep = ({
               <div className="flex gap-2">
                 {!q.submitted && (
                   <button
-                    onClick={() => editingQuestion === idx ? handleCancelEdit() : handleEditQuestion(idx)}
+                    onClick={() =>
+                      editingQuestion === idx
+                        ? handleCancelEdit()
+                        : handleEditQuestion(idx)
+                    }
                     className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                    title={editingQuestion === idx ? "Cancel editing" : "Edit question"}
+                    title={
+                      editingQuestion === idx
+                        ? "Cancel editing"
+                        : "Edit question"
+                    }
                   >
-                    {editingQuestion === idx ? <XCircle className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+                    {editingQuestion === idx ? (
+                      <XCircle className="w-4 h-4" />
+                    ) : (
+                      <Edit3 className="w-4 h-4" />
+                    )}
                   </button>
                 )}
                 {q.submitted ? (
@@ -250,17 +266,26 @@ const EvaluationStep = ({
               // Edit Mode
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Question Text:</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Question Text:
+                  </label>
                   <textarea
                     value={editedQuestion.question}
-                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, question: e.target.value }))}
+                    onChange={(e) =>
+                      setEditedQuestion((prev) => ({
+                        ...prev,
+                        question: e.target.value,
+                      }))
+                    }
                     className="w-full p-2 border rounded-md"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Options:</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Options:
+                  </label>
                   {editedQuestion.options?.map((opt, i) => (
                     <div key={i} className="flex items-center gap-2 mb-2">
                       <input
@@ -270,7 +295,9 @@ const EvaluationStep = ({
                         onChange={() => handleCorrectAnswerChange(i)}
                         className="text-blue-600"
                       />
-                      <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                      <span className="font-medium">
+                        {String.fromCharCode(65 + i)}.
+                      </span>
                       <input
                         type="text"
                         value={opt.option_text}
@@ -282,10 +309,17 @@ const EvaluationStep = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Solution/Explanation:</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Solution/Explanation:
+                  </label>
                   <textarea
                     value={editedQuestion.solution}
-                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, solution: e.target.value }))}
+                    onChange={(e) =>
+                      setEditedQuestion((prev) => ({
+                        ...prev,
+                        solution: e.target.value,
+                      }))
+                    }
                     className="w-full p-2 border rounded-md"
                     rows={2}
                     placeholder="Optional explanation..."
@@ -293,10 +327,17 @@ const EvaluationStep = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Difficulty Level:</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Difficulty Level:
+                  </label>
                   <select
                     value={editedQuestion.difficulty_level}
-                    onChange={(e) => setEditedQuestion(prev => ({ ...prev, difficulty_level: e.target.value }))}
+                    onChange={(e) =>
+                      setEditedQuestion((prev) => ({
+                        ...prev,
+                        difficulty_level: e.target.value,
+                      }))
+                    }
                     className="p-2 border rounded-md"
                   >
                     <option value="easy">Easy</option>
@@ -326,13 +367,17 @@ const EvaluationStep = ({
                 <p className="text-gray-800 mb-3">{q.question}</p>
                 <ul className="space-y-1 mb-3">
                   {q.options.map((opt, i) => (
-                    <li 
-                      key={i} 
+                    <li
+                      key={i}
                       className={`flex items-center gap-2 ${
-                        opt.is_correct ? 'text-green-700 font-medium' : 'text-gray-700'
+                        opt.is_correct
+                          ? "text-green-700 font-medium"
+                          : "text-gray-700"
                       }`}
                     >
-                      <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                      <span className="font-medium">
+                        {String.fromCharCode(65 + i)}.
+                      </span>
                       <span>{opt.option_text}</span>
                       {opt.is_correct && (
                         <CheckCircle className="w-4 h-4 text-green-600" />
@@ -349,14 +394,14 @@ const EvaluationStep = ({
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500">
-                    Difficulty: {q.difficulty_level || 'medium'}
+                    Difficulty: {q.difficulty_level || "medium"}
                   </span>
                   <button
                     onClick={() => handleSubmitQuestion(idx)}
                     disabled={q.submitted}
                     className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                      q.submitted 
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                      q.submitted
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                         : "bg-green-600 text-white hover:bg-green-700"
                     }`}
                   >
@@ -393,6 +438,48 @@ const Page = () => {
     }
     return 0;
   });
+
+  // Floating WhatsApp CTA
+  const FloatingWhatsAppCTA = ({
+    phone = "+91XXXXXXXXXX", // <- your WhatsApp number (with country code, no spaces)
+    message, // string OR () => string
+    label = "We’ll do this for you — WhatsApp us!",
+  }) => {
+    const buildLink = () => {
+      const base = `https://wa.me/${phone.replace(/\D/g, "")}`;
+      const text = typeof message === "function" ? message() : message;
+      return `${base}?text=${encodeURIComponent(
+        text ||
+          "Hi, I want you to extract MCQs, review, and upload them to my test."
+      )}`;
+    };
+
+    return (
+      <a
+        href={buildLink()}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-5 right-5 z-50 group"
+      >
+        <div className="flex items-center gap-3 rounded-full shadow-xl bg-white pr-4 pl-2 py-2 border border-emerald-200 hover:shadow-2xl transition-all">
+          {/* WhatsApp icon bubble */}
+          <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow">
+            <svg viewBox="0 0 32 32" className="h-6 w-6 fill-white">
+              <path d="M19.11 17.3c-.29-.15-1.68-.83-1.94-.92-.26-.1-.45-.15-.64.15-.19.3-.74.92-.9 1.11-.17.2-.33.22-.62.08-.29-.15-1.23-.45-2.35-1.43-.87-.77-1.46-1.72-1.63-2.01-.17-.3-.02-.46.13-.61.13-.13.29-.33.43-.49.14-.16.19-.27.29-.46.1-.2.05-.36-.02-.5-.07-.15-.64-1.55-.88-2.12-.23-.56-.47-.49-.64-.5l-.55-.01c-.2 0-.5.07-.76.36-.26.3-1 1-1 2.45 0 1.44 1.03 2.83 1.17 3.03.14.2 2.03 3.1 4.92 4.35.69.3 1.22.48 1.63.61.68.22 1.29.19 1.78.11.54-.08 1.68-.69 1.91-1.35.24-.66.24-1.23.17-1.35-.07-.12-.26-.19-.54-.34zM26.67 5.33C23.8 2.46 20.02 1 16.01 1 7.64 1 1 7.64 1 16.01c0 2.65.69 5.2 1.99 7.46L1 31l7.71-1.97c2.21 1.2 4.7 1.84 7.3 1.84h.01c8.37 0 15.01-6.64 15.01-15.01 0-4-1.56-7.78-4.36-10.53zM16.01 28.79h-.01c-2.33 0-4.6-.63-6.59-1.83l-.47-.28-4.58 1.17 1.22-4.46-.3-.46c-1.22-2-1.86-4.3-1.86-6.93 0-7.12 5.8-12.91 12.93-12.91 3.45 0 6.69 1.34 9.13 3.78 2.44 2.44 3.78 5.68 3.78 9.13 0 7.13-5.8 12.92-12.92 12.92z" />
+            </svg>
+          </span>
+          {/* Label (hidden on very small screens) */}
+          <div className="hidden sm:block">
+            <p className="text-sm font-semibold text-emerald-900">{label}</p>
+            <p className="text-xs text-emerald-700">
+              Fast response on WhatsApp
+            </p>
+          </div>
+        </div>
+      </a>
+    );
+  };
 
   // Test Series & Test Dropdown states
   const [testSeriesList, setTestSeriesList] = useState([]);
@@ -554,7 +641,9 @@ const Page = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Test Series</label>
+              <label className="block text-sm font-medium mb-2">
+                Test Series
+              </label>
               <select
                 value={selectedSeries}
                 onChange={(e) => {
@@ -598,7 +687,7 @@ const Page = () => {
           <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
             <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ Image
           </h2>
-          
+
           <div className="space-y-4">
             <div
               ref={pasteBoxRef}
@@ -683,6 +772,34 @@ const Page = () => {
           </motion.div>
         )}
       </motion.div>
+      <FloatingWhatsAppCTA
+        phone="+91XXXXXXXXXX" // <- replace with your business number
+        message={() => {
+          // Build a helpful, contextual message
+          const series = testSeriesList.find(
+            (s) => String(s.id) === String(selectedSeries)
+          );
+          const seriesName = series?.name || "N/A";
+
+          const test = testsList.find(
+            (t) => String(t.id) === String(selectedTest)
+          );
+          const testName = test?.testName || "N/A";
+
+          const totalExtracted = extractedQuestions.length;
+          const totalSubmitted = submittedCount;
+
+          return [
+            "Hi NEET720 team, I want you to handle MCQ extraction, review, and submission for my test.",
+            `Series: ${seriesName}`,
+            `Test: ${testName}`,
+            `Extracted MCQs: ${totalExtracted}`,
+            `Already Submitted: ${totalSubmitted}`,
+            "Please contact me to proceed.",
+          ].join("\n");
+        }}
+        label="We’ll do this for you — WhatsApp us!"
+      />
     </div>
   );
 };
