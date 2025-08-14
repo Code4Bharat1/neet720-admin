@@ -184,6 +184,14 @@ export default function AddStaffPage() {
 
             <div className="flex items-center gap-4">
               <Link
+                href="/admindashboard" // change this to your desired back route
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Link>
+
+              <Link
                 href="/remove-staff"
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               >
@@ -352,8 +360,11 @@ export default function AddStaffPage() {
                       onChange={handleChange}
                       className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
                     >
+                      <option value="admin">Admin</option>
+                      <option value="batchmanager">Batch Manager</option>
                       <option value="teacher">Teacher</option>
                       <option value="supporter">Supporter</option>
+                      <option value="content_manager">Content Creator</option>
                     </select>
                   </div>
                 </div>

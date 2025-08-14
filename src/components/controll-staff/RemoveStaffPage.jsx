@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 
 export default function RemoveStaffPage() {
   const [loading, setLoading] = useState(false);
@@ -63,9 +64,9 @@ export default function RemoveStaffPage() {
       console.log("response : ", claims.id);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/superadmin/getStaff`,
-        {params : { adminId: claims.id }}
+        { params: { adminId: claims.id } }
       );
-      console.log("data :" , res.data?.data)
+      console.log("data :", res.data?.data);
       setAdminList(res.data?.data || []);
     } catch (err) {
       toast.error("Failed to load admin list");
@@ -177,6 +178,13 @@ export default function RemoveStaffPage() {
             </div>
 
             <div className="flex items-center gap-4">
+              <Link
+                href="/admindashboard" // change this to your desired back route
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Link>
               <Link
                 href="/add-staff"
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
@@ -351,6 +359,9 @@ export default function RemoveStaffPage() {
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Expiry Date
                   </th>
+                  <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white/50 divide-y divide-gray-200">
@@ -425,6 +436,15 @@ export default function RemoveStaffPage() {
                           </span>
                         </div>
                       )}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <Link
+                        href={`/edit-staff/${admin.id}`} // route to edit page with AdminId
+                        className="inline-flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200"
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}
