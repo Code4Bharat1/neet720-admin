@@ -75,16 +75,22 @@ export default function Batches() {
             },
           }
         );
+        // Check if batchData exists
         setBatchData(response.data.batchData || []);
       } catch (error) {
-        setError(
-          "Error fetching batch data: " +
-            (error.response?.data?.message || error.message)
-        );
+        if (error.response?.status === 404) {
+          setError("No batches found");
+        } else {
+          setError(
+            "Error fetching batch data: " +
+              (error.response?.data?.message || error.message)
+          );
+        }
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchTestCount();
     fetchBatches();
   }, []);
@@ -327,8 +333,20 @@ export default function Batches() {
               <p>Loading batch data...</p>
             </div>
           ) : error ? (
-            <div className="p-8 text-center text-red-500">
-              <p>{error}</p>
+            <div className="p-8 text-center bg-red-100 rounded-lg border border-red-500 shadow-lg">
+              <div className="flex items-center justify-center text-red-500 mb-4">
+                <IoSchoolOutline className="text-4xl mr-3" />
+                <h3 className="text-xl font-semibold">
+                  Oops! Something went wrong
+                </h3>
+              </div>
+              <p className="text-lg font-medium text-gray-700">{error}</p>
+              <button
+                onClick={() => window.location.reload()} // Reload the page or trigger a retry function
+                className="mt-6 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+              >
+                Retry
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto max-sm:mb-10">
@@ -401,12 +419,18 @@ export default function Batches() {
                       <td colSpan="5" className="py-8 text-center">
                         <div className="flex flex-col items-center justify-center">
                           <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
-                          <p className="text-gray-500 mb-1">
-                            No matching batches found
+                          <p className="text-gray-500 mb-2 text-xl font-semibold">
+                            No Batches Found
                           </p>
-                          <p className="text-gray-400 text-xs">
-                            Try adjusting your search or create a new batch
+                          <p className="text-gray-400 text-sm mb-4">
+                            No batches match your search criteria. You can
+                            create a new batch to get started.
                           </p>
+                          <Link href="/batch-add">
+                            <button className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all">
+                              Create New Batch
+                            </button>
+                          </Link>
                         </div>
                       </td>
                     </tr>
