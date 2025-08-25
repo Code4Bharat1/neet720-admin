@@ -251,21 +251,15 @@ const Desktop_student = () => {
         window.location.reload(); // Reload the page to reflect changes
         closeAddStudentModal();
       }
-      // if (response.status === 409) {
-      //   toast.error("Email or Mobile number already exists for this admin", {
-      //     duration: 5000,
-      //   });
-      //   setIsSubmitting(false); // Reset loading state
-      //   return;
-      // }
-    } catch (error) {
-      if (error.status === 409) {
-        toast.error("Email or Mobile number already exists for this admin", {
+      console.log(response)
+      if (response.status === 200) {
+        toast.error(JSON.parse(response.request.response).message, {
           duration: 5000,
         });
         setIsSubmitting(false); // Reset loading state
         return;
       }
+    } catch (error) {
       console.error("Error saving student data:", error);
       setIsSubmitting(false);
       toast.error("Error saving student data", {
