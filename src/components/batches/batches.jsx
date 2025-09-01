@@ -9,7 +9,6 @@ import {
   IoPencilOutline,
   IoPersonOutline,
   IoCalendarOutline,
-  
 } from "react-icons/io5";
 import { AiFillDelete } from "react-icons/ai";
 import { useRouter } from "next/navigation";
@@ -21,6 +20,8 @@ export default function Batches() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedBatchId, setSelectedBatchId] = useState(null);
 
   const [highlightCreateBatch, setHighlightCreateBatch] = useState(false);
 
@@ -34,6 +35,11 @@ export default function Batches() {
       }
     }
   }, []);
+
+  const openDeleteModal = (batchId) => {
+    setSelectedBatchId(batchId);
+    setShowDeleteModal(true);
+  };
 
   // Fetch batches from the backend
   useEffect(() => {
@@ -98,8 +104,8 @@ export default function Batches() {
   }, []);
 
   // Add this handler inside your component
-  const handleDelete = async (batchId) => {
-    if (!confirm("Are you sure you want to delete this batch?")) return;
+  const confirmDelete = async () => {
+    if (!selectedBatchId) return;
 
     try {
       let token = null;
@@ -108,21 +114,23 @@ export default function Batches() {
       }
 
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/deletebatch/${batchId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/batch/${selectedBatchId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Update UI by filtering out deleted batch
-      setBatchData((prev) => prev.filter((batch) => batch.batchId !== batchId));
+      setBatchData((prev) =>
+        prev.filter((batch) => batch.batchId !== selectedBatchId)
+      );
     } catch (error) {
       alert(
         "Error deleting batch: " +
           (error.response?.data?.message || error.message)
       );
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedBatchId(null);
     }
   };
 
@@ -266,7 +274,6 @@ export default function Batches() {
 
         {/* Performance Stats Card - Adjusted proportions */}
 
-
         {/* Batch Table Component - Improved */}
         <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
           <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -361,9 +368,7 @@ export default function Batches() {
                           </button>
                           <button
                             className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
-                            onClick={() =>
-                              handleDelete(batch.BatchId)
-                            }
+                            onClick={() => openDeleteModal(batch.batchId)}
                           >
                             <AiFillDelete className="text-sm" />
                             <span>Delete</span>
@@ -398,6 +403,40 @@ export default function Batches() {
           )}
         </div>
       </div>
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Transparent overlay */}
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          ></div>
+
+          {/* Modal content */}
+          <div className="relative bg-white rounded-lg shadow-lg p-6 w-96 max-w-sm backdrop-blur-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Delete Batch
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this batch? This action cannot be
+              undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
