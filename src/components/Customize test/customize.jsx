@@ -221,6 +221,7 @@ const sortedStudents = useMemo(() => {
     
     // Get performance class for scores
     const getScoreClass = (score, totalMarks) => {
+      
       const percentage = (score / totalMarks) * 100;
       if (percentage >= 80) return "performance-high";
       if (percentage >= 60) return "performance-medium";
