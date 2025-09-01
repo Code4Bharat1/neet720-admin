@@ -25,8 +25,15 @@ const Desktop_student = () => {
   const [students, setStudents] = useState([]);
   const [localAdmin, setLocalAdmin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   const STUDENT_LIMIT = 100; // Set student limit
+
+  const confirmDeleteStudent = (student) => {
+    setStudentToDelete(student);
+    setIsDeleteModalOpen(true);
+  };
 
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
@@ -251,7 +258,7 @@ const Desktop_student = () => {
         window.location.reload(); // Reload the page to reflect changes
         closeAddStudentModal();
       }
-      console.log(response)
+      console.log(response);
       if (response.status === 200) {
         toast.error(JSON.parse(response.request.response).message, {
           duration: 5000,
@@ -590,7 +597,7 @@ const Desktop_student = () => {
                     </td>
                     <td className="py-4 px-6">
                       <button
-                        onClick={() => deleteStudent(student)}
+                        onClick={() => confirmDeleteStudent(student)}
                         className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 rounded-full"
                       >
                         Delete
@@ -814,6 +821,37 @@ const Desktop_student = () => {
                 student.
               </p>
             </form>
+          </div>
+        </div>
+      )}
+      {isDeleteModalOpen && studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Delete Student
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete{" "}
+              <span className="font-medium">{studentToDelete.fullName}</span>?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteStudent(studentToDelete);
+                  setIsDeleteModalOpen(false);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
