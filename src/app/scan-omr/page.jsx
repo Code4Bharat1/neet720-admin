@@ -225,87 +225,64 @@ const OMRScannerSimplified = () => {
   };
   const handleEvaluate = async (e) => {
     e.preventDefault();
-    // if (answerKeyFiles.length === 0 || questionPaperFiles.length === 0) {
-    //   alert("Please upload both OMR answer key and question paper files.");
-    //   return;
-    // }
 
     try {
       setLoading(true);
 
-      // Step 1: Process OMR Answer Key
-      // const answerKeyOmrFormData = new FormData();
-      // answerKeyFiles.forEach((file) =>
-      //   answerKeyOmrFormData.append("omrfile", file)
-      // );
-      // console.log("Processing OMR Answer Key...");
-      // const answerKeyOmrResponse = await axios.post(
-      //   "https://omr.neet720.com/api/process-omr",
-      //   answerKeyOmrFormData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
-
-      // Step 2: Process OMR Question Paper
-      const questionPaperOmrFormData = new FormData();
+      // Step 1: Process QR Code for Question Paper
+      const questionPaperQrFormData = new FormData();
       questionPaperFiles.forEach((file) =>
-        questionPaperOmrFormData.append("omrfile", file)
+        questionPaperQrFormData.append("file", file)
       );
-      console.log("Processing OMR Question Paper...");
-      const questionPaperOmrResponse = await axios.post(
-        "https://omr.neet720.com/api/process-omr",
-        questionPaperOmrFormData,
+      console.log("Processing QR Code for Question Paper...");
+      const questionPaperQrResponse = await axios.post(
+        "https://omr.neet720.com/api/scan_qr",
+        questionPaperQrFormData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         }
       );
-      console.log(questionPaperOmrResponse.data);
 
-      // Step 3: Process QR Code for Answer Key
-      // const answerKeyQrFormData = new FormData();
-      // answerKeyFiles.forEach((file) =>
-      //   answerKeyQrFormData.append("file", file)
-      // ); // Assuming 'qrfile' is the expected field name
-      // console.log("Processing QR Code for Answer Key...");
-      // const answerKeyQrResponse = await axios.post(
-      //   "https://omr.neet720.com/api/scan_qr",
-      //   answerKeyQrFormData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
+      // Handle successful QR scan
+      if (questionPaperQrResponse.status === 200) {
+        console.log("QR Code Scanned Successfully");
 
-      // Step 4: Process QR Code for Question Paper
-      // const questionPaperQrFormData = new FormData();
-      // questionPaperFiles.forEach((file) =>
-      //   questionPaperQrFormData.append("file", file)
-      // ); // Assuming 'qrfile' is the expected field name
-      // console.log("Processing QR Code for Question Paper...");
-      // const questionPaperQrResponse = await axios.post(
-      //   "https://omr.neet720.com/api/scan_qr",
-      //   questionPaperQrFormData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
+        // Step 2: Process OMR Question Paper
+        const questionPaperOmrFormData = new FormData();
+        questionPaperFiles.forEach((file) =>
+          questionPaperOmrFormData.append("omrfile", file)
+        );
+        console.log("Processing OMR Question Paper...");
+        const questionPaperOmrResponse = await axios.post(
+          "https://omr.neet720.com/api/process-omr",
+          questionPaperOmrFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
-      // Step 5: Compare both OMR and QR responses
-      console.log("Comparing OMR and QR responses...");
-      const comparisonResult = compareOMRResponses(
-        questionPaperOmrResponse.data,
-        questionPaperOmrResponse.data,
-        selectedTestQuestions
-      );
-      setResult(comparisonResult);
+        console.log("OMR Sheet Processed Successfully");
+        console.log(questionPaperOmrResponse.data);
+
+        // Step 3: Compare both OMR and QR responses
+        console.log("Comparing OMR and QR responses...");
+
+        // Assuming `compareOMRResponses` needs both the QR and OMR response data
+        const comparisonResult = compareOMRResponses(
+          questionPaperOmrResponse.data, // OMR response data
+          questionPaperQrResponse.data, // QR response data
+          selectedTestQuestions
+        );
+
+        // Set the comparison result to state (or handle accordingly)
+        setResult(comparisonResult);
+      } else {
+        throw new Error("QR Code scanning failed. Please try again.");
+      }
     } catch (error) {
       console.error("Error evaluating:", error.response?.data || error.message);
       alert(

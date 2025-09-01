@@ -3,8 +3,6 @@
 import { useSearchParams } from "next/navigation";
 import MobileNavbar from "@/components/mobilenav/mobilenav";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
-import Sidebar from "@/components/desktopsidebar/sidebar";
-import Desktopnav from "@/components/desktopnav/nav";
 import Batchesedit from "@/components/batchesedit/batchesedit";
 
 export default function EditClientPage() {
@@ -28,13 +26,13 @@ export default function EditClientPage() {
       </div>
 
       {/* Sidebar */}
-      <div className="md:w-1/6">
+      {/* <div className="md:w-1/6">
         <Sidebar />
-      </div>
+      </div> */}
 
       {/* Main content */}
       <div className="w-full md:w-5/6 flex-1 h-screen bg-white">
-        <Desktopnav />
+        {/* <Desktopnav /> */}
         <Batchesedit batchId={batchId} />
       </div>
     </div>

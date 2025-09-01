@@ -40,7 +40,7 @@ export default function AnswerPaper() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
         { testid }
       );
-      console.log("this is my response : " , response.data.data)
+      console.log("this is my response : ", response.data.data);
       setQuestions(response.data.data);
     } catch (error) {
       console.error("Failed to fetch questions:", error);
@@ -63,7 +63,7 @@ export default function AnswerPaper() {
       );
 
       console.log("Batch and Test Info:", response.data);
-      console.log("test id :")
+      console.log("test id :");
       // Update state with the response data
       if (response.data) {
         setBatchId(response.data.batchId);
@@ -102,70 +102,70 @@ export default function AnswerPaper() {
       questions.forEach((q, idx) => {
         if (showSubjects && q.subject !== lastSubject) {
           output += `
-          <div class="subject-header">
-            ${q.subject}
-          </div>
-        `;
+        <div class="subject-header">
+          ${q.subject}
+        </div>
+      `;
           lastSubject = q.subject;
         }
 
         output += `
-        <div class="question-block">
-          <div class="question-number">${idx + 1}.</div>
-          <div class="question-main">
-            <div class="question-text">${q.question_text}</div>
-            ${
-              q.options
-                ? `
-              <div class="options-block">
-                ${Object.entries(q.options)
-                  .map(
-                    ([key, value]) => `
-                    <div class="option-row${
-                      q.correctanswer &&
-                      q.correctanswer.toLowerCase() === key.toLowerCase()
-                        ? " correct"
-                        : ""
-                    }">
-                      <span class="option-letter">${key.toUpperCase()})</span>
-                      <span>${value}</span>
-                    </div>
-                  `
-                  )
-                  .join("")}
-              </div>
-            `
-                : ""
-            }
-            ${
-              showMarks
-                ? `<div class="marks-label">[${q.marks || 4} Mark${
-                    (q.marks || 4) > 1 ? "s" : ""
-                  }]</div>`
-                : ""
-            }
-            ${
-              showSolutions
-                ? `
-              <div class="solution-block">
-                <div class="solution-title">Solution & Answer</div>
-                ${
-                  q.correctanswer
-                    ? `<div class="correct-answer"><strong>Correct Answer:</strong> ${q.correctanswer.toUpperCase()}</div>`
-                    : ""
-                }
-                ${
-                  q.solution
-                    ? `<div class="solution-text"><strong>Explanation:</strong><br>${q.solution}</div>`
-                    : ""
-                }
-              </div>
-            `
-                : ""
-            }
-          </div>
+      <div class="question-block">
+        <div class="question-number">${idx + 1}.</div>
+        <div class="question-main">
+          <div class="question-text">${q.question_text}</div>
+          ${
+            q.options
+              ? `
+            <div class="options-block">
+              ${Object.entries(q.options)
+                .map(
+                  ([key, value]) => `
+                  <div class="option-row${
+                    q.correctanswer &&
+                    q.correctanswer.toLowerCase() === key.toLowerCase()
+                      ? " correct"
+                      : ""
+                  }">
+                    <span class="option-letter">${key.toUpperCase()})</span>
+                    <span>${value}</span>
+                  </div>
+                `
+                )
+                .join("")}
+            </div>
+          `
+              : ""
+          }
+          ${
+            showMarks
+              ? `<div class="marks-label">[${q.marks || 4} Mark${
+                  (q.marks || 4) > 1 ? "s" : ""
+                }]</div>`
+              : ""
+          }
+          ${
+            showSolutions
+              ? `
+            <div class="solution-block">
+              <div class="solution-title">Solution & Answer</div>
+              ${
+                q.correctanswer
+                  ? `<div class="correct-answer"><strong>Correct Answer:</strong> ${q.correctanswer.toUpperCase()}</div>`
+                  : ""
+              }
+              ${
+                q.solution
+                  ? `<div class="solution-text"><strong>Explanation:</strong><br>${q.solution}</div>`
+                  : ""
+              }
+            </div>
+          `
+              : ""
+          }
         </div>
-      `;
+      </div>
+    `;
       });
       return output;
     };
@@ -423,11 +423,11 @@ export default function AnswerPaper() {
         }
         .omr-header {
           text-align: center;
-          margin-bottom: 20px;
+          margin-bottom: 5px;
         }
         .omr-box {
           border: 2px solid #000;
-          padding: 12px;
+          padding: 6px;
           display: inline-block;
           text-align: left;
           width: 100%;
@@ -437,13 +437,13 @@ export default function AnswerPaper() {
           font-size: 16pt;
           font-weight: bold;
           text-align: center;
-          margin: 4px 0;
+          margin: 2px 0;
         }
         .omr-subtitle {
           font-size: 11pt;
           color: #444;
           text-align: center;
-          margin-bottom: 10px;
+          margin-bottom: 5px;
         }
         .omr-info {
           display: flex;
@@ -468,7 +468,7 @@ export default function AnswerPaper() {
         .column {
           flex: 1;
           border: 1px solid black;
-          padding: 10px;
+          padding: 5px;
         }
         .question-row {
           display: flex;
@@ -881,7 +881,6 @@ export default function AnswerPaper() {
                     onChange={(e) => setChapters(e.target.value)}
                     placeholder="E.g., Algebra, Geometry, Calculus"
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    
                   />
                 </div>
                 <div>
@@ -894,7 +893,6 @@ export default function AnswerPaper() {
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="E.g., Mathematics"
                     className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
-                    
                   />
                 </div>
                 <div>
@@ -1195,7 +1193,7 @@ export default function AnswerPaper() {
               </div>
               <div className="bg-white mx-auto p-8 shadow-xl rounded-2xl max-w-4xl border border-gray-200">
                 <div className="border-2 border-black p-6 text-center mb-6">
-                  <h1 className="text-2xl font-bold mb-2 uppercase">
+                  <h1 className="text-2xl font-bold  uppercase">
                     OMR Answer Sheet
                   </h1>
                   <p className="text-lg text-gray-700 mb-4">{paperTitle}</p>

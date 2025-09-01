@@ -9,7 +9,9 @@ import {
   IoPencilOutline,
   IoPersonOutline,
   IoCalendarOutline,
+  
 } from "react-icons/io5";
+import { AiFillDelete } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 
 export default function Batches() {
@@ -94,6 +96,35 @@ export default function Batches() {
     fetchTestCount();
     fetchBatches();
   }, []);
+
+  // Add this handler inside your component
+  const handleDelete = async (batchId) => {
+    if (!confirm("Are you sure you want to delete this batch?")) return;
+
+    try {
+      let token = null;
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("adminAuthToken");
+      }
+
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/deletebatch/${batchId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update UI by filtering out deleted batch
+      setBatchData((prev) => prev.filter((batch) => batch.batchId !== batchId));
+    } catch (error) {
+      alert(
+        "Error deleting batch: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  };
 
   const handleIdClick = async (BatchId) => {
     let batchId = null;
@@ -234,90 +265,7 @@ export default function Batches() {
         </div>
 
         {/* Performance Stats Card - Adjusted proportions */}
-        <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200 mb-6">
-          <div className="p-6 border-b border-gray-300">
-            <h3 className="text-xl font-bold text-gray-900">
-              Batch Management Overview
-            </h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Manage batches efficiently with quick actions
-            </p>
-          </div>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8 max-sm:h-fit">
-            {/* Image with reduced width */}
-            <div className="md:col-span-1 flex justify-center mt-13 items-center">
-              <img
-                src="test.png"
-                alt="Batch Management"
-                className="w-full max-w-[500px] h-75 object-cover rounded-lg border border-gray-200 shadow-md"
-              />
-            </div>
 
-            {/* Actions with increased width */}
-            <div className="md:col-span-2 space-y-6">
-              <h4 className="text-xl font-bold text-gray-800">
-                What You Can Do
-              </h4>
-
-              {/* Make cards horizontally scrollable on mobile */}
-              <div className="max-sm:h-fit flex space-x-4 h-75 text-center overflow-x-auto pb-4 md:overflow-x-visible">
-                {/* Create Batch */}
-                <div className="max-sm:h-fit bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg hover:shadow-2xl transition-all min-w-[260px] md:min-w-0 flex-shrink-0">
-                  <div className="p-6 flex flex-col justify-between h-full max-sm:h-fit items-center">
-                    <div className="flex flex-col items-center">
-                      <h5 className="text-4xl font-bold">Create a Batch</h5>
-                      <p className="text-sm text-gray-100 mt-2">
-                        Start a new batch and enroll students
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        router.push("/batch-add");
-                      }}
-                      className="mt-4 bg-white text-blue-600 font-semibold py-2 px-4 cursor-pointer rounded-full whitespace-nowrap hover:bg-gray-100 transition-all"
-                    >
-                      Create New Batch
-                    </button>
-                  </div>
-                </div>
-
-                {/* Update Batch */}
-                <div className="max-sm:h-fit bg-gradient-to-r from-green-400 to-teal-500 text-white rounded-lg shadow-lg hover:shadow-2xl transition-all min-w-[260px] md:min-w-0 flex-shrink-0">
-                  <div className="max-sm:h-fit p-6 flex flex-col justify-between h-full items-center">
-                    <div className="flex flex-col items-center">
-                      <h5 className="text-3xl font-bold">Update a Batch</h5>
-                      <p className="text-sm text-gray-100 mt-2">
-                        Modify the details of an existing batch
-                      </p>
-                    </div>
-                    <Link href="/batchesedit">
-                      <button className="mt-4 bg-white text-green-600 font-semibold py-2 px-4 cursor-pointer rounded-full hover:bg-gray-100 transition-all">
-                        Update Batch
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* View Batch Summary */}
-                <div className="max-sm:h-fit bg-gradient-to-r from-yellow-500 to-orange-400 text-white rounded-lg shadow-lg hover:shadow-2xl transition-all min-w-[260px] md:min-w-0 flex-shrink-0">
-                  <div className="max-sm:h-fit p-6 flex flex-col justify-between h-full items-center">
-                    <div className="flex flex-col items-center">
-                      <h5 className="text-3xl font-bold">Batch Summary</h5>
-                      <p className="text-sm text-gray-100 mt-2">
-                        View the summary of all batches
-                      </p>
-                    </div>
-                    <Link href="#summary">
-                      <button className="mt-4 bg-white text-yellow-600 font-semibold py-2 px-4 cursor-pointer rounded-full whitespace-nowrap hover:bg-gray-100 transition-all">
-                        View Summary
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Batch Table Component - Improved */}
         <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
@@ -399,7 +347,7 @@ export default function Batches() {
                         </td>
                         <td className="py-4 px-6 text-center">
                           <button
-                            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-1 mx-auto"
+                            className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
                             onClick={() =>
                               handleAction(
                                 batch.batchId,
@@ -410,6 +358,15 @@ export default function Batches() {
                           >
                             <IoPencilOutline className="text-sm" />
                             <span>Edit</span>
+                          </button>
+                          <button
+                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
+                            onClick={() =>
+                              handleDelete(batch.BatchId)
+                            }
+                          >
+                            <AiFillDelete className="text-sm" />
+                            <span>Delete</span>
                           </button>
                         </td>
                       </tr>
