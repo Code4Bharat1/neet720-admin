@@ -5,12 +5,19 @@ import { useRouter } from "next/navigation";
 import { FaSignOutAlt, FaUserAlt } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { Bell, Settings, ChevronDown, User, LogOut, Shield } from "lucide-react";
+import {
+  Bell,
+  Settings,
+  ChevronDown,
+  User,
+  LogOut,
+  Shield,
+} from "lucide-react";
 
 const DesktopNavbar = () => {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [navbarColor, setNavbarColor] = useState("from-blue-200 to-yellow-100");
+  const [navbarColor, setNavbarColor] = useState("#3B82F6");
   const [userRole, setUserRole] = useState("");
   const [userName, setUserName] = useState("");
   const dropdownRef = useRef(null);
@@ -29,51 +36,47 @@ const DesktopNavbar = () => {
     router.push("/");
   };
 
-  useEffect(() => {
-    const fetchNavbarColor = async () => {
-      try {
-        const token = localStorage.getItem("adminAuthToken");
-        if (!token) return;
+  // useEffect(() => {
+  //   const fetchNavbarColor = async () => {
+  //     try {
+  //       const token = localStorage.getItem("adminAuthToken");
+  //       if (!token) return;
 
-        const decoded = jwtDecode(token);
-        const adminId = decoded?.id;
-        const role = decoded?.role || decoded?.userRole || "";
-        const name = decoded?.name || decoded?.username || "";
+  //       const decoded = jwtDecode(token);
+  //       const adminId = decoded?.id;
+  //       const role = decoded?.role || decoded?.userRole || "";
+  //       const name = decoded?.name || decoded?.username || "";
 
-        if (!adminId) return;
+  //       if (!adminId) return;
 
-        setUserRole(role);
-        setUserName(name);
+  //       setUserRole(role);
+  //       setUserName(name);
 
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/colors`,
-          {
-            id: adminId,
-          }
-        );
+  //       const response = await axios.post(
+  //         `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/colors`,
+  //         {
+  //           id: adminId,
+  //         }
+  //       );
 
-        if (response.data.success) {
-          const color = response.data.colors.navbarColor;
-          if (color) {
-            if (color.startsWith("from-")) {
-              setNavbarColor(color); // gradient classes
-            } else {
-              setNavbarColor(color); // solid color
-            }
-          }
-        }
-        console.log(
-          "Navbar color fetched successfully:",
-          response.data.colors.navbarColor,
-          navbarColor
-        );
-      } catch (error) {
-        console.error("Error fetching navbar color:", error);
-      }
-    };
+  //       // if (response.data.success) {
+  //       //   const color = response.data.colors.navbarColor;
+  //       //   if (color) {
+  //       //     setNavbarColor(color); // solid color
+  //       //   }
+  //       // }
+  //       // console.log(
+  //       //   "Navbar color fetched successfully:",
+  //       //   response.data.colors.navbarColor,
+  //       //   navbarColor
+  //       // );
+  //     } catch (error) {
+  //       console.error("Error fetching navbar color:", error);
+  //     }
+  //   };
 
-    fetchNavbarColor();
-  }, []);
+  //   fetchNavbarColor();
+  // }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -114,14 +117,14 @@ const DesktopNavbar = () => {
       teacher: "bg-blue-100 text-blue-700",
       batchmanager: "bg-green-100 text-green-700",
       content_manager: "bg-purple-100 text-purple-700",
-      default: "bg-gray-100 text-gray-700"
+      default: "bg-gray-100 text-gray-700",
     };
     return colors[role] || colors.default;
   };
 
   const getRoleIcon = (role) => {
-    if (role === 'admin') return <Shield className="w-3 h-3" />;
-    if (role === 'teacher') return <User className="w-3 h-3" />;
+    if (role === "admin") return <Shield className="w-3 h-3" />;
+    if (role === "teacher") return <User className="w-3 h-3" />;
     return <User className="w-3 h-3" />;
   };
 
