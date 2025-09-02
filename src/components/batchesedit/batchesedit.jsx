@@ -137,7 +137,7 @@ const UpdateBatchForm = ({ batchId }) => {
     try {
       const api = createAxios();
       const adminId = getAdminId();
-      const { data } = await api.post("/studentdata/info", {
+      const { data } = await api.post(`/studentdata/info`, {
         addedByAdminId: parseInt(adminId),
       });
 
@@ -167,7 +167,7 @@ const UpdateBatchForm = ({ batchId }) => {
     try {
       const api = createAxios();
       const adminId = getAdminId();
-      const { data } = await api.post("/studentdata/batch-student", {
+      const { data } = await api.post(`/studentdata/batch-student`, {
         addedByAdminId: parseInt(adminId),
         batchId,
       });

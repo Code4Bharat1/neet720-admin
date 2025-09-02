@@ -16,6 +16,8 @@ import Link from "next/link";
 import { CiUser, CiMail, CiPhone, CiCalendar } from "react-icons/ci";
 
 const Desktop_student = () => {
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [studentToUpdate, setStudentToUpdate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -33,6 +35,15 @@ const Desktop_student = () => {
   const confirmDeleteStudent = (student) => {
     setStudentToDelete(student);
     setIsDeleteModalOpen(true);
+  };
+
+  const openUpdateModal = (student) => {
+    setStudentToUpdate(student); // Set the student to be updated
+    setIsUpdateModalOpen(true); // Open the modal
+  };
+
+  const closeUpdateModal = () => {
+    setIsUpdateModalOpen(false); // Close the modal
   };
 
   const handleExcelUpload = (e) => {
@@ -110,6 +121,7 @@ const Desktop_student = () => {
         );
 
         if (response.data.studentInfo) {
+          console.log(response.data.studentInfo);
           const sanitized = response.data.studentInfo.map((s) => ({
             ...s,
             fullName: cleanName(s.fullName, s.firstName, s.lastName),
@@ -123,6 +135,66 @@ const Desktop_student = () => {
 
     fetchStudentData();
   }, []);
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.target);
+    const updatedStudent = {
+      id: studentToUpdate.id,
+      firstName: formData.get("name"),
+      email: formData.get("email"),
+      dateOfBirth: formData.get("dob"),
+      phoneNumber: formData.get("phone"),
+      gender: formData.get("gender"),
+    };
+
+    // Optimistically update the UI by updating the student data in state
+    setStudents((prevStudents) =>
+      prevStudents.map((s) =>
+        s.id === updatedStudent.id ? { ...s, ...updatedStudent } : s
+      )
+    );
+
+    try {
+      // API request to update the student data
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/update`, // API endpoint for updating
+        updatedStudent
+      );
+
+      setIsSubmitting(false);
+
+      if (response.status === 200) {
+        // If the API response is successful, update the student with the server response
+        setStudents((prevStudents) =>
+          prevStudents.map((s) =>
+            s.id === updatedStudent.id ? { ...s, ...response.data.student } : s
+          )
+        );
+        toast.success("Student updated successfully", {
+          duration: 5000,
+        });
+        closeUpdateModal();
+      } else {
+        toast.error("Failed to update student", {
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating student data:", error);
+      setIsSubmitting(false);
+
+      // In case of failure, revert the optimistic update
+      setStudents((prevStudents) =>
+        prevStudents.map((s) => (s.id === updatedStudent.id ? { ...s } : s))
+      );
+      toast.error("Error updating student data", {
+        duration: 5000,
+      });
+    }
+  };
 
   // Remove literal "null"/"undefined"/"n/a" tokens, collapse spaces, fallback to "Unknown"
   const cleanName = (...parts) => {
@@ -602,6 +674,12 @@ const Desktop_student = () => {
                       >
                         Delete
                       </button>
+                      <button
+                        onClick={() => openUpdateModal(student)}
+                        className="text-blue-500 hover:text-blue-700 text-[12px] font-medium p-1 ml-2 rounded-full"
+                      >
+                        Update
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -852,6 +930,153 @@ const Desktop_student = () => {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* this is the update model */}
+      {isUpdateModalOpen && studentToUpdate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 relative">
+            {/* Modal Header */}
+            <div className="mb-6 relative text-center">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Update Student Details
+              </h2>
+              <button
+                onClick={closeUpdateModal}
+                className="absolute top-0 right-0 text-2xl text-gray-400 hover:text-gray-600 px-3 py-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleUpdateSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Full Name */}
+                <div className="relative">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Full Name
+                  </label>
+                  <CiUser className="absolute left-3 top-10 text-gray-400 text-lg" />
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Enter student's name"
+                    defaultValue={studentToUpdate.fullName}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="relative">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Email Address
+                  </label>
+                  <CiMail className="absolute left-3 top-10 text-gray-400 text-lg" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="example@email.com"
+                    defaultValue={studentToUpdate.email}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
+
+                {/* Date of Birth */}
+                <div className="relative">
+                  <label
+                    htmlFor="dob"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Date of Birth
+                  </label>
+                  <CiCalendar className="absolute left-3 top-10 text-gray-400 text-lg" />
+                  <input
+                    type="date"
+                    id="dob"
+                    name="dob"
+                    defaultValue={studentToUpdate.dateOfBirth}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div className="relative">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Phone Number
+                  </label>
+                  <CiPhone className="absolute left-3 top-10 text-gray-400 text-lg" />
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter phone number"
+                    defaultValue={studentToUpdate.phoneNumber}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Gender */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Gender
+                </label>
+                <div className="flex items-center space-x-6 bg-gray-50 p-3 rounded-lg">
+                  {["Male", "Female", "Other"].map((gender) => (
+                    <label key={gender} className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={gender}
+                        className="form-radio h-4 w-4 text-blue-500 focus:ring-blue-500"
+                        defaultChecked={studentToUpdate.gender === gender}
+                        required
+                      />
+                      <span className="ml-2 text-gray-700">{gender}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex space-x-4">
+                <button
+                  type="button"
+                  onClick={closeUpdateModal}
+                  className="w-1/2 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-100 transition shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-1/2 py-3 text-white rounded-lg transition-all shadow-sm ${
+                    isSubmitting
+                      ? "bg-yellow-400 cursor-not-allowed opacity-70"
+                      : "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600"
+                  }`}
+                >
+                  {isSubmitting ? "Updating..." : "Update Student"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
