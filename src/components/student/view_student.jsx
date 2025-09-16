@@ -7,6 +7,7 @@ import {
   IoCloudUploadOutline,
   IoDocumentTextOutline,
   IoSchoolOutline,
+  IoSearchOutline,
 } from "react-icons/io5";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -29,8 +30,30 @@ const Desktop_student = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
-
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search
   const STUDENT_LIMIT = 100; // Set student limit
+
+  // Filter students based on search term - FIXED
+  const filteredStudents = students.filter((student) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      // Convert student.id to string before using includes
+      (student.id && student.id.toString().includes(searchLower)) ||
+      (student.firstName &&
+        student.firstName.toLowerCase().includes(searchLower)) ||
+      (student.lastName &&
+        student.lastName.toLowerCase().includes(searchLower)) ||
+      (student.fullName &&
+        student.fullName.toLowerCase().includes(searchLower)) ||
+      (student.email && student.email.toLowerCase().includes(searchLower)) ||
+      (student.phoneNumber &&
+        student.phoneNumber.toLowerCase().includes(searchLower)) ||
+      (student.gender && student.gender.toLowerCase().includes(searchLower)) ||
+      (student.dateOfBirth &&
+        student.dateOfBirth.toLowerCase().includes(searchLower)) ||
+      (student.status && student.status.toLowerCase().includes(searchLower))
+    );
+  });
 
   const confirmDeleteStudent = (student) => {
     setStudentToDelete(student);
@@ -49,7 +72,6 @@ const Desktop_student = () => {
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const data = event.target.result;
@@ -57,25 +79,24 @@ const Desktop_student = () => {
         const workbook = XLSX.read(data, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-
         const json = XLSX.utils.sheet_to_json(sheet);
-
         const processedStudents = json.map((student) => {
-          const fullNameRaw = student["STUDENT NAME"] || "";
-          const fullName = cleanName(fullNameRaw); // << sanitize here
-
+          const firstNameRaw = student["FIRST NAME"] || "";
+          const lastNameRaw = student["LAST NAME"] || "";
+          const firstName = cleanName(firstNameRaw);
+          const lastName = cleanName(lastNameRaw);
+          const fullName = `${firstName} ${lastName}`.trim();
           const dob = student["DOB "] || "";
           const year = dob
             ? dob instanceof Date
               ? dob.getFullYear()
               : new Date(dob).getFullYear()
             : "";
-
-          const password = `${fullName.charAt(0) || "X"}${year || "0000"}`;
-
+          const password = `${firstName.charAt(0) || "X"}${year || "0000"}`;
           return {
-            fullName, // << store clean name
-            firstName: fullName, // if backend expects firstName right now
+            firstName,
+            lastName,
+            fullName,
             emailAddress: student["EMAIL"] || "",
             mobileNumber: student["PHONE NUMBER"] || "",
             gender: student["GENDER"] || "",
@@ -84,14 +105,13 @@ const Desktop_student = () => {
             addedByAdminId: localAdmin,
           };
         });
-
         console.log(processedStudents);
         setStudents(processedStudents);
+      
       } catch (error) {
         console.error("Error processing the Excel file:", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
@@ -100,18 +120,15 @@ const Desktop_student = () => {
       try {
         // Get the admin token from localStorage
         const token = localStorage.getItem("adminAuthToken");
-
         if (!token) {
           console.error("No token found in localStorage.");
           return;
         }
-
         // Decode the token to extract the admin ID
         const decodedToken = jwtDecode(token);
         const addedByAdminId = decodedToken.id;
         console.log(addedByAdminId);
         setLocalAdmin(addedByAdminId);
-
         // Send the addedByAdminId in the request body
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/info`,
@@ -119,7 +136,6 @@ const Desktop_student = () => {
             addedByAdminId: addedByAdminId, // Send the addedByAdminId in the request body
           }
         );
-
         if (response.data.studentInfo) {
           console.log(response.data.studentInfo);
           const sanitized = response.data.studentInfo.map((s) => ({
@@ -132,40 +148,35 @@ const Desktop_student = () => {
         console.error("Error fetching student data:", error);
       }
     };
-
     fetchStudentData();
   }, []);
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     const formData = new FormData(e.target);
     const updatedStudent = {
       id: studentToUpdate.id,
-      firstName: formData.get("name"),
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
       email: formData.get("email"),
       dateOfBirth: formData.get("dob"),
       phoneNumber: formData.get("phone"),
       gender: formData.get("gender"),
     };
-
     // Optimistically update the UI by updating the student data in state
     setStudents((prevStudents) =>
       prevStudents.map((s) =>
         s.id === updatedStudent.id ? { ...s, ...updatedStudent } : s
       )
     );
-
     try {
       // API request to update the student data
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/update`, // API endpoint for updating
         updatedStudent
       );
-
       setIsSubmitting(false);
-
       if (response.status === 200) {
         // If the API response is successful, update the student with the server response
         setStudents((prevStudents) =>
@@ -185,7 +196,6 @@ const Desktop_student = () => {
     } catch (error) {
       console.error("Error updating student data:", error);
       setIsSubmitting(false);
-
       // In case of failure, revert the optimistic update
       setStudents((prevStudents) =>
         prevStudents.map((s) => (s.id === updatedStudent.id ? { ...s } : s))
@@ -223,7 +233,6 @@ const Desktop_student = () => {
   const handleStudentClick = (studentId) => {
     // Save the student ID to localStorage
     localStorage.setItem("studentId", studentId);
-
     // Redirect to the desktopuserprofile page
     window.location.href = "/desktopuserprofile"; // This will navigate the user to the profile page
   };
@@ -231,17 +240,15 @@ const Desktop_student = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     const formData = new FormData(e.target);
-    const firstName = formData.get("name");
+    const firstName = formData.get("firstName");
+    const lastName = formData.get("lastName");
     const email = formData.get("email");
     const dateOfBirth = formData.get("dob");
     const phoneNumber = formData.get("phone");
     const gender = formData.get("gender");
-
     // Get the JWT token from localStorage
     const token = localStorage.getItem("adminAuthToken");
-
     // Decode the token to extract the admin ID
     let addedByAdminId = null;
     if (token) {
@@ -257,16 +264,21 @@ const Desktop_student = () => {
         return;
       }
     }
-
     // Validate if all required fields are present
-    if (!email || !firstName || !dateOfBirth || !phoneNumber || !gender) {
+    if (
+      !email ||
+      !firstName ||
+      !lastName ||
+      !dateOfBirth ||
+      !phoneNumber ||
+      !gender
+    ) {
       toast.error("All fields are required", {
         duration: 5000,
       });
       setIsSubmitting(false); // Reset loading state
       return;
     }
-
     // Prevent adding more students if the limit is reached
     if (students.length >= STUDENT_LIMIT) {
       toast.error(
@@ -278,7 +290,6 @@ const Desktop_student = () => {
       setIsSubmitting(false); // Reset loading state
       return;
     }
-
     // Validate email format
     const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
     if (!emailRegex.test(email)) {
@@ -288,7 +299,6 @@ const Desktop_student = () => {
       setIsSubmitting(false); // Reset loading state
       return;
     }
-
     // ✅ Validate phone number format
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(phoneNumber)) {
@@ -301,10 +311,8 @@ const Desktop_student = () => {
       setIsSubmitting(false); // Reset loading state
       return;
     }
-
     const birthYear = new Date(dateOfBirth).getFullYear();
     const password = `${firstName.charAt(0)}${birthYear}`;
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/save`,
@@ -312,15 +320,14 @@ const Desktop_student = () => {
           email,
           password,
           firstName,
+          lastName,
           dateOfBirth,
           phoneNumber,
           gender,
           addedByAdminId,
         }
       );
-
       setIsSubmitting(false);
-
       if (response.status === 201) {
         await sendEmail(email, password);
         setStudents((prevStudents) => [...prevStudents, response.data.student]);
@@ -355,7 +362,6 @@ const Desktop_student = () => {
           data: { id: student.id },
         }
       );
-
       if (response.status === 200) {
         setStudents((prevStudents) =>
           prevStudents.filter((s) => s.id !== student.id)
@@ -382,7 +388,6 @@ const Desktop_student = () => {
           text: `Hello, \n\nCongratulations! You have been successfully added to the Exam Portal.\nYour login credentials are:\n\nEmail: ${email}\nPassword: ${password}\n\nBest regards,\nThe Exam Portal Team`,
         }
       );
-
       if (response.status === 200) {
         console.log("Email sent successfully");
       }
@@ -394,31 +399,38 @@ const Desktop_student = () => {
   const handleDownloadTemplate = () => {
     // Create a new workbook
     const wb = XLSX.utils.book_new();
-
-    // Define the headers
-    const headers = ["STUDENT NAME", "EMAIL", "PHONE NUMBER", "GENDER", "DOB"];
-
+    // Define the headers - UPDATED to include first and last name
+    const headers = [
+      "FIRST NAME",
+      "LAST NAME",
+      "EMAIL",
+      "PHONE NUMBER",
+      "GENDER",
+      "DOB",
+    ];
     // Create example data (one row with empty cells)
-    const data = [headers, ["", "", "", "", ""]];
-
+    const data = [headers, ["", "", "", "", "", ""]];
     // Create a worksheet from the data
     const ws = XLSX.utils.aoa_to_sheet(data);
-
     // Add the worksheet to the workbook
     XLSX.utils.book_append_sheet(wb, ws, "Template");
-
     // Generate the Excel file
     XLSX.writeFile(wb, "student_template.xlsx");
   };
 
   const handleExport = () => {
-    const headers = ["Sr.No,Student Name,Email,Phone Number,Gender,DOB,Status"];
+    const headers = [
+      "Sr.No,First Name,Last Name,Email,Phone Number,Gender,DOB,Status",
+    ];
     const rows = students.map(
       (student) =>
-        `${student.id},${student.name},${student.email},${student.phone},${student.gender},${student.dob},${student.status}`
+        `${student.id},${student.firstName || ""},${student.lastName || ""},${
+          student.email
+        },${student.phoneNumber},${student.gender},${student.dateOfBirth},${
+          student.status
+        }`
     );
     const csvContent = [...headers, ...rows].join("\n");
-
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -430,17 +442,14 @@ const Desktop_student = () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
     closeModal();
   };
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-
     try {
       const currentCount = students.length;
       const spaceLeft = STUDENT_LIMIT - currentCount;
-
       if (spaceLeft <= 0) {
         toast.error(
           "Student limit of 100 has been reached. Cannot upload more students.",
@@ -450,9 +459,7 @@ const Desktop_student = () => {
         );
         return;
       }
-
       let studentsToAdd = students.slice(0, spaceLeft);
-
       if (students.length > spaceLeft) {
         toast.success(
           `Only ${spaceLeft} students were added. Student limit of 100 reached.`,
@@ -461,14 +468,11 @@ const Desktop_student = () => {
           }
         );
       }
-
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/bulk-save`,
         { students: studentsToAdd }
       );
-
       const existingEmails = response.data.existingEmails || [];
-
       // If there are existing emails, display them in the toast message
       if (existingEmails.length > 0) {
         toast.error(
@@ -484,7 +488,6 @@ const Desktop_student = () => {
           duration: 5000,
         });
       }
-
       setStudents((prev) => [...prev, ...studentsToAdd]); // Update state
       console.log("Backend Response:", response.data);
     } catch (error) {
@@ -502,7 +505,6 @@ const Desktop_student = () => {
         <meta name="description" content="Student management system" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       {/* Top navigation button */}
       <div className="flex justify-center mb-4 sm:mb-8">
         <div className="bg-white rounded-2xl overflow-hidden">
@@ -517,7 +519,6 @@ const Desktop_student = () => {
           </button>
         </div>
       </div>
-
       <main className="max-w-6xl mx-auto w-full h-fit">
         {/* Template download button */}
         <div className="mb-8 flex justify-between items-center">
@@ -531,7 +532,8 @@ const Desktop_student = () => {
                 Download Excel Template
               </span>
               <span className="text-xs text-gray-500">
-                Contains: STUDENT NAME, EMAIL, PHONE NUMBER, GENDER, DOB
+                Contains: FIRST NAME, LAST NAME, EMAIL, PHONE NUMBER, GENDER,
+                DOB
               </span>
             </div>
           </button>
@@ -587,7 +589,27 @@ const Desktop_student = () => {
             )}
           </div>
         </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <IoSearchOutline className="text-gray-400 text-xl" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search students by name, email, phone, gender, DOB or status..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="mt-2 text-sm text-gray-500">
+            Showing {filteredStudents.length} of {students.length} students
+          </div>
+        </div>
       </main>
+
       {/* Students Table with Enhanced Borders */}
       <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
         <div className="overflow-x-auto w-full">
@@ -619,8 +641,8 @@ const Desktop_student = () => {
               </tr>
             </thead>
             <tbody className="text-gray-700 text-sm">
-              {students.length > 0 ? (
-                students.map((student, index) => (
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student, index) => (
                   <tr
                     key={student.id || index}
                     className="hover:bg-gray-50 transition-colors border-b border-gray-200"
@@ -632,7 +654,7 @@ const Desktop_student = () => {
                       className="py-4 px-6 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline font-medium border-r border-gray-200"
                       onClick={() => handleStudentClick(student.id)}
                     >
-                      {student.fullName || "N/A"}
+                      {student.firstName || "N/A"} {student.lastName || "N/A"}
                     </td>
                     <td className="py-4 px-6 border-r border-gray-200">
                       {student.email || "N/A"}
@@ -688,9 +710,15 @@ const Desktop_student = () => {
                   <td colSpan="8" className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
-                      <p className="text-gray-500 mb-1">No students found</p>
+                      <p className="text-gray-500 mb-1">
+                        {searchTerm
+                          ? "No students match your search"
+                          : "No students found"}
+                      </p>
                       <p className="text-gray-400 text-xs">
-                        Add students individually or import from Excel
+                        {searchTerm
+                          ? "Try a different search term"
+                          : "Add students individually or import from Excel"}
                       </p>
                     </div>
                   </td>
@@ -700,6 +728,7 @@ const Desktop_student = () => {
           </table>
         </div>
       </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 transition-all">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md border border-gray-100 transform transition-all">
@@ -714,7 +743,6 @@ const Desktop_student = () => {
                 &times;
               </button>
             </div>
-
             <div className="flex flex-col items-center">
               <label className="w-full bg-gradient-to-r from-green-50 to-blue-50 border-2 border-dashed border-green-200 text-gray-700 py-10 px-6 rounded-xl mb-6 flex flex-col items-center space-y-3 cursor-pointer hover:border-green-400 transition-all">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
@@ -735,7 +763,6 @@ const Desktop_student = () => {
                   style={{ display: "none" }}
                 />
               </label>
-
               <div className="w-full flex space-x-4 justify-end">
                 <button
                   onClick={closeModal}
@@ -771,29 +798,44 @@ const Desktop_student = () => {
                 &times;
               </button>
             </div>
-
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Full Name */}
+                {/* first name */}
                 <div className="relative">
                   <label
-                    htmlFor="name"
+                    htmlFor="firstName"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Full Name
+                    First Name
                   </label>
                   <CiUser className="absolute left-3 top-10 text-gray-400 text-lg" />
                   <input
                     type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Enter student's name"
+                    id="firstName"
+                    name="firstName"
+                    placeholder="Enter first name"
                     required
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
-
+                {/* last name */}
+                <div className="relative">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Last Name
+                  </label>
+                  <CiUser className="absolute left-3 top-10 text-gray-400 text-lg" />
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Enter last name"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
                 {/* Email */}
                 <div className="relative">
                   <label
@@ -812,7 +854,6 @@ const Desktop_student = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
-
                 {/* Date of Birth */}
                 <div className="relative">
                   <label
@@ -830,7 +871,6 @@ const Desktop_student = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
-
                 {/* Phone Number */}
                 <div className="relative">
                   <label
@@ -850,7 +890,6 @@ const Desktop_student = () => {
                   />
                 </div>
               </div>
-
               {/* Gender */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -871,7 +910,6 @@ const Desktop_student = () => {
                   ))}
                 </div>
               </div>
-
               {/* Action Buttons */}
               <div className="mt-6 flex space-x-4">
                 <button
@@ -893,7 +931,6 @@ const Desktop_student = () => {
                   {isSubmitting ? "Adding Student..." : "Add Student"}
                 </button>
               </div>
-
               <p className="text-xs text-center text-gray-500 mt-4">
                 A welcome email with login credentials will be sent to the
                 student.
@@ -902,6 +939,7 @@ const Desktop_student = () => {
           </div>
         </div>
       )}
+
       {isDeleteModalOpen && studentToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-100">
@@ -933,6 +971,7 @@ const Desktop_student = () => {
           </div>
         </div>
       )}
+
       {/* this is the update model */}
       {isUpdateModalOpen && studentToUpdate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -949,30 +988,59 @@ const Desktop_student = () => {
                 &times;
               </button>
             </div>
-
             {/* Form */}
             <form onSubmit={handleUpdateSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Full Name */}
                 <div className="relative">
                   <label
-                    htmlFor="name"
+                    htmlFor="firstName"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Full Name
+                    First Name
                   </label>
+                  {/* <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Last Name
+                  </label> */}
                   <CiUser className="absolute left-3 top-10 text-gray-400 text-lg" />
                   <input
                     type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Enter student's name"
-                    defaultValue={studentToUpdate.fullName}
+                    id="firtName"
+                    name="firstName"
+                    placeholder="Enter first name"
+                    defaultValue={studentToUpdate.firstName}
                     required
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
+                  {/* <input
+                    type="text"
+                    id="lastName"
+                    name="LastName"
+                    placeholder="Enter last name"
+                    defaultValue={studentToUpdate.lastName}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  /> */}
                 </div>
-
+                <div className="relative">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="LastName"
+                    placeholder="Enter last name"
+                    defaultValue={studentToUpdate.lastName}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
+                  />
+                </div>
                 {/* Email */}
                 <div className="relative">
                   <label
@@ -992,7 +1060,6 @@ const Desktop_student = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
-
                 {/* Date of Birth */}
                 <div className="relative">
                   <label
@@ -1011,7 +1078,6 @@ const Desktop_student = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
-
                 {/* Phone Number */}
                 <div className="relative">
                   <label
@@ -1032,7 +1098,6 @@ const Desktop_student = () => {
                   />
                 </div>
               </div>
-
               {/* Gender */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -1054,7 +1119,6 @@ const Desktop_student = () => {
                   ))}
                 </div>
               </div>
-
               {/* Action Buttons */}
               <div className="mt-6 flex space-x-4">
                 <button

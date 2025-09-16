@@ -90,7 +90,9 @@ const sanitizeRows = (rows = []) =>
   try {
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/generatetest/customize`,
-      { params: { filterType, studentId: searchTerm } }
+      { headers :{
+        Authorization : `Bearer ${localStorage.getItem("adminAuthToken")}`
+      } }
     );
     const fetched = sanitizeRows(res.data?.results || []);
     setStudents(fetched);

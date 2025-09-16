@@ -288,13 +288,13 @@ export default function Batches() {
               <p>Loading batch data...</p>
             </div>
           ) : error ? (
-            <div className="p-8 text-center bg-red-100 rounded-lg border border-red-500 shadow-lg">
-              <div className="flex items-center justify-center text-red-500 mb-4">
+            <div className="p-8 text-center rounded-lg shadow-lg">
+              {/* <div className="flex items-center justify-center text-red-500 mb-4">
                 <IoSchoolOutline className="text-4xl mr-3" />
                 <h3 className="text-xl font-semibold">
                   Oops! Something went wrong
                 </h3>
-              </div>
+              </div> */}
               <p className="text-lg font-medium text-gray-700">{error}</p>
               <button
                 onClick={() => window.location.reload()} // Reload the page or trigger a retry function

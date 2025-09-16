@@ -344,7 +344,6 @@ const BatchCreationForm = () => {
                           <div>
                             <p className="text-sm font-medium text-gray-800">
                               {cleanName(
-                                student.fullName,
                                 student.firstName,
                                 student.lastName
                               )}
@@ -445,7 +444,6 @@ const BatchCreationForm = () => {
                                     <div className="flex-1">
                                       <p className="text-sm font-medium text-gray-800">
                                         {cleanName(
-                                          student.fullName,
                                           student.firstName,
                                           student.lastName
                                         )}
