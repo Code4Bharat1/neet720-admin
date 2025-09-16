@@ -200,7 +200,7 @@ const TestUpdateForm = ({ testId }) => {
         </div>
 
         {/* Status */}
-        <div>
+        {/* <div>
           <label className="block font-medium text-gray-700">Status</label>
           <select
             name="status"
@@ -213,7 +213,7 @@ const TestUpdateForm = ({ testId }) => {
             <option value="inactive">Inactive</option>
             <option value="draft">Draft</option>
           </select>
-        </div>
+        </div> */}
 
         <button
           type="submit"
