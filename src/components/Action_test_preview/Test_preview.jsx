@@ -15,9 +15,21 @@ const TestPreview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Utility function to format date properly
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    // Use toLocaleDateString to show date in user's local format
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   useEffect(() => {
     const testid = localStorage.getItem("testid");
-    console.log("testid :" , testid)
+    console.log("testid :", testid);
 
     if (!testid) {
       setError("No test ID found in localStorage.");
@@ -32,27 +44,28 @@ const TestPreview = () => {
           { testid }
         );
         setTestData(response.data.test);
+        console.log("response data : ", response.data.test);
 
         // Process question_ids to get subject-wise topic distribution
         if (response.data.test.question_ids) {
           try {
             const questionData = JSON.parse(response.data.test.question_ids);
-            
+
             // Group by subject and topic
             const subjectsMap = new Map();
-            
-            questionData.forEach(item => {
+
+            questionData.forEach((item) => {
               if (!subjectsMap.has(item.subject)) {
                 subjectsMap.set(item.subject, {
                   subject: item.subject,
-                  topics: []
+                  topics: [],
                 });
               }
-              
+
               const subjectEntry = subjectsMap.get(item.subject);
               subjectEntry.topics.push({
                 topic: item.topic,
-                questionCount: item.ids.length
+                questionCount: item.ids.length,
               });
             });
 
@@ -63,7 +76,10 @@ const TestPreview = () => {
           }
         }
       } catch (err) {
-        console.error("Error fetching test data:", err.response ? err.response.data : err);
+        console.error(
+          "Error fetching test data:",
+          err.response ? err.response.data : err
+        );
         setError("Failed to fetch test data.");
       } finally {
         setLoading(false);
@@ -95,7 +111,10 @@ const TestPreview = () => {
     <>
       <Head>
         <title>Test Preview</title>
-        <meta name="description" content="Preview test details before proceeding" />
+        <meta
+          name="description"
+          content="Preview test details before proceeding"
+        />
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -103,7 +122,7 @@ const TestPreview = () => {
         <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push("/generatetest")}
               className="mr-4 text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
               aria-label="Go back"
             >
@@ -141,7 +160,7 @@ const TestPreview = () => {
             <div className="bg-blue-600 text-white px-6 py-3">
               <h2 className="text-lg font-semibold">Test Summary</h2>
             </div>
-            
+
             <div className="p-6">
               <div className="flex flex-wrap -mx-3">
                 <div className="w-full sm:w-1/2 p-3">
@@ -155,7 +174,7 @@ const TestPreview = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full sm:w-1/2 p-3">
                   <div className="flex items-center p-3 bg-blue-50 rounded-lg">
                     <div className="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3">
@@ -167,7 +186,7 @@ const TestPreview = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full sm:w-1/2 p-3">
                   <div className="flex items-center p-3 bg-amber-50 rounded-lg">
                     <div className="w-10 h-10 flex items-center justify-center bg-amber-100 text-amber-600 rounded-full mr-3">
@@ -179,7 +198,7 @@ const TestPreview = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full sm:w-1/2 p-3">
                   <div className="flex items-center p-3 bg-amber-50 rounded-lg">
                     <div className="w-10 h-10 flex items-center justify-center bg-amber-100 text-amber-600 rounded-full mr-3">
@@ -191,7 +210,7 @@ const TestPreview = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full sm:w-1/2 p-3">
                   <div className="flex items-center p-3 bg-green-50 rounded-lg">
                     <div className="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-full mr-3">
@@ -203,7 +222,7 @@ const TestPreview = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full sm:w-1/2 p-3">
                   <div className="flex items-center p-3 bg-green-50 rounded-lg">
                     <div className="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-full mr-3">
@@ -220,31 +239,44 @@ const TestPreview = () => {
           </div>
 
           {/* Subject Content */}
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Subject Content</h2>
-          
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            Subject Content
+          </h2>
+
           <div className="space-y-6">
             {subjectTopics.map((subject, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div
+                key={index}
+                className="bg-white rounded-lg shadow-sm overflow-hidden"
+              >
                 {/* Subject Header */}
                 <div className="p-4 flex items-center border-b border-gray-100">
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center mr-4">
-                    <Image 
-                      src="/Logo.png" 
-                      alt={subject.subject} 
-                      width={40} 
+                    <Image
+                      src="/Logo.png"
+                      alt={subject.subject}
+                      width={40}
                       height={40}
-                      className="object-contain" 
+                      className="object-contain"
                     />
                   </div>
-                  
+
                   <div className="flex-1">
                     <h3 className="text-lg font-bold">{subject.subject}</h3>
                     <div className="mt-1 flex flex-wrap gap-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {subject.topics.reduce((sum, t) => sum + t.questionCount, 0)} Questions
+                        {subject.topics.reduce(
+                          (sum, t) => sum + t.questionCount,
+                          0
+                        )}{" "}
+                        Questions
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {subject.topics.reduce((sum, t) => sum + t.questionCount * 4, 0)} Marks
+                        {subject.topics.reduce(
+                          (sum, t) => sum + t.questionCount * 4,
+                          0
+                        )}{" "}
+                        Marks
                       </span>
                     </div>
                   </div>
@@ -257,13 +289,22 @@ const TestPreview = () => {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+                          >
                             No.
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             Topic Name
                           </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28"
+                          >
                             Questions
                           </th>
                         </tr>

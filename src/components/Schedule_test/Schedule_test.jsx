@@ -16,6 +16,25 @@ const TestUpdateForm = ({ testId }) => {
     exam_end_date: "",
     status: "",
   });
+  // Convert UTC date string to datetime-local format (YYYY-MM-DDTHH:mm)
+  const toLocalDateTimeInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    // Get YYYY-MM-DD and HH:mm in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const toUTCString = (localDateTime) => {
+    if (!localDateTime) return "";
+    return new Date(localDateTime).toISOString();
+  };
 
   // Fetch test details on mount
   useEffect(() => {
@@ -29,13 +48,14 @@ const TestUpdateForm = ({ testId }) => {
         );
 
         const test = response.data.test;
+        console.log("data :",test)
         setFormData({
           testname: test.testname || "",
           batch_name: test.batch_name || "",
           duration: test.duration || "",
-          exam_start_date: test.exam_start_date || "",
-          exam_end_date: test.exam_end_date || "",
-          status: test.status || "",
+          exam_start_date: toLocalDateTimeInput(test.exam_start_date),
+          exam_end_date: toLocalDateTimeInput(test.exam_end_date),
+          status: (test.status || "").toLowerCase(), 
         });
       } catch (err) {
         setError("Failed to fetch test details");
@@ -64,6 +84,8 @@ const TestUpdateForm = ({ testId }) => {
         {
           testid: localStorage.getItem("testid"),
           ...formData,
+          exam_start_date: toUTCString(formData.exam_start_date),
+          exam_end_date: toUTCString(formData.exam_end_date),
         }
       );
 
@@ -78,7 +100,11 @@ const TestUpdateForm = ({ testId }) => {
   };
 
   if (loading)
-    return <div className="text-center text-gray-600 py-6">Loading test details...</div>;
+    return (
+      <div className="text-center text-gray-600 py-6">
+        Loading test details...
+      </div>
+    );
   if (error)
     return (
       <div className="bg-red-100 text-red-600 p-4 rounded-lg text-center">
@@ -89,7 +115,9 @@ const TestUpdateForm = ({ testId }) => {
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-6 mt-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Update Test Details</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Update Test Details
+        </h2>
         <button
           onClick={() => router.push("/test_preview")}
           className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
