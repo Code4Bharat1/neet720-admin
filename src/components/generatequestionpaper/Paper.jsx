@@ -329,13 +329,12 @@ export default function SimplePaperPrinter() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/offline_mode")}
           className="flex items-center gap-1 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
         >
           <IoIosArrowBack className="text-xl" />
           <span className="text-sm font-medium">Back</span>
         </button>
-
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
