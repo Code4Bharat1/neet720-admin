@@ -35,13 +35,13 @@ const page = () => {
 
 
 
-    <div className='hidden md:block ' >
+    <div  >
     <AnswerPaper/>
     </div>
 
-    <div className='md:hidden' >
+    {/* <div className='md:hidden' >
     <GenerateAnswerKeyMobile />
-    </div>
+    </div> */}
     </>
   )
 }

@@ -334,10 +334,10 @@ export default function AnswerPaper() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading questions...</p>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-base sm:text-lg text-gray-600">Loading questions...</p>
         </div>
       </div>
     );
@@ -345,14 +345,14 @@ export default function AnswerPaper() {
 
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Questions</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-md w-full">
+          <div className="text-red-500 text-4xl sm:text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Error Loading Questions</h2>
+          <p className="text-gray-600 mb-4 text-sm sm:text-base">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
           >
             Retry
           </button>
@@ -362,42 +362,43 @@ export default function AnswerPaper() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 bg-white p-6 rounded-2xl shadow-lg">
-          <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:shadow-xl transform hover:scale-105">
-            <ArrowLeft size={20} />
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg gap-4 sm:gap-0">
+          <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-2 sm:p-3 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:shadow-xl transform hover:scale-105 order-1 sm:order-none">
+            <ArrowLeft size={16} className="sm:hidden" />
+            <ArrowLeft size={20} className="hidden sm:block" />
           </button>
 
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-              <FileText className="text-blue-600" />
-              Answer Paper Generator
+          <div className="text-center order-2 sm:order-none">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+              <FileText className="text-blue-600" size={20} />
+              <span className="text-center">Answer Paper Generator</span>
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base px-2">
               Generate printable answer keys with solutions and explanations
             </p>
-            <div className="text-sm text-blue-600 mt-2">
+            <div className="text-xs sm:text-sm text-blue-600 mt-2">
               {questions.length} questions loaded
             </div>
           </div>
 
-          <div className="w-12"></div>
+          <div className="w-8 sm:w-12 order-3 sm:order-none"></div>
         </div>
 
         {/* Configuration Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <div className="flex items-center mb-6">
-            <Settings className="text-blue-600 mr-3" size={24} />
-            <h2 className="text-2xl font-bold text-gray-800">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+          <div className="flex items-center mb-4 sm:mb-6">
+            <Settings className="text-blue-600 mr-2 sm:mr-3" size={20} />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
               Configuration Options
             </h2>
           </div>
 
           {/* Paper Title Input */}
-          <div className="mb-8">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <div className="mb-6 sm:mb-8">
+            <label className="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
               Answer Paper Title
             </label>
             <input
@@ -405,78 +406,78 @@ export default function AnswerPaper() {
               value={paperTitle}
               onChange={(e) => setPaperTitle(e.target.value)}
               placeholder="E.g., Physics Answer Key - Final Exam"
-              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-lg"
+              className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm sm:text-base lg:text-lg"
             />
           </div>
 
           {/* Display Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-700 border-b-2 border-blue-200 pb-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="font-semibold text-base sm:text-lg text-gray-700 border-b-2 border-blue-200 pb-2 sm:pb-3">
                 Display Options
               </h3>
 
-              <label className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
+              <label className="flex items-start sm:items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 mt-1 sm:mt-0 flex-shrink-0"
                   checked={showWatermark}
                   onChange={(e) => setShowWatermark(e.target.checked)}
                 />
-                <div>
-                  <span className="font-medium text-gray-800">Show Watermark</span>
-                  <p className="text-sm text-gray-500 mt-1">
+                <div className="flex-1">
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Watermark</span>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Adds "ANSWER KEY" watermark to prevent copying
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
+              <label className="flex items-start sm:items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 mt-1 sm:mt-0 flex-shrink-0"
                   checked={showSubjects}
                   onChange={(e) => setShowSubjects(e.target.checked)}
                 />
-                <div>
-                  <span className="font-medium text-gray-800">Show Subject Headers</span>
-                  <p className="text-sm text-gray-500 mt-1">
+                <div className="flex-1">
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Subject Headers</span>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Groups questions by subject with clear headers
                   </p>
                 </div>
               </label>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-700 border-b-2 border-blue-200 pb-3">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="font-semibold text-base sm:text-lg text-gray-700 border-b-2 border-blue-200 pb-2 sm:pb-3">
                 Content Options
               </h3>
 
-              <label className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
+              <label className="flex items-start sm:items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 mt-1 sm:mt-0 flex-shrink-0"
                   checked={showSolutions}
                   onChange={(e) => setShowSolutions(e.target.checked)}
                 />
-                <div>
-                  <span className="font-medium text-gray-800">Show Solutions</span>
-                  <p className="text-sm text-gray-500 mt-1">
+                <div className="flex-1">
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Solutions</span>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Includes detailed explanations and solutions
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
+              <label className="flex items-start sm:items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 mt-1 sm:mt-0 flex-shrink-0"
                   checked={showMarks}
                   onChange={(e) => setShowMarks(e.target.checked)}
                 />
-                <div>
-                  <span className="font-medium text-gray-800">Show Marks</span>
-                  <p className="text-sm text-gray-500 mt-1">
+                <div className="flex-1">
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Marks</span>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Displays mark allocation for each question
                   </p>
                 </div>
@@ -485,55 +486,61 @@ export default function AnswerPaper() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center gap-4 pt-6 border-t-2 border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 sm:pt-6 border-t-2 border-gray-200">
             <button
               onClick={handlePreview}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Eye size={20} /> Generate Preview
+              <Eye size={18} className="sm:hidden" />
+              <Eye size={20} className="hidden sm:block" />
+              Generate Preview
             </button>
 
             <button
               onClick={resetOptions}
-              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <RotateCcw size={20} /> Reset Options
+              <RotateCcw size={18} className="sm:hidden" />
+              <RotateCcw size={20} className="hidden sm:block" />
+              Reset Options
             </button>
           </div>
         </div>
 
         {/* Preview Section */}
         {showPreview && (
-          <div id="previewSection" className="mb-10">
-            <div className="flex justify-between items-center mb-6 bg-white p-6 rounded-2xl shadow-lg">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+          <div id="previewSection" className="mb-8 sm:mb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg gap-4 sm:gap-0">
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                   Answer Paper Preview
                 </h2>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">
                   Review your answer key before printing • {questions.length} questions
                 </p>
               </div>
 
               <button
                 onClick={handlePrint}
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold text-sm sm:text-base"
               >
-                <Printer size={18} /> Print Answer Key
+                <Printer size={16} className="sm:hidden" />
+                <Printer size={18} className="hidden sm:block" />
+                Print Answer Key
               </button>
             </div>
 
-            <div className="bg-white mx-auto p-10 shadow-xl rounded-2xl max-w-4xl border border-gray-200 relative">
+            <div className="bg-white mx-auto p-4 sm:p-6 lg:p-10 shadow-xl rounded-xl sm:rounded-2xl max-w-4xl border border-gray-200 relative">
               {showWatermark && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <div className="text-gray-200 text-8xl font-bold transform rotate-[-30deg] select-none opacity-30">
+                  <div className="text-gray-200 text-4xl sm:text-6xl lg:text-8xl font-bold transform rotate-[-30deg] select-none opacity-30">
                     ANSWER KEY
                   </div>
                 </div>
               )}
 
-              <div className="text-center border-b-2 border-gray-800 pb-6 mb-8 relative z-10">
-                <h1 className="text-3xl font-bold mb-2 uppercase tracking-wide">
+              <div className="text-center border-b-2 border-gray-800 pb-4 sm:pb-6 mb-6 sm:mb-8 relative z-10">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 uppercase tracking-wide break-words">
                   {paperTitle}
                 </h1>
               </div>
@@ -542,74 +549,65 @@ export default function AnswerPaper() {
                 {(() => {
                   let currentSubject = null;
                   return questions.map((q, index) => (
-                    <div key={q.id || index} className="mb-8 border-l-4 border-blue-200 pl-6 ml-2">
+                    <div key={q.id || index} className="mb-6 sm:mb-8 border-l-2 sm:border-l-4 border-blue-200 pl-3 sm:pl-6 ml-1 sm:ml-2">
                       {showSubjects && q.subject !== currentSubject && (() => {
                         currentSubject = q.subject;
                         return (
-                          <h3 className="text-xl font-bold text-center uppercase border-b-2 border-blue-400 pb-3 mb-6 mt-6 text-blue-700 bg-blue-50 p-4 rounded-lg">
+                          <h3 className="text-lg sm:text-xl font-bold text-center uppercase border-b-2 border-blue-400 pb-2 sm:pb-3 mb-4 sm:mb-6 mt-4 sm:mt-6 text-blue-700 bg-blue-50 p-3 sm:p-4 rounded-lg">
                             {q.subject}
                           </h3>
                         );
                       })()}
 
-                      <div className="flex mb-4 items-start">
-                        <span className="font-bold mr-4 mt-1 min-w-[40px] text-gray-800 text-lg">
+                      <div className="flex mb-3 sm:mb-4 items-start">
+                        <span className="font-bold mr-3 sm:mr-4 mt-1 min-w-[30px] sm:min-w-[40px] text-gray-800 text-base sm:text-lg flex-shrink-0">
                           {index + 1}.
                         </span>
 
-                        <div className="flex-1">
-                          <div className="font-medium mb-4 leading-relaxed text-lg whitespace-pre-line">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium mb-3 sm:mb-4 leading-relaxed text-base sm:text-lg whitespace-pre-line break-words">
                             {q.question_text}
                           </div>
 
                           {q.options && (
-                            <div className="ml-6 space-y-3 mb-4">
+                            <div className="ml-0 sm:ml-6 space-y-2 sm:space-y-3 mb-3 sm:mb-4">
                               {Object.entries(q.options).map(([key, value]) => (
                                 <div
                                   key={key}
-                                  className={`flex items-start p-3 rounded-lg transition-all duration-200 ${q.correctanswer && q.correctanswer.toLowerCase() === key.toLowerCase()
-                                      ? "bg-green-100 border-l-4 border-green-500 shadow-sm"
+                                  className={`flex items-start p-2 sm:p-3 rounded-lg transition-all duration-200 ${q.correctanswer && q.correctanswer.toLowerCase() === key.toLowerCase()
+                                      ? "bg-green-100 border-l-2 sm:border-l-4 border-green-500 shadow-sm"
                                       : "hover:bg-gray-50 border border-gray-200"
                                     }`}
                                 >
-                                  <span className="font-semibold mr-4 min-w-[30px] text-blue-600">
+                                  <span className="font-semibold mr-2 sm:mr-4 min-w-[25px] sm:min-w-[30px] text-blue-600 flex-shrink-0 text-sm sm:text-base">
                                     {key.toUpperCase()})
                                   </span>
-                                  <span className="leading-relaxed flex-1">{value}</span>
+                                  <span className="leading-relaxed flex-1 text-sm sm:text-base break-words">{value}</span>
                                 </div>
                               ))}
                             </div>
                           )}
 
                           {showMarks && (
-                            <div className="text-right text-sm text-red-600 mb-4 italic font-medium">
+                            <div className="text-right text-xs sm:text-sm text-red-600 mb-3 sm:mb-4 italic font-medium">
                               [{q.marks || 4} Mark{(q.marks || 4) > 1 ? "s" : ""}]
                             </div>
                           )}
 
                           {showSolutions && (
-                            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mt-4">
-                              <div className="font-bold text-blue-800 mb-4 border-b-2 border-blue-200 pb-2 text-lg">
+                            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 sm:p-4 lg:p-6 mt-3 sm:mt-4">
+                              <div className="font-bold text-blue-800 mb-3 sm:mb-4 border-b-2 border-blue-200 pb-2 text-base sm:text-lg">
                                 Solution & Answer
                               </div>
 
                               {q.correctanswer && (
-                                <div className="bg-green-100 p-4 rounded-lg mb-4 border-l-4 border-green-500">
-                                  <strong className="text-green-800 text-lg">Correct Answer: </strong>
-                                  <span className="ml-2 font-semibold text-green-700 text-lg">
+                                <div className="bg-green-100 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4 border-l-2 sm:border-l-4 border-green-500">
+                                  <strong className="text-green-800 text-sm sm:text-base lg:text-lg">Correct Answer: </strong>
+                                  <span className="ml-1 sm:ml-2 font-semibold text-green-700 text-sm sm:text-base lg:text-lg break-words">
                                     {q.correctanswer.toUpperCase()}) {q.options ? q.options[q.correctanswer.toLowerCase()] : ''}
                                   </span>
                                 </div>
                               )}
-
-                              {/* {q.solution && (
-                                <div className="text-gray-700 leading-relaxed">
-                                  <strong className="text-blue-800">Explanation:</strong>
-                                  <p className="mt-2 text-gray-600 leading-loose">
-                                    {q.solution}
-                                  </p>
-                                </div>
-                              )} */}
                             </div>
                           )}
                         </div>
@@ -619,7 +617,7 @@ export default function AnswerPaper() {
                 })()}
               </div>
 
-              <div className="text-center mt-8 pt-6 border-t-2 border-gray-300 text-sm text-gray-600 relative z-10 font-medium">
+              <div className="text-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-gray-300 text-xs sm:text-sm text-gray-600 relative z-10 font-medium">
                 --- End of Answer Key ---
               </div>
             </div>
