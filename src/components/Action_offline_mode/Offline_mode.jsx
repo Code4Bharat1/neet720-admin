@@ -13,8 +13,10 @@ import {
   Settings,
   Plus
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const TestGeneratorUI = () => {
+  const router = useRouter()
   const [activeCard, setActiveCard] = useState(null);
 
   const mainFeatures = [
@@ -163,7 +165,7 @@ const TestGeneratorUI = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-100/50">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
+      {/* <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200">
@@ -183,7 +185,7 @@ const TestGeneratorUI = () => {
             </button>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -258,6 +260,7 @@ const TestGeneratorUI = () => {
                 
                 return (
                   <button
+                    onClick={()=>{router.push(action.route)}}
                     key={index}
                     className={`flex-1 bg-gradient-to-r ${colors.gradient} ${colors.hoverGradient} text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group`}
                   >
@@ -271,7 +274,7 @@ const TestGeneratorUI = () => {
         </section>
 
         {/* Additional Features */}
-        <section>
+        {/* <section>
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">More Features</h2>
             <p className="text-gray-600">Discover additional tools to enhance your testing workflow</p>
@@ -298,7 +301,7 @@ const TestGeneratorUI = () => {
               );
             })}
           </div>
-        </section>
+        </section> */}
 
         {/* Floating Action Button (Mobile) */}
         <div className="fixed bottom-6 right-6 md:hidden">
