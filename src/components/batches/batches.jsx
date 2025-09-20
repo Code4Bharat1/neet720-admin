@@ -165,7 +165,7 @@ export default function Batches() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-b bg-white p-6">
       {/* Header */}
       <div className="flex justify-center mb-8">
         <div className="bg-white rounded-2xl overflow-hidden">

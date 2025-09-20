@@ -387,7 +387,7 @@ const sortedStudents = useMemo(() => {
   };
 
   return (
-    <div className="py-6 w-full mx-auto px-4 lg:px-8 bg-gray-50 min-h-screen">
+    <div className="py-6 w-full mx-auto px-4 lg:px-8 bg-white min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-8 w-fit mx-auto text-center">
