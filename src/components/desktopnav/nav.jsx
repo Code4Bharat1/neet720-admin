@@ -17,7 +17,7 @@ import {
 const DesktopNavbar = () => {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [navbarColor, setNavbarColor] = useState("#3B82F6");
+  const [navbarColor, setNavbarColor] = useState("#0096c7");
   const [userRole, setUserRole] = useState("");
   const [userName, setUserName] = useState("");
   const dropdownRef = useRef(null);

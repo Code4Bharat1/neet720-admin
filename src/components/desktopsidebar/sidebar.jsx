@@ -53,7 +53,6 @@ const Sidebar = () => {
           // Keep default colors if API fails
           console.log("Using default colors");
         }
-
       } catch (err) {
         console.error("Sidebar bootstrap error:", err);
       }
@@ -70,7 +69,8 @@ const Sidebar = () => {
     }
     // permission gate
     if (item.perm) {
-      if (!Array.isArray(permissions) || !permissions.includes(item.perm)) return false;
+      if (!Array.isArray(permissions) || !permissions.includes(item.perm))
+        return false;
     }
     return true;
   };
@@ -83,77 +83,77 @@ const Sidebar = () => {
         icon: <BiSolidDashboard className="text-xl" />,
         href: "/admindashboard",
         allowedRoles: ["admin", "teacher", "content_manager", "batchmanager"],
-        description: "Overview & Analytics"
+        description: "Overview & Analytics",
       },
       {
         label: "View Students",
         icon: <AiOutlineEye className="text-xl" />,
         href: "/view_student",
         allowedRoles: ["admin", "teacher", "batchmanager"],
-        description: "Student Management"
+        description: "Student Management",
       },
       {
         label: "Batches",
         icon: <PiStudent className="text-xl" />,
         href: "/batches",
         allowedRoles: ["batchmanager", "admin", "teacher"],
-        description: "Batch Operations"
+        description: "Batch Operations",
       },
       {
         label: "Practice Test",
         icon: <AiOutlineFileText className="text-xl" />,
         href: "/Practisetest",
         allowedRoles: ["admin", "teacher"],
-        description: "Practice Assessments"
+        description: "Practice Assessments",
       },
       {
         label: "Customized Test",
         icon: <GiTestTubes className="text-xl" />,
         href: "/Customize",
         allowedRoles: ["admin", "teacher"],
-        description: "Custom Test Builder"
+        description: "Custom Test Builder",
       },
       {
         label: "Generate Test",
         icon: <LuFileInput className="text-xl" />,
         href: "/generatetest",
         allowedRoles: ["admin", "teacher"],
-        description: "Auto Test Generation"
+        description: "Auto Test Generation",
       },
       {
         label: "Post Notice",
         icon: <PiBook className="text-xl" />,
         href: "/notice",
         allowedRoles: ["admin", "content_manager", "teacher"],
-        description: "Announcements"
+        description: "Announcements",
       },
       {
         label: "Scan OMR",
         icon: <Scan className="text-xl" />,
         href: "/scan-omr",
         allowedRoles: ["admin", "content_manager", "teacher"],
-        description: "OMR Processing"
+        description: "OMR Processing",
       },
       {
         label: "Chapter-wise question",
         icon: <Scan className="text-xl" />,
         href: "/chapterwisequestion",
         allowedRoles: ["admin", "content_manager"],
-        description: "Question Bank"
+        description: "Question Bank",
       },
       {
         label: "Test Series",
         icon: <Layers className="text-xl" />,
         href: "/test-series",
         allowedRoles: ["admin", "teacher", "content_manager"],
-        description: "Series Management"
+        description: "Series Management",
       },
       {
         label: "Manage Staff",
         icon: <Layers className="text-xl" />,
         href: "/add-staff",
         allowedRoles: ["admin"],
-        description: "Staff Administration"
+        description: "Staff Administration",
       },
     ],
     [role, permissions]
@@ -207,11 +207,13 @@ const Sidebar = () => {
                   style={{ color: textColor }}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`p-1.5 rounded-lg transition-all duration-300 ${
-                      isActive 
-                        ? "bg-white/20 shadow-md" 
-                        : "group-hover:bg-white/10"
-                    }`}>
+                    <div
+                      className={`p-1.5 rounded-lg transition-all duration-300 ${
+                        isActive
+                          ? "bg-white/20 shadow-md"
+                          : "group-hover:bg-white/10"
+                      }`}
+                    >
                       {item.icon}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
@@ -225,18 +227,18 @@ const Sidebar = () => {
                       )}
                     </div>
                   </div>
-                  <ChevronRight 
+                  <ChevronRight
                     className={`w-4 h-4 transition-all duration-300 flex-shrink-0 ${
-                      isActive 
-                        ? "opacity-100 translate-x-1" 
+                      isActive
+                        ? "opacity-100 translate-x-1"
                         : "opacity-0 group-hover:opacity-70 group-hover:translate-x-1"
                     }`}
                   />
                 </Link>
-                
+
                 {/* Active Indicator */}
                 {isActive && (
-                  <div 
+                  <div
                     className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 rounded-r-full shadow-lg"
                     style={{ backgroundColor: textColor }}
                   />
@@ -250,16 +252,23 @@ const Sidebar = () => {
       {/* Footer Section */}
       <div className="flex-shrink-0 p-4 border-t border-white/10">
         <div className="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-white/5 backdrop-blur-sm">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-bold text-white">
               {role?.charAt(0)?.toUpperCase() || "U"}
             </span>
           </div>
+
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate" style={{ color: textColor }}>
+            <p
+              className="text-sm font-medium truncate"
+              style={{ color: textColor }}
+            >
               {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"}
             </p>
-            <p className="text-xs opacity-60 truncate" style={{ color: textColor }}>
+            <p
+              className="text-xs opacity-60 truncate"
+              style={{ color: textColor }}
+            >
               ID: {adminId || "N/A"}
             </p>
           </div>
