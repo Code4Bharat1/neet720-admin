@@ -119,7 +119,7 @@ const TestPreview = () => {
 
       <div className="min-h-screen bg-gray-50">
         {/* Header with Back Button */}
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+        {/* <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center">
             <button
               onClick={() => router.push("/generatetest")}
@@ -130,7 +130,7 @@ const TestPreview = () => {
             </button>
             <h1 className="text-xl font-bold text-gray-800">Back</h1>
           </div>
-        </header>
+        </header> */}
 
         <main className="max-w-5xl mx-auto px-4 py-6">
           {/* Action Buttons */}

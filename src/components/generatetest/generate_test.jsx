@@ -179,7 +179,7 @@ export default function TestDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen ml-7 max-sm:ml-0 flex-col bg-gray-50 pb-20">
+    <div className="flex min-h-screen ml-7 max-sm:ml-0 flex-col bg-white pb-20">
       {/* Header */}
       <div className="bg-white px-8 py-6 shadow-sm">
         <div className="text-center">

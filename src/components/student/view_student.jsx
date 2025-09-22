@@ -692,7 +692,7 @@ const Desktop_student = () => {
                     <td className="py-4 px-6">
                       <button
                         onClick={() => confirmDeleteStudent(student)}
-                        className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 rounded-full"
+                        className="text-red-500 hover:text-red-700 text-[12px] font-medium  p-1 ml-2 rounded-full"
                       >
                         Delete
                       </button>

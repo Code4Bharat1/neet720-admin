@@ -2,95 +2,89 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Mail, Phone, User } from "lucide-react";
 
 const ProfileCard = () => {
   const [studentData, setStudentData] = useState(null);
 
   useEffect(() => {
-    const studentId = localStorage.getItem("studentId"); // Get studentId from localStorage
+    const studentId = localStorage.getItem("studentId");
 
     const fetchStudentData = async () => {
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/student-data`,
-          { studentId } // Send studentId to the backend
+          { studentId }
         );
-        setStudentData(response.data.data); // Set the student data to state
+        setStudentData(response.data.data);
       } catch (error) {
         console.error("Error fetching student data:", error.response?.data || error.message);
       }
     };
 
     if (studentId) {
-      fetchStudentData(); // Fetch student data only if studentId exists
+      fetchStudentData();
     }
   }, []);
 
-  // Provide default empty string value to inputs to avoid undefined value error
-  const getValue = (value) => {
-    return value ?? ""; // If value is undefined or null, return an empty string
-  };
+  const getValue = (value) => value ?? "";
 
   return (
-    <div className="max-w-4xl mx-auto pr-6 pl-6 pb-6 bg-white rounded-lg relative">
+    <div className="max-w-3xl mx-auto p-6 sm:p-8 bg-white shadow-md rounded-2xl border border-gray-200">
       {/* Profile Header */}
-      <div className="flex justify-center space-x-6">
-        <div className="relative -mt-12">
-          {/* Red Background Circle */}
-          <div className="bg-[#007AFF] inset-0 border-1 border-gray-100 shadow-lg bg-gray-100 rounded-full transform scale-100 z-0" />
-          {/* Profile Image */}
+      <div className="flex flex-col items-center text-center">
+        <div className="relative">
           <img
-            src={studentData?.profileImage || "/profilphoto.png"} // Use profileImage from API or fallback to a default image
+            src={studentData?.profileImage || "/profilphoto.png"}
             alt="Profile Picture"
-            className="w-35 h-35 rounded-full object-cover relative z-10 drop-shadow-lg"
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-[#007AFF] shadow-md"
           />
         </div>
+        <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold text-gray-800">
+          {getValue(studentData?.firstName)} {getValue(studentData?.lastName)}
+        </h2>
+        <p className="text-gray-500 text-xs sm:text-sm italic">Student Profile</p>
       </div>
 
       {/* Profile Info */}
-      <div className="mt-6 space-y-10">
-        <div className="flex space-x-10">
-          <div className="w-1/2">
-            <label className="block text-gray-600 font-bold">First Name</label>
-            <input
-              type="text"
-              className="mt-1 p-3 w-full border text-white border-gray-300 font-semi italic rounded-md bg-[#007AFF]"
-              value={getValue(studentData?.firstName)} // Fallback to empty string if null/undefined
-              readOnly
-            />
-          </div>
-          <div className="w-1/2">
-            <label className="block text-gray-600 font-bold">Last Name</label>
-            <input
-              type="text"
-              className="mt-1 p-3 w-full italic border text-white font-semi rounded-md bg-[#007AFF]"
-              value={getValue(studentData?.lastName)} // Fallback to empty string if null/undefined
-              readOnly
-            />
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div>
+          <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1">
+            First Name
+          </label>
+          <div className="flex items-center gap-2 bg-[#007AFF] text-white p-2 sm:p-3 rounded-md shadow-sm text-sm sm:text-base">
+            <User size={16} className="sm:w-5 sm:h-5" />
+            <span className="truncate">{getValue(studentData?.firstName)}</span>
           </div>
         </div>
 
-        <div className="flex space-x-14">
-          <div className="w-1/2">
-            <label className="block text-gray-600 font-bold ">E-mail ID</label>
-            <input
-              type="email"
-              className="mt-1 p-3 w-full border text-white border-gray-300 font-semi italic rounded-md bg-[#007AFF]"
-              value={getValue(studentData?.emailAddress)} // Fallback to empty string if null/undefined
-              readOnly
-            />
+        <div>
+          <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1">
+            Last Name
+          </label>
+          <div className="flex items-center gap-2 bg-[#007AFF] text-white p-2 sm:p-3 rounded-md shadow-sm text-sm sm:text-base">
+            <User size={16} className="sm:w-5 sm:h-5" />
+            <span className="truncate">{getValue(studentData?.lastName)}</span>
           </div>
+        </div>
 
-          <div className="w-1/2">
-            <label className="block text-gray-600 font-bold">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              className="mt-1 p-3 w-full border text-white border-gray-300 italic font-semi rounded-md bg-[#007AFF]"
-              value={getValue(studentData?.mobileNumber)} // Fallback to empty string if null/undefined
-              readOnly
-            />
+        <div>
+          <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1">
+            Email ID
+          </label>
+          <div className="flex items-center gap-2 bg-[#007AFF] text-white p-2 sm:p-3 rounded-md shadow-sm text-sm sm:text-base break-words">
+            <Mail size={16} className="sm:w-5 sm:h-5" />
+            <span className="break-all">{getValue(studentData?.emailAddress)}</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1">
+            Phone Number
+          </label>
+          <div className="flex items-center gap-2 bg-[#007AFF] text-white p-2 sm:p-3 rounded-md shadow-sm text-sm sm:text-base">
+            <Phone size={16} className="sm:w-5 sm:h-5" />
+            <span>{getValue(studentData?.mobileNumber)}</span>
           </div>
         </div>
       </div>

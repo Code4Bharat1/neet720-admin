@@ -7,7 +7,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import MobileNavbar from "@/components/mobilenav/mobilenav";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
-
+import LayoutWithNav from "../mainLayout";
 const Page = () => {
   const [formData, setFormData] = useState({
     adminId: "",
@@ -227,18 +227,8 @@ const Page = () => {
   };
 
   return (
-    <div className="flex">
-      <div className="w-50 max-sm:hidden">
-        <Sidebar />
-      </div>
-      <div className="hidden max-md:block fixed top-0 left-0 w-full h-16 bg-white shadow-md z-50">
-        <MobileNavbar />
-        <MobilebottomNavbar />
-      </div>
-      <div className="flex-1">
-        <DesktopNavbar />
-
-        <div className="p-6 md:ml-20 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20">
+    <LayoutWithNav>
+      <div className="p-6 md:ml-20 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col items-center text-center mb-4">
@@ -942,9 +932,8 @@ const Page = () => {
               </div>
             )}
           </div>
-        </div>
       </div>
-    </div>
+    </LayoutWithNav>
   );
 };
 
