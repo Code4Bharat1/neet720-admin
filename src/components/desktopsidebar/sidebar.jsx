@@ -136,11 +136,12 @@ const Sidebar = () => {
         description: "OMR Processing",
       },
       {
-        label: "Chapter-wise question",
+        label: "Scan & Add Questions",
         icon: <LuScanText className="text-2xl" />,
         href: "/chapterwisequestion",
         allowedRoles: ["admin", "content_manager"],
-        description: "Question Bank",
+        description:
+          "Add questions via scan",
       },
       {
         label: "Test Series",

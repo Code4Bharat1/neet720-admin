@@ -17,7 +17,10 @@ import {
   Edit3,
 } from "lucide-react";
 import Sidebar from "@/components/desktopsidebar/sidebar";
-
+import DesktopNavbar from "@/components/desktopnav/nav";
+import toast from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+import LayoutWithNav from "../mainLayout";
 // Separate Evaluation Step Component
 const EvaluationStep = ({
   extractedQuestions,
@@ -87,7 +90,7 @@ const EvaluationStep = ({
   // Submit a question to backend
   const handleSubmitQuestion = async (idx) => {
     if (!selectedTest) {
-      alert("Please select a test first.");
+      toast("Please select a test first.");
       return;
     }
 
@@ -127,7 +130,7 @@ const EvaluationStep = ({
         throw new Error(errorData.message || "Failed to create question");
       }
 
-      alert(`✅ Question ${idx + 1} added to test successfully.`);
+      toast.success(`✅ Question ${idx + 1} added to test successfully.`);
 
       setExtractedQuestions((prev) => {
         const updated = [...prev];
@@ -141,7 +144,7 @@ const EvaluationStep = ({
         return newCount;
       });
     } catch (error) {
-      alert(
+      toast.error(
         "❌ Error creating question: " + (error.message || "Unknown error")
       );
     }
@@ -150,13 +153,20 @@ const EvaluationStep = ({
   // Submit all questions at once
   const handleSubmitAllQuestions = async () => {
     if (!selectedTest) {
-      alert("Please select a test first.");
+      toast("Please select a test first.");
+      return;
+    }
+
+    if (extractedQuestions.length === 0) {
+      toast.error(
+        "⚠ No questions available to submit. Please extract questions first."
+      );
       return;
     }
 
     const unsubmittedQuestions = extractedQuestions.filter((q) => !q.submitted);
     if (unsubmittedQuestions.length === 0) {
-      alert("All questions have already been submitted.");
+      toast("All questions have already been submitted.");
       return;
     }
 
@@ -171,7 +181,6 @@ const EvaluationStep = ({
 
     for (let i = 0; i < extractedQuestions.length; i++) {
       if (extractedQuestions[i].submitted) continue;
-
       try {
         await handleSubmitQuestion(i);
         successCount++;
@@ -180,7 +189,7 @@ const EvaluationStep = ({
       }
     }
 
-    alert(
+    toast.success(
       `✅ ${successCount} questions submitted successfully. ${
         failCount > 0 ? `❌ ${failCount} failed.` : ""
       }`
@@ -217,77 +226,54 @@ const EvaluationStep = ({
         </div>
       </div>
 
-      <div className="space-y-4 max-h-96 overflow-y-auto">
+      <motion.div className="space-y-4 max-h-96 overflow-y-auto">
         {extractedQuestions.map((q, idx) => (
           <motion.div
             key={idx}
-            className={`border rounded-lg p-4 ${
+            className={`border rounded-xl p-5 shadow-sm transition-colors duration-300 ${
               q.submitted
                 ? "bg-green-50 border-green-200"
-                : "bg-gray-50 border-gray-200"
+                : "bg-white border-gray-200 hover:shadow-md"
             }`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.1 }}
+            transition={{ delay: idx * 0.05 }}
           >
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="font-medium text-gray-800">Question {idx + 1}</h4>
-              <div className="flex gap-2">
-                {!q.submitted && (
-                  <button
-                    onClick={() =>
-                      editingQuestion === idx
-                        ? handleCancelEdit()
-                        : handleEditQuestion(idx)
-                    }
-                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                    title={
-                      editingQuestion === idx
-                        ? "Cancel editing"
-                        : "Edit question"
-                    }
-                  >
-                    {editingQuestion === idx ? (
-                      <XCircle className="w-4 h-4" />
-                    ) : (
-                      <Edit3 className="w-4 h-4" />
-                    )}
-                  </button>
-                )}
-                {q.submitted ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                )}
-              </div>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="font-semibold text-gray-800 text-lg">
+                Question {idx + 1}
+              </h4>
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  q.submitted
+                    ? "bg-green-200 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {q.submitted ? "Submitted" : "Pending"}
+              </span>
             </div>
 
             {editingQuestion === idx ? (
               // Edit Mode
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Question Text:
-                  </label>
-                  <textarea
-                    value={editedQuestion.question}
-                    onChange={(e) =>
-                      setEditedQuestion((prev) => ({
-                        ...prev,
-                        question: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border rounded-md"
-                    rows={3}
-                  />
-                </div>
+                <textarea
+                  value={editedQuestion.question}
+                  onChange={(e) =>
+                    setEditedQuestion((prev) => ({
+                      ...prev,
+                      question: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-400"
+                  rows={3}
+                  placeholder="Edit question text..."
+                />
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Options:
-                  </label>
+                <div className="space-y-2">
                   {editedQuestion.options?.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-2 mb-2">
+                    <div key={i} className="flex items-center gap-2">
                       <input
                         type="radio"
                         name={`correct-${idx}`}
@@ -302,34 +288,27 @@ const EvaluationStep = ({
                         type="text"
                         value={opt.option_text}
                         onChange={(e) => handleOptionChange(i, e.target.value)}
-                        className="flex-1 p-1 border rounded"
+                        className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+                        placeholder="Option text"
                       />
                     </div>
                   ))}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Solution/Explanation:
-                  </label>
-                  <textarea
-                    value={editedQuestion.solution}
-                    onChange={(e) =>
-                      setEditedQuestion((prev) => ({
-                        ...prev,
-                        solution: e.target.value,
-                      }))
-                    }
-                    className="w-full p-2 border rounded-md"
-                    rows={2}
-                    placeholder="Optional explanation..."
-                  />
-                </div>
+                <textarea
+                  value={editedQuestion.solution}
+                  onChange={(e) =>
+                    setEditedQuestion((prev) => ({
+                      ...prev,
+                      solution: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-400"
+                  rows={2}
+                  placeholder="Solution / Explanation (optional)"
+                />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Difficulty Level:
-                  </label>
+                <div className="flex justify-between items-center">
                   <select
                     value={editedQuestion.difficulty_level}
                     onChange={(e) =>
@@ -344,34 +323,34 @@ const EvaluationStep = ({
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
                   </select>
-                </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleSaveEdit(idx)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
-                  >
-                    Cancel
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSaveEdit(idx)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
               // View Mode
-              <div>
-                <p className="text-gray-800 mb-3">{q.question}</p>
-                <ul className="space-y-1 mb-3">
+              <div className="space-y-3">
+                <p className="text-gray-800">{q.question}</p>
+                <ul className="space-y-1">
                   {q.options.map((opt, i) => (
                     <li
                       key={i}
-                      className={`flex items-center gap-2 ${
+                      className={`flex items-center gap-2 p-2 rounded-md ${
                         opt.is_correct
-                          ? "text-green-700 font-medium"
+                          ? "bg-green-100 text-green-800 font-medium"
                           : "text-gray-700"
                       }`}
                     >
@@ -387,42 +366,42 @@ const EvaluationStep = ({
                 </ul>
 
                 {q.solution && (
-                  <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded mb-3">
+                  <div className="text-sm text-gray-700 bg-blue-50 p-2 rounded-md">
                     <strong>Solution:</strong> {q.solution}
                   </div>
                 )}
 
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mt-2">
                   <span className="text-sm text-gray-500">
                     Difficulty: {q.difficulty_level || "medium"}
                   </span>
-                  <button
-                    onClick={() => handleSubmitQuestion(idx)}
-                    disabled={q.submitted}
-                    className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                      q.submitted
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                  >
-                    {q.submitted ? (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        Submitted
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Submit Question
-                      </>
+                  <div className="flex gap-2">
+                    {!q.submitted && (
+                      <button
+                        onClick={() => handleEditQuestion(idx)}
+                        className="px-3 py-1 text-blue-600 border border-blue-300 rounded hover:bg-blue-50"
+                      >
+                        Edit
+                      </button>
                     )}
-                  </button>
+                    <button
+                      onClick={() => handleSubmitQuestion(idx)}
+                      disabled={q.submitted}
+                      className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-1 ${
+                        q.submitted
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          : "bg-green-600 text-white hover:bg-green-700"
+                      }`}
+                    >
+                      {q.submitted ? "Submitted" : "Submit"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
@@ -493,6 +472,7 @@ const Page = () => {
   const [extractError, setExtractError] = useState(null);
   const [extractedQuestions, setExtractedQuestions] = useState([]);
   const pasteBoxRef = useRef(null);
+  const evaluationRef = useRef(null);
 
   //--fetch test series
   useEffect(() => {
@@ -553,12 +533,12 @@ const Page = () => {
     }
   };
 
-  // Extract MCQs from image
   const handleExtractMcqs = async () => {
     if (!mcqImage) {
-      alert("Please paste or upload an image first.");
+      toast("Please paste or upload an image first.");
       return;
     }
+
     setExtracting(true);
     setExtractError(null);
     setExtractedQuestions([]);
@@ -569,21 +549,22 @@ const Page = () => {
 
       const res = await fetch(
         "https://mcq-extractor.neet720.com/api/extract-mcqs",
-        {
-          method: "POST",
-          body: formData,
-        }
+        { method: "POST", body: formData }
       );
 
+      // Parse the response
+      const data = await res.json();
+
+      console.log("Extraction response:", data); // Debug
+
+      // Check for API success AND that mcqs exist and are not empty
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to extract MCQs");
+        throw new Error(data.error || "Failed to extract MCQs");
       }
 
-      const data = await res.json();
       const mcqs = data.mcqs;
 
-      if (Array.isArray(mcqs)) {
+      if (Array.isArray(mcqs) && mcqs.length > 0) {
         setExtractedQuestions(
           mcqs.map((mcq) => ({
             ...mcq,
@@ -595,11 +576,18 @@ const Page = () => {
           }))
         );
       } else {
-        setExtractError("No MCQs found in response.");
+        setExtractError("⚠ No MCQs found in the image.");
+        toast.error(
+          "⚠ No questions were extracted from this image. Please check the image or try another one."
+        );
       }
     } catch (err) {
+      console.error("MCQ extraction error:", err);
       setExtractError(
         "Failed to extract MCQs: " + (err.message || "Unknown error")
+      );
+      toast.error(
+        "❌ Failed to extract MCQs: " + (err.message || "Unknown error")
       );
     } finally {
       setExtracting(false);
@@ -621,81 +609,85 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900 p-4 sm:p-6">
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-      <motion.div
-        className="max-w-4xl mx-auto md:ml-96 space-y-8"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {/* Step 1: Dropdowns */}
-        <motion.div
-          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
-          variants={itemVariants}
+    <LayoutWithNav>
+        <div
         >
-          <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-            <Book className="w-5 h-5" /> Step 1: Select Test Series & Test
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Test Series
-              </label>
-              <select
-                value={selectedSeries}
-                onChange={(e) => {
-                  setSelectedSeries(e.target.value);
-                  setSelectedTest("");
-                }}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select Test Series</option>
-                {testSeriesList.map((series) => (
-                  <option key={series.id} value={series.id}>
-                    {series.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Test</label>
-              <select
-                value={selectedTest}
-                onChange={(e) => setSelectedTest(e.target.value)}
-                disabled={!selectedSeries}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-              >
-                <option value="">Select Test</option>
-                {testsList.map((test) => (
-                  <option key={test.id} value={test.id}>
-                    {test.testName}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="text-center mb-6">
+            <Toaster />
+            <h1 className="text-3xl sm:text-4xl font-bold text-blue-700 mt-2">
+              Add Questions to Test Series
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">
+              Scan or upload question images to extract and submit MCQs
+            </p>
           </div>
-        </motion.div>
+          {/* Step 1: Dropdowns */}
+          <motion.div
+            className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+            variants={itemVariants}
+          >
+            <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
+              <Book className="w-5 h-5" /> Step 1: Select Test Series & Test
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Test Series
+                </label>
+                <select
+                  value={selectedSeries}
+                  onChange={(e) => {
+                    setSelectedSeries(e.target.value);
+                    setSelectedTest("");
+                  }}
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Test Series</option>
+                  {testSeriesList.map((series) => (
+                    <option key={series.id} value={series.id}>
+                      {series.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Test</label>
+                <select
+                  value={selectedTest}
+                  onChange={(e) => setSelectedTest(e.target.value)}
+                  disabled={!selectedSeries}
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                >
+                  <option value="">Select Test</option>
+                  {testsList.map((test) => (
+                    <option key={test.id} value={test.id}>
+                      {test.testName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </motion.div>
 
-        {/* Step 2: MCQ Extraction */}
-        <motion.div
-          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
-          variants={itemVariants}
-        >
-          <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ Image
-          </h2>
+          {/* step 2: MCQ Image Upload & Extraction */}
+          <motion.div
+            className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+            variants={itemVariants}
+          >
+            <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
+              <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ
+              Image
+            </h2>
 
-          <div className="space-y-4">
-            <div
-              ref={pasteBoxRef}
-              tabIndex={0}
-              onPaste={handlePasteImage}
-              className="border-2 border-dashed border-blue-300 bg-blue-50 p-8 text-center rounded-lg hover:border-blue-400 transition-colors"
-            >
-              <div className="flex flex-col items-center gap-4">
+            <div className="space-y-4">
+              {/* File Upload / Paste Box */}
+              <label
+                ref={pasteBoxRef}
+                tabIndex={0}
+                onPaste={handlePasteImage}
+                htmlFor="mcq-upload"
+                className="cursor-pointer border-2 border-dashed border-blue-300 bg-blue-50 p-8 text-center rounded-lg hover:border-blue-400 transition-colors flex flex-col items-center gap-4"
+              >
                 <Clipboard className="w-12 h-12 text-blue-600" />
                 <div>
                   <p className="text-lg font-medium text-blue-800">
@@ -707,72 +699,84 @@ const Page = () => {
                 </div>
                 <input
                   type="file"
+                  id="mcq-upload"
                   accept="image/*"
                   onChange={handleMcqImageChange}
-                  className="mt-2"
+                  className="hidden"
                 />
-              </div>
-            </div>
+              </label>
 
-            {mcqImage && (
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
-                <CheckCircle className="w-5 h-5" />
-                <span>Image loaded: {mcqImage.name}</span>
-              </div>
-            )}
-
-            <button
-              onClick={handleExtractMcqs}
-              disabled={extracting || !mcqImage}
-              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {extracting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Extracting MCQs...
-                </>
-              ) : (
-                <>
-                  <PlusCircle className="w-4 h-4" />
-                  Extract MCQs
-                </>
+              {/* Show selected file */}
+              {mcqImage && (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
+                    <CheckCircle className="w-5 h-5" />
+                    <span>Image loaded: {mcqImage.name}</span>
+                  </div>
+                  {/* Image Preview */}
+                  <img
+                    src={URL.createObjectURL(mcqImage)}
+                    alt="MCQ Preview"
+                    className="max-h-64 rounded-lg border border-gray-300 mt-2 object-contain"
+                  />
+                </div>
               )}
-            </button>
 
-            {extractError && (
-              <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
-                <XCircle className="w-5 h-5" />
-                <span>{extractError}</span>
-              </div>
-            )}
-          </div>
-        </motion.div>
+              {/* Extract button */}
+              <button
+                onClick={handleExtractMcqs}
+                disabled={extracting || !mcqImage}
+                className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {extracting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Extracting MCQs...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="w-4 h-4" />
+                    Extract MCQs
+                  </>
+                )}
+              </button>
 
-        {/* Step 3: Evaluation Step (Separate Component) */}
-        <EvaluationStep
-          extractedQuestions={extractedQuestions}
-          setExtractedQuestions={setExtractedQuestions}
-          selectedTest={selectedTest}
-          submittedCount={submittedCount}
-          setSubmittedCount={setSubmittedCount}
-        />
-
-        {/* Stats */}
-        {submittedCount > 0 && (
-          <motion.div
-            className="bg-green-50 border border-green-200 p-4 rounded-lg"
-            variants={itemVariants}
-          >
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">
-                Total Questions Submitted: {submittedCount}
-              </span>
+              {extractError && (
+                <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
+                  <XCircle className="w-5 h-5" />
+                  <span>{extractError}</span>
+                </div>
+              )}
             </div>
           </motion.div>
-        )}
-      </motion.div>
-      <FloatingWhatsAppCTA
+
+          {/* Step 3: Evaluation Step (Separate Component) */}
+          <motion.div ref={evaluationRef}>
+            <EvaluationStep
+              extractedQuestions={extractedQuestions}
+              setExtractedQuestions={setExtractedQuestions}
+              selectedTest={selectedTest}
+              submittedCount={submittedCount}
+              setSubmittedCount={setSubmittedCount}
+            />
+          </motion.div>
+
+          {/* Stats */}
+          {submittedCount > 0 && (
+            <motion.div
+              className="bg-green-50 border border-green-200 p-4 rounded-lg"
+              variants={itemVariants}
+            >
+              <div className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">
+                  Total Questions Submitted: {submittedCount}
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </div>
+        {/* <FloatingWhatsAppCTA
         phone="+91XXXXXXXXXX" // <- replace with your business number
         message={() => {
           // Build a helpful, contextual message
@@ -799,8 +803,8 @@ const Page = () => {
           ].join("\n");
         }}
         label="We’ll do this for you — WhatsApp us!"
-      />
-    </div>
+      /> */}
+    </LayoutWithNav>
   );
 };
 
