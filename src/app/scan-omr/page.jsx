@@ -16,7 +16,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import LayoutWithNav from "../mainLayout";
 // File Upload Component
 const FileUploadZone = ({
   onFileSelect,
@@ -452,555 +452,568 @@ const OMRScannerSimplified = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={() => router.push("/admindashboard")}
-          className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium shadow transition-all"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <LayoutWithNav>
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          {/* Back Button */}
+          {/* <button
+            type="button"
+            onClick={() => router.push("/admindashboard")}
+            className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium shadow transition-all"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back
-        </button>
-        {/* Header Section */}
-        <motion.div
-          className="mb-6 sm:mb-8 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            OMR & QR Scanner Comparator
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
-            Upload OMR answer key and question paper for comparison and
-            evaluation, including QR code verification.
-          </p>
-        </motion.div>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back
+          </button> */}
+          {/* Header Section */}
+          <motion.div
+            className="mb-6 sm:mb-8 text-center"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              OMR & QR Scanner Comparator
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Upload OMR answer key and question paper for comparison and
+              evaluation, including QR code verification.
+            </p>
+          </motion.div>
 
-        {/* Main Form Card */}
-        <motion.div
-          className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 w-full rounded-full mb-4 sm:mb-6"></div>
-          <form onSubmit={handleEvaluate} className="space-y-6">
-            {/* File Upload Section */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* OMR Answer Key Upload */}
-              <div className="space-y-4">
-                {/* Dropdown Selector of tests */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <Key className="w-4 h-4 mr-2" />
-                    Select Test
-                  </label>
-                  <select
-                    onChange={handleTestSelect}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  >
-                    <option value="">-- Choose a Test --</option>
-                    {tests.map((test) => (
-                      <option key={test.id} value={test.id}>
-                        {test.testname} ({test.subject})
-                      </option>
-                    ))}
-                  </select>
+          {/* Main Form Card */}
+          <motion.div
+            className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 w-full rounded-full mb-4 sm:mb-6"></div>
+            <form onSubmit={handleEvaluate} className="space-y-6">
+              {/* File Upload Section */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* OMR Answer Key Upload */}
+                <div className="space-y-4">
+                  {/* Dropdown Selector of tests */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                      <Key className="w-4 h-4 mr-2" />
+                      Select Test
+                    </label>
+                    <select
+                      onChange={handleTestSelect}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      <option value="">-- Choose a Test --</option>
+                      {tests.map((test) => (
+                        <option key={test.id} value={test.id}>
+                          {test.testname} ({test.subject})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Display Selected Test Details */}
+                  {selectedTest && (
+                    <motion.div
+                      className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <h3 className="text-lg font-bold text-blue-700">
+                        {selectedTest.testname}
+                      </h3>
+                      <p className="text-sm text-gray-700">
+                        <b>Subjects:</b> {selectedTest.subject}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <b>Batch:</b> {selectedTest.batch_name}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <b>Duration:</b> {selectedTest.duration} min
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <b>Marks:</b> {selectedTest.marks} ( +
+                        {selectedTest.positivemarks} / -
+                        {selectedTest.negativemarks} )
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <b>Status:</b> {selectedTest.status}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <b>Instruction:</b> {selectedTest.instruction}
+                      </p>
+
+                      {/* Topics List */}
+                      {selectedTest.topic_name && (
+                        <div className="text-sm text-gray-700">
+                          <b>Topics:</b>
+                          <ul className="list-disc ml-5">
+                            {JSON.parse(
+                              selectedTest.topic_name
+                            )[0].topic_names.map((topic, idx) => (
+                              <li key={idx}>{topic}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
                 </div>
-
-                {/* Display Selected Test Details */}
-                {selectedTest && (
+                {selectedTestQuestions.length > 0 && (
                   <motion.div
-                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2"
+                    className="bg-white border border-gray-200 rounded-lg p-4 mt-4 shadow"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <h3 className="text-lg font-bold text-blue-700">
-                      {selectedTest.testname}
-                    </h3>
-                    <p className="text-sm text-gray-700">
-                      <b>Subjects:</b> {selectedTest.subject}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      <b>Batch:</b> {selectedTest.batch_name}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      <b>Duration:</b> {selectedTest.duration} min
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      <b>Marks:</b> {selectedTest.marks} ( +
-                      {selectedTest.positivemarks} / -
-                      {selectedTest.negativemarks} )
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      <b>Status:</b> {selectedTest.status}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      <b>Instruction:</b> {selectedTest.instruction}
-                    </p>
-
-                    {/* Topics List */}
-                    {selectedTest.topic_name && (
-                      <div className="text-sm text-gray-700">
-                        <b>Topics:</b>
-                        <ul className="list-disc ml-5">
-                          {JSON.parse(
-                            selectedTest.topic_name
-                          )[0].topic_names.map((topic, idx) => (
-                            <li key={idx}>{topic}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </div>
-              {selectedTestQuestions.length > 0 && (
-                <motion.div
-                  className="bg-white border border-gray-200 rounded-lg p-4 mt-4 shadow"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <h4 className="text-lg font-semibold mb-3 text-blue-700">
-                    Test Questions
-                  </h4>
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                    {selectedTestQuestions.map((q, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-blue-50 border border-blue-100 rounded p-3"
-                      >
-                        <p className="font-semibold text-gray-800">
-                          Q{idx + 1}: {q.question_text}
-                        </p>
-                        <ul className="list-disc ml-5 text-sm text-gray-700">
-                          {q.options.map((opt, i) => (
-                            <li
-                              key={i}
-                              className={
-                                opt === q.correctanswer
-                                  ? "text-green-600 font-medium"
-                                  : ""
-                              }
-                            >
-                              {opt}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Question Paper Upload */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <FileUploadZone
-                  onFileSelect={setQuestionPaperFiles}
-                  files={questionPaperFiles}
-                  label="Student Question Paper"
-                  color="purple"
-                  icon={HelpCircle}
-                />
-              </motion.div>
-            </div>
-            {/* Evaluate Button */}
-            <motion.div
-              className="pt-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    Comparing OMR & QR Sheets...
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center">
-                    <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Compare & Evaluate Sheets
-                  </div>
-                )}
-              </button>
-            </motion.div>
-          </form>
-        </motion.div>
-
-        {/* Results Section */}
-        <AnimatePresence>
-          {result && (
-            <motion.div
-              className="space-y-4 sm:space-y-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* Summary Card */}
-              <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 text-white">
-                <div className="flex flex-col space-y-4">
-                  <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
-                      OMR & QR Comparison Complete!
-                    </h2>
-                    <p className="text-green-100 text-sm sm:text-base">
-                      {result.message}
-                    </p>
-                  </div>
-                  {/* Summary Statistics */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-green-200">
-                        {result.correctAnswers}
-                      </div>
-                      <div className="text-xs opacity-90">Correct</div>
-                    </div>
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-red-200">
-                        {result.incorrectAnswers}
-                      </div>
-                      <div className="text-xs opacity-90">Incorrect</div>
-                    </div>
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-gray-200">
-                        {result.unansweredQuestions}
-                      </div>
-                      <div className="text-xs opacity-90">Unanswered</div>
-                    </div>
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold">
-                        {result.accuracy}%
-                      </div>
-                      <div className="text-xs opacity-90">Accuracy</div>
-                    </div>
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold">
-                        {result.totalScore}/{result.maxScore}
-                      </div>
-                      <div className="text-xs opacity-90">Score</div>
-                    </div>
-                  </div>
-                  {/* Comparison Details */}
-                  {result.comparisonDetails && (
-                    <div className="text-center text-sm text-green-100">
-                      <p>
-                        Answer Key OMR:{" "}
-                        {result.comparisonDetails.answerKeyMarked}/
-                        {result.comparisonDetails.totalAnswerKeyQuestions}{" "}
-                        marked
-                      </p>
-                      <p>
-                        Student Paper OMR:{" "}
-                        {result.comparisonDetails.studentMarked}/
-                        {result.comparisonDetails.totalStudentQuestions} marked
-                      </p>
-                    </div>
-                  )}
-                  {/* QR Code Details */}
-                  <div className="bg-white/20 rounded-lg p-3 text-center text-sm">
-                    <h3 className="font-bold text-lg mb-2 flex items-center justify-center">
-                      <QrCode className="w-5 h-5 mr-2" /> QR Code Verification
-                    </h3>
-                    <p
-                      className={`font-semibold ${
-                        result.qrComparisonStatus === "matched"
-                          ? "text-green-200"
-                          : "text-red-200"
-                      }`}
-                    >
-                      Status: {result.qrComparisonMessage}
-                    </p>
-                    {result.answerKeyQrData && (
-                      <div className="mt-2">
-                        <p className="font-semibold text-green-100">
-                          Answer Key QR:
-                        </p>
-                        <p>
-                          Test Name: {result.answerKeyQrData.testName || "N/A"}
-                        </p>
-                        <p>Test ID: {result.answerKeyQrData.testId || "N/A"}</p>
-                        <p>
-                          Batch Name:{" "}
-                          {result.answerKeyQrData.batchName || "N/A"}
-                        </p>
-                      </div>
-                    )}
-                    {result.questionPaperQrData && (
-                      <div className="mt-2">
-                        <p className="font-semibold text-green-100">
-                          Student Paper QR:
-                        </p>
-                        <p>
-                          Student ID:{" "}
-                          {result.questionPaperQrData.studentId || "N/A"}
-                        </p>
-                        <p>
-                          Test Name:{" "}
-                          {result.questionPaperQrData.testName || "N/A"}
-                        </p>
-                        <p>
-                          Test ID: {result.questionPaperQrData.testId || "N/A"}
-                        </p>
-                        <p>
-                          Subject: {result.questionPaperQrData.subject || "N/A"}
-                        </p>
-                        <p>
-                          Chapter: {result.questionPaperQrData.chapter || "N/A"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Processed Images Display */}
-              {(result.answerKeyImage || result.questionPaperImage) && (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {/* Answer Key Image */}
-                  {result.answerKeyImage && (
-                    <motion.div
-                      className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-                        <h3 className="text-lg font-bold">
-                          Answer Key (Processed)
-                        </h3>
-                      </div>
-                      <div className="p-4">
-                        <img
-                          src={`data:image/png;base64,${result.answerKeyImage}`}
-                          alt="Processed Answer Key"
-                          className="w-full h-auto max-h-64 object-contain border border-gray-200 rounded-lg"
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                  {/* Question Paper Image */}
-                  {result.questionPaperImage && (
-                    <motion.div
-                      className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-4 text-white">
-                        <h3 className="text-lg font-bold">
-                          Student Paper (Processed)
-                        </h3>
-                      </div>
-                      <div className="p-4">
-                        <img
-                          src={`data:image/png;base64,${result.questionPaperImage}`}
-                          alt="Processed Question Paper"
-                          className="w-full h-auto max-h-64 object-contain border border-gray-200 rounded-lg"
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              )}
-
-              {/* Detailed Results Table */}
-              <div className="space-y-4 sm:space-y-6">
-                {result.pages.map((page, idx) => (
-                  <motion.div
-                    key={idx}
-                    className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                  >
-                    {/* Page Header */}
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 sm:p-6 text-white">
-                      <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">
-                          Page {page.page}
-                        </h3>
-                        <div className="flex space-x-4 text-center">
-                          <div>
-                            <div className="text-xl font-bold text-green-200">
-                              {page.correct}
-                            </div>
-                            <div className="text-xs opacity-90">Correct</div>
-                          </div>
-                          <div>
-                            <div className="text-xl font-bold text-red-200">
-                              {page.incorrect}
-                            </div>
-                            <div className="text-xs opacity-90">Incorrect</div>
-                          </div>
-                          <div>
-                            <div className="text-xl font-bold text-gray-200">
-                              {page.unanswered}
-                            </div>
-                            <div className="text-xs opacity-90">Unanswered</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Questions Table */}
-                    <div className="p-3 sm:p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-xs sm:text-sm">
-                          <thead>
-                            <tr className="bg-gradient-to-r from-gray-100 to-gray-200">
-                              <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
-                                Q#
-                              </th>
-                              <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
-                                Correct Answer
-                              </th>
-                              <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
-                                Student Answer
-                              </th>
-                              <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
-                                Status
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {page.questions.map((q, i) => (
-                              <tr
+                    <h4 className="text-lg font-semibold mb-3 text-blue-700">
+                      Test Questions
+                    </h4>
+                    <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                      {selectedTestQuestions.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-blue-50 border border-blue-100 rounded p-3"
+                        >
+                          <p className="font-semibold text-gray-800">
+                            Q{idx + 1}: {q.question_text}
+                          </p>
+                          <ul className="list-disc ml-5 text-sm text-gray-700">
+                            {q.options.map((opt, i) => (
+                              <li
                                 key={i}
-                                className={`transition-colors ${
-                                  q.status === "correct"
-                                    ? "bg-green-50 hover:bg-green-100"
-                                    : q.status === "incorrect"
-                                    ? "bg-red-50 hover:bg-red-100"
-                                    : "bg-gray-50 hover:bg-gray-100"
-                                }`}
+                                className={
+                                  opt === q.correctanswer
+                                    ? "text-green-600 font-medium"
+                                    : ""
+                                }
                               >
-                                <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">
-                                  {q.question}
-                                </td>
-                                <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-bold text-blue-600">
-                                  {q.correctAnswer}
-                                </td>
-                                <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-bold">
-                                  <span
-                                    className={
-                                      q.status === "correct"
-                                        ? "text-green-600"
-                                        : q.status === "incorrect"
-                                        ? "text-red-600"
-                                        : "text-gray-600"
-                                    }
-                                  >
-                                    {q.studentAnswer}
-                                  </span>
-                                </td>
-                                <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center">
-                                  {q.status === "correct" ? (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-xs">
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">
-                                        Correct
-                                      </span>
-                                      <span className="sm:hidden">✓</span>
-                                    </span>
-                                  ) : q.status === "incorrect" ? (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold text-xs">
-                                      <XCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">
-                                        Incorrect
-                                      </span>
-                                      <span className="sm:hidden">✗</span>
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold text-xs">
-                                      <XCircle className="w-3 h-3 mr-1" />
-                                      <span className="hidden sm:inline">
-                                        Unanswered
-                                      </span>
-                                      <span className="sm:hidden">-</span>
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
+                                {opt}
+                              </li>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          </ul>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
-                ))}
-              </div>
+                )}
 
-              {/* Submit Button */}
+                {/* Question Paper Upload */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <FileUploadZone
+                    onFileSelect={setQuestionPaperFiles}
+                    files={questionPaperFiles}
+                    label="Student Question Paper"
+                    color="purple"
+                    icon={HelpCircle}
+                  />
+                </motion.div>
+              </div>
+              {/* Evaluate Button */}
               <motion.div
-                className="pt-4 sm:pt-6"
+                className="pt-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.6 }}
               >
                 <button
-                  onClick={handleSubmitMarks}
-                  disabled={submitLoading}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
                 >
-                  {submitLoading ? (
+                  {loading ? (
                     <div className="flex items-center justify-center">
                       <Loader2 className="animate-spin -ml-1 mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                      Submitting Results...
+                      Comparing OMR & QR Sheets...
                     </div>
                   ) : (
                     <div className="flex items-center justify-center">
-                      <Send className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      Submit Marks to Database
+                      <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      Compare & Evaluate Sheets
                     </div>
                   )}
                 </button>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </form>
+          </motion.div>
+
+          {/* Results Section */}
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                className="space-y-4 sm:space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6 }}
+              >
+                {/* Summary Card */}
+                <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 text-white">
+                  <div className="flex flex-col space-y-4">
+                    <div className="text-center">
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+                        OMR & QR Comparison Complete!
+                      </h2>
+                      <p className="text-green-100 text-sm sm:text-base">
+                        {result.message}
+                      </p>
+                    </div>
+                    {/* Summary Statistics */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+                      <div className="bg-white/20 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-green-200">
+                          {result.correctAnswers}
+                        </div>
+                        <div className="text-xs opacity-90">Correct</div>
+                      </div>
+                      <div className="bg-white/20 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-red-200">
+                          {result.incorrectAnswers}
+                        </div>
+                        <div className="text-xs opacity-90">Incorrect</div>
+                      </div>
+                      <div className="bg-white/20 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-gray-200">
+                          {result.unansweredQuestions}
+                        </div>
+                        <div className="text-xs opacity-90">Unanswered</div>
+                      </div>
+                      <div className="bg-white/20 rounded-lg p-3">
+                        <div className="text-2xl font-bold">
+                          {result.accuracy}%
+                        </div>
+                        <div className="text-xs opacity-90">Accuracy</div>
+                      </div>
+                      <div className="bg-white/20 rounded-lg p-3">
+                        <div className="text-2xl font-bold">
+                          {result.totalScore}/{result.maxScore}
+                        </div>
+                        <div className="text-xs opacity-90">Score</div>
+                      </div>
+                    </div>
+                    {/* Comparison Details */}
+                    {result.comparisonDetails && (
+                      <div className="text-center text-sm text-green-100">
+                        <p>
+                          Answer Key OMR:{" "}
+                          {result.comparisonDetails.answerKeyMarked}/
+                          {result.comparisonDetails.totalAnswerKeyQuestions}{" "}
+                          marked
+                        </p>
+                        <p>
+                          Student Paper OMR:{" "}
+                          {result.comparisonDetails.studentMarked}/
+                          {result.comparisonDetails.totalStudentQuestions}{" "}
+                          marked
+                        </p>
+                      </div>
+                    )}
+                    {/* QR Code Details */}
+                    <div className="bg-white/20 rounded-lg p-3 text-center text-sm">
+                      <h3 className="font-bold text-lg mb-2 flex items-center justify-center">
+                        <QrCode className="w-5 h-5 mr-2" /> QR Code Verification
+                      </h3>
+                      <p
+                        className={`font-semibold ${
+                          result.qrComparisonStatus === "matched"
+                            ? "text-green-200"
+                            : "text-red-200"
+                        }`}
+                      >
+                        Status: {result.qrComparisonMessage}
+                      </p>
+                      {result.answerKeyQrData && (
+                        <div className="mt-2">
+                          <p className="font-semibold text-green-100">
+                            Answer Key QR:
+                          </p>
+                          <p>
+                            Test Name:{" "}
+                            {result.answerKeyQrData.testName || "N/A"}
+                          </p>
+                          <p>
+                            Test ID: {result.answerKeyQrData.testId || "N/A"}
+                          </p>
+                          <p>
+                            Batch Name:{" "}
+                            {result.answerKeyQrData.batchName || "N/A"}
+                          </p>
+                        </div>
+                      )}
+                      {result.questionPaperQrData && (
+                        <div className="mt-2">
+                          <p className="font-semibold text-green-100">
+                            Student Paper QR:
+                          </p>
+                          <p>
+                            Student ID:{" "}
+                            {result.questionPaperQrData.studentId || "N/A"}
+                          </p>
+                          <p>
+                            Test Name:{" "}
+                            {result.questionPaperQrData.testName || "N/A"}
+                          </p>
+                          <p>
+                            Test ID:{" "}
+                            {result.questionPaperQrData.testId || "N/A"}
+                          </p>
+                          <p>
+                            Subject:{" "}
+                            {result.questionPaperQrData.subject || "N/A"}
+                          </p>
+                          <p>
+                            Chapter:{" "}
+                            {result.questionPaperQrData.chapter || "N/A"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Processed Images Display */}
+                {(result.answerKeyImage || result.questionPaperImage) && (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {/* Answer Key Image */}
+                    {result.answerKeyImage && (
+                      <motion.div
+                        className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
+                          <h3 className="text-lg font-bold">
+                            Answer Key (Processed)
+                          </h3>
+                        </div>
+                        <div className="p-4">
+                          <img
+                            src={`data:image/png;base64,${result.answerKeyImage}`}
+                            alt="Processed Answer Key"
+                            className="w-full h-auto max-h-64 object-contain border border-gray-200 rounded-lg"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                    {/* Question Paper Image */}
+                    {result.questionPaperImage && (
+                      <motion.div
+                        className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-4 text-white">
+                          <h3 className="text-lg font-bold">
+                            Student Paper (Processed)
+                          </h3>
+                        </div>
+                        <div className="p-4">
+                          <img
+                            src={`data:image/png;base64,${result.questionPaperImage}`}
+                            alt="Processed Question Paper"
+                            className="w-full h-auto max-h-64 object-contain border border-gray-200 rounded-lg"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* Detailed Results Table */}
+                <div className="space-y-4 sm:space-y-6">
+                  {result.pages.map((page, idx) => (
+                    <motion.div
+                      key={idx}
+                      className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      {/* Page Header */}
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 sm:p-6 text-white">
+                        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
+                          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold">
+                            Page {page.page}
+                          </h3>
+                          <div className="flex space-x-4 text-center">
+                            <div>
+                              <div className="text-xl font-bold text-green-200">
+                                {page.correct}
+                              </div>
+                              <div className="text-xs opacity-90">Correct</div>
+                            </div>
+                            <div>
+                              <div className="text-xl font-bold text-red-200">
+                                {page.incorrect}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                Incorrect
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xl font-bold text-gray-200">
+                                {page.unanswered}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                Unanswered
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Questions Table */}
+                      <div className="p-3 sm:p-6">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse text-xs sm:text-sm">
+                            <thead>
+                              <tr className="bg-gradient-to-r from-gray-100 to-gray-200">
+                                <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
+                                  Q#
+                                </th>
+                                <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
+                                  Correct Answer
+                                </th>
+                                <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
+                                  Student Answer
+                                </th>
+                                <th className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-bold">
+                                  Status
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {page.questions.map((q, i) => (
+                                <tr
+                                  key={i}
+                                  className={`transition-colors ${
+                                    q.status === "correct"
+                                      ? "bg-green-50 hover:bg-green-100"
+                                      : q.status === "incorrect"
+                                      ? "bg-red-50 hover:bg-red-100"
+                                      : "bg-gray-50 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">
+                                    {q.question}
+                                  </td>
+                                  <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-bold text-blue-600">
+                                    {q.correctAnswer}
+                                  </td>
+                                  <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center font-bold">
+                                    <span
+                                      className={
+                                        q.status === "correct"
+                                          ? "text-green-600"
+                                          : q.status === "incorrect"
+                                          ? "text-red-600"
+                                          : "text-gray-600"
+                                      }
+                                    >
+                                      {q.studentAnswer}
+                                    </span>
+                                  </td>
+                                  <td className="border-2 border-gray-300 px-2 sm:px-4 py-2 sm:py-3 text-center">
+                                    {q.status === "correct" ? (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-xs">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        <span className="hidden sm:inline">
+                                          Correct
+                                        </span>
+                                        <span className="sm:hidden">✓</span>
+                                      </span>
+                                    ) : q.status === "incorrect" ? (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold text-xs">
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        <span className="hidden sm:inline">
+                                          Incorrect
+                                        </span>
+                                        <span className="sm:hidden">✗</span>
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold text-xs">
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        <span className="hidden sm:inline">
+                                          Unanswered
+                                        </span>
+                                        <span className="sm:hidden">-</span>
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Submit Button */}
+                <motion.div
+                  className="pt-4 sm:pt-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <button
+                    onClick={handleSubmitMarks}
+                    disabled={submitLoading}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
+                  >
+                    {submitLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="animate-spin -ml-1 mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                        Submitting Results...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <Send className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        Submit Marks to Database
+                      </div>
+                    )}
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <FloatingWhatsAppCTA
+          phone="+91XXXXXXXXXX" // <-- replace with your WhatsApp number
+          message={() => {
+            // Prefill message using current context (selected test, counts, etc.)
+            const testLine = selectedTest
+              ? `\nTest: ${selectedTest.testname} (${selectedTest.subject}) | Batch: ${selectedTest.batch_name}`
+              : "";
+            const qCount = selectedTestQuestions?.length || 0;
+            return (
+              "Hi NEET720 team, I want you to handle OMR + QR comparison and upload results for me." +
+              testLine +
+              (qCount ? `\nQuestions detected: ${qCount}` : "") +
+              "\nPlease contact me."
+            );
+          }}
+          label="We’ll do this for you — WhatsApp us!"
+        />
       </div>
-      <FloatingWhatsAppCTA
-        phone="+91XXXXXXXXXX" // <-- replace with your WhatsApp number
-        message={() => {
-          // Prefill message using current context (selected test, counts, etc.)
-          const testLine = selectedTest
-            ? `\nTest: ${selectedTest.testname} (${selectedTest.subject}) | Batch: ${selectedTest.batch_name}`
-            : "";
-          const qCount = selectedTestQuestions?.length || 0;
-          return (
-            "Hi NEET720 team, I want you to handle OMR + QR comparison and upload results for me." +
-            testLine +
-            (qCount ? `\nQuestions detected: ${qCount}` : "") +
-            "\nPlease contact me."
-          );
-        }}
-        label="We’ll do this for you — WhatsApp us!"
-      />
-    </div>
+    </LayoutWithNav>
   );
 };
 

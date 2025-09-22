@@ -1,10 +1,12 @@
-import AddStaffPage from '@/components/controll-staff/AddStaffPage'
-import React from 'react'
-
+import AddStaffPage from "@/components/controll-staff/AddStaffPage";
+import React from "react";
+import LayoutWithNav from "../mainLayout";
 export default function page() {
   return (
     <div>
-      <AddStaffPage />
+      <LayoutWithNav>
+        <AddStaffPage />
+      </LayoutWithNav>
     </div>
-  )
+  );
 }

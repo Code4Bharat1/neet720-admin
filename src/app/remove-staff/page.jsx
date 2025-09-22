@@ -1,10 +1,12 @@
-import RemoveStaffPage from '@/components/controll-staff/RemoveStaffPage'
-import React from 'react'
-
+import RemoveStaffPage from "@/components/controll-staff/RemoveStaffPage";
+import React from "react";
+import LayoutWithNav from "../mainLayout";
 export default function page() {
   return (
     <div>
-      <RemoveStaffPage />
+      <LayoutWithNav>
+        <RemoveStaffPage />
+      </LayoutWithNav>
     </div>
-  )
+  );
 }

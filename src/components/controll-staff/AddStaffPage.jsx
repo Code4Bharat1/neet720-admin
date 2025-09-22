@@ -17,6 +17,8 @@ import {
   Building,
   Key,
   ArrowLeft,
+  UserMinus,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -24,7 +26,6 @@ export default function AddStaffPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    AdminId: "",
     PassKey: "",
     name: "",
     Course: "",
@@ -37,6 +38,33 @@ export default function AddStaffPage() {
     HodName: "",
     role: "admin",
   });
+
+  const generatePassword = () => {
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#  const handleChange = (e) => {*";
+    const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+    const numberChars = "0123456789";
+    const specialChars = "@#  const handleChange = (e) => {*";
+    
+    let password = "";
+    
+    // Ensure at least one character from each category
+    password += uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)];
+    password += lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)];
+    password += numberChars[Math.floor(Math.random() * numberChars.length)];
+    password += specialChars[Math.floor(Math.random() * specialChars.length)];
+    
+    // Fill the remaining characters randomly
+    for (let i = 4; i < 12; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
+    }
+    
+    // Shuffle the password to avoid predictable patterns
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    
+    setFormData((prev) => ({ ...prev, PassKey: password }));
+    toast.success("Password generated successfully! 🔐", { duration: 3000 });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -110,7 +138,6 @@ export default function AddStaffPage() {
     try {
       const payload = {
         created_by_admin_id: claims.id,
-        AdminId: formData.AdminId,
         PassKey: formData.PassKey,
         name: formData.name,
         Course: formData.Course,
@@ -138,7 +165,6 @@ export default function AddStaffPage() {
       );
 
       setFormData({
-        AdminId: "",
         PassKey: "",
         name: "",
         Course: "",
@@ -183,22 +209,23 @@ export default function AddStaffPage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link
+              {/* <Link
                 href="/admindashboard" // change this to your desired back route
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
-              </Link>
+              </Link> */}
 
               <Link
                 href="/remove-staff"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <UserMinus className="w-4 h-4" />
                 Remove Admin
               </Link>
-              <div className="hidden md:block">
+              
+              {/* <div className="hidden md:block">
                 <Image
                   src="/neet720_logo.jpg"
                   alt="Neet720 Logo"
@@ -206,7 +233,7 @@ export default function AddStaffPage() {
                   height={20}
                   className="object-fit"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -216,7 +243,7 @@ export default function AddStaffPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
           {/* Form Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-8">
+          {/* <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-8">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold text-white flex items-center">
@@ -231,7 +258,7 @@ export default function AddStaffPage() {
                 <Shield className="w-12 h-12 text-white/80" />
               </div>
             </div>
-          </div>
+          </div> */}
 
           <form onSubmit={handleSubmit} className="p-8">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
@@ -250,23 +277,6 @@ export default function AddStaffPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Admin ID */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      <Shield className="w-4 h-4 inline mr-2 text-blue-600" />
-                      Admin ID
-                    </label>
-                    <input
-                      type="text"
-                      name="AdminId"
-                      value={formData.AdminId}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
-                      placeholder="Enter unique admin ID"
-                    />
-                  </div>
-
                   {/* Password */}
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -280,19 +290,36 @@ export default function AddStaffPage() {
                         value={formData.PassKey}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-4 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
+                        className="w-full px-4 py-4 pr-24 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
                         placeholder="Enter secure password"
                       />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                          title={showPassword ? "Hide Password" : "Show Password"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <p className="text-xs text-gray-500">
+                        Must be at least 8 characters with uppercase, lowercase, numbers & symbols
+                      </p>
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 p-1"
+                        onClick={generatePassword}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-all duration-200"
                       >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
+                        <RefreshCw className="w-3 h-3" />
+                        Auto Generate
                       </button>
                     </div>
                   </div>

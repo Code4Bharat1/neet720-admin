@@ -8,17 +8,12 @@ import {
   UserMinus,
   User,
   Mail,
-  Calendar,
   Shield,
   AlertTriangle,
   Search,
-  Filter,
-  Download,
-  CheckCircle,
-  XCircle,
-  Clock,
   ArrowLeft,
   Trash2,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
@@ -28,24 +23,23 @@ export default function RemoveStaffPage() {
   const [deleteData, setDeleteData] = useState({ AdminId: "", reason: "" });
   const [adminList, setAdminList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [error, setError] = useState(null);
+
   function getAuthToken() {
     if (typeof window === "undefined") return null;
     return (
-      // adjust keys to your app
       localStorage.getItem("adminAuthToken") ||
       sessionStorage.getItem("adminAuthToken") ||
       getCookie("adminAuthToken")
     );
   }
+
   function decodeJwtNoVerify(token) {
     if (!token || typeof token !== "string") return null;
     const parts = token.split(".");
     if (parts.length < 2) return null;
 
     const payloadB64 = parts[1];
-    // base64url -> base64 + padding
     const b64 = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
     const padded = b64 + "=".repeat((4 - (b64.length % 4 || 4)) % 4);
 
@@ -53,23 +47,22 @@ export default function RemoveStaffPage() {
       const json = atob(padded);
       return JSON.parse(json);
     } catch {
-      return null; // invalid/garbled token
+      return null;
     }
   }
+
   const fetchAdminList = async () => {
     try {
       const token = getAuthToken();
       if (!token) return { token: null, creatorId: null, claims: null };
       const claims = decodeJwtNoVerify(token);
-      console.log("response : ", claims.id);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/superadmin/getStaff`,
         { params: { adminId: claims.id } }
       );
-      console.log("data :", res.data?.data);
       setAdminList(res.data?.data || []);
     } catch (err) {
-      toast.error("Failed to load admin list");
+      toast.error("Failed to load staff list");
     }
   };
 
@@ -87,7 +80,7 @@ export default function RemoveStaffPage() {
     if (!deleteData.AdminId) return;
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete admin with ID: ${deleteData.AdminId}?`
+      `Are you sure you want to remove staff member with ID: ${deleteData.AdminId}?`
     );
     if (!confirmed) return;
 
@@ -100,7 +93,7 @@ export default function RemoveStaffPage() {
         { AdminId: deleteData.AdminId, reason: deleteData.reason }
       );
 
-      toast.success("Admin Removed Successfully ✅", { duration: 5000 });
+      toast.success("Staff Member Removed Successfully", { duration: 5000 });
       setDeleteData({ AdminId: "", reason: "" });
       fetchAdminList();
     } catch (err) {
@@ -113,49 +106,15 @@ export default function RemoveStaffPage() {
     }
   };
 
-  const getStatusTag = (expiryDate) => {
-    if (!expiryDate)
-      return (
-        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-          <Clock className="w-3 h-3 mr-1.5" />
-          No Expiry
-        </span>
-      );
-
-    const today = new Date();
-    const exp = new Date(expiryDate);
-    return exp > today ? (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-        <CheckCircle className="w-3 h-3 mr-1.5" />
-        Active
-      </span>
-    ) : (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
-        <XCircle className="w-3 h-3 mr-1.5" />
-        Expired
-      </span>
-    );
-  };
-
   const filteredAdmins = useMemo(() => {
     return (adminList || []).filter((admin) => {
-      const matchesSearch =
+      return (
         admin.AdminId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        admin.Email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      if (filterStatus === "all") return matchesSearch;
-
-      const isActive = admin.ExpiryDate
-        ? new Date(admin.ExpiryDate) > new Date()
-        : false;
-
-      if (filterStatus === "active") return matchesSearch && isActive;
-      if (filterStatus === "expired") return matchesSearch && !isActive;
-      if (filterStatus === "null") return matchesSearch && !admin.ExpiryDate;
-
-      return matchesSearch;
+        admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        admin.Email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     });
-  }, [adminList, searchTerm, filterStatus]);
+  }, [adminList, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-pink-50">
@@ -169,63 +128,54 @@ export default function RemoveStaffPage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Remove Admin
+                  Remove Staff
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Permanently remove an admin account
+                  Remove a staff member from your team
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <Link
-                href="/admindashboard" // change this to your desired back route
+              {/* <Link
+                href="/admindashboard"
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
-              </Link>
+              </Link> */}
               <Link
                 href="/add-staff"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Add Admin
+                <UserPlus className="w-4 h-4" />
+                Add Staff
               </Link>
-              <div className="hidden md:block">
-                <Image
-                  src="/neet720_logo.jpg"
-                  alt="Neet720 Logo"
-                  width={60}
-                  height={20}
-                  className="object-fit"
-                />
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Remove Form */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-red-600 via-red-700 to-pink-700 px-8 py-8">
+          {/* <div className="bg-gradient-to-r from-red-600 via-red-700 to-pink-700 px-8 py-8">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold text-white flex items-center">
                   <UserMinus className="w-8 h-8 mr-3" />
-                  Remove Admin Account
+                  Remove Staff Member
                 </h2>
                 <p className="text-red-100 mt-2 text-lg">
-                  Enter Admin ID and reason to permanently remove an admin
+                  Enter staff ID and reason to remove a team member
                 </p>
               </div>
               <div className="hidden sm:block p-4 bg-white/10 rounded-2xl">
                 <Trash2 className="w-12 h-12 text-white/80" />
               </div>
             </div>
-          </div>
+          </div> */}
 
           <form onSubmit={handleDelete} className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -233,7 +183,7 @@ export default function RemoveStaffPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     <Shield className="w-4 h-4 inline mr-2 text-red-600" />
-                    Admin ID to Remove
+                    Staff ID to Remove
                   </label>
                   <input
                     type="text"
@@ -242,7 +192,7 @@ export default function RemoveStaffPage() {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50/50 hover:bg-white"
-                    placeholder="Enter admin ID to remove"
+                    placeholder="Enter staff ID to remove"
                   />
                   <p className="text-xs text-gray-500 mt-2">
                     This action cannot be undone
@@ -263,7 +213,7 @@ export default function RemoveStaffPage() {
                     required
                     rows={4}
                     className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 resize-none bg-gray-50/50 hover:bg-white"
-                    placeholder="Provide a detailed reason for removing this admin"
+                    placeholder="Provide a reason for removing this staff member"
                   />
                 </div>
               </div>
@@ -278,12 +228,12 @@ export default function RemoveStaffPage() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <span>Removing Admin...</span>
+                    <span>Removing Staff...</span>
                   </>
                 ) : (
                   <>
                     <UserMinus className="w-6 h-6" />
-                    <span>Remove Admin Account</span>
+                    <span>Remove Staff Member</span>
                   </>
                 )}
               </button>
@@ -291,7 +241,7 @@ export default function RemoveStaffPage() {
           </form>
         </div>
 
-        {/* Admin List */}
+        {/* Staff List */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
           <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-8 border-b border-gray-200/60">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
@@ -300,41 +250,22 @@ export default function RemoveStaffPage() {
                   <div className="p-2 bg-blue-100 rounded-lg mr-3">
                     <User className="w-6 h-6 text-blue-600" />
                   </div>
-                  Admin Status Overview
+                  Your Team Members
                 </h3>
                 <p className="text-gray-600 mt-2 text-lg">
-                  Monitor and manage all admin accounts ({adminList.length}{" "}
-                  total)
+                  Manage your staff ({adminList.length}/4 members)
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search by ID or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 pr-4 py-3 w-64 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80"
-                  />
-                </div>
-
-                {/* Filter */}
-                <div className="relative">
-                  <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-white/80 font-medium"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="active">Active Only</option>
-                    <option value="expired">Expired Only</option>
-                    <option value="null">No Expiry Set</option>
-                  </select>
-                </div>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search staff members..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 py-3 w-64 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80"
+                />
               </div>
             </div>
           </div>
@@ -348,16 +279,13 @@ export default function RemoveStaffPage() {
                     Sr. No
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Admin Details
+                    Staff Details
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Contact Information
+                    Contact
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Expiry Date
+                    Role
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
@@ -384,13 +312,10 @@ export default function RemoveStaffPage() {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-bold text-gray-900">
-                            {admin.AdminId || "-"}
-                          </div>
-                          <div className="text-sm text-gray-600 font-medium">
                             {admin.name || "N/A"}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Role: {admin.role || "admin"}
+                          <div className="text-sm text-gray-600">
+                            ID: {admin.AdminId || "-"}
                           </div>
                         </div>
                       </div>
@@ -403,46 +328,22 @@ export default function RemoveStaffPage() {
                         </div>
                         {admin.mobileNumber && (
                           <div className="text-xs text-gray-600">
-                            📱 {admin.mobileNumber}
+                            Phone: {admin.mobileNumber}
                           </div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
-                      {getStatusTag(admin.ExpiryDate)}
-                    </td>
-                    <td className="px-6 py-5 whitespace-nowrap">
-                      {admin.ExpiryDate ? (
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {new Date(admin.ExpiryDate).toLocaleDateString()}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {Math.ceil(
-                                (new Date(admin.ExpiryDate) - new Date()) /
-                                  (1000 * 60 * 60 * 24)
-                              )}{" "}
-                              days
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                          <span className="text-gray-500 font-medium">
-                            No expiry set
-                          </span>
-                        </div>
-                      )}
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                        {admin.role || "admin"}
+                      </span>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
                       <Link
-                        href={`/edit-staff/${admin.id}`} // route to edit page with AdminId
-                        className="inline-flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200"
+                        href={`/edit-staff/${admin.id}`}
+                        className="inline-flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200 mr-2"
                       >
-                        <Pencil className="w-4 h-4 mr-2" />
+                        <Pencil className="w-4 h-4 mr-1" />
                         Edit
                       </Link>
                     </td>
@@ -456,11 +357,12 @@ export default function RemoveStaffPage() {
                           <User className="w-12 h-12 text-gray-400" />
                         </div>
                         <p className="text-gray-600 text-xl font-bold mb-2">
-                          No admins found
+                          No staff members found
                         </p>
                         <p className="text-gray-500 text-sm max-w-md">
-                          No admins match your current search criteria. Try
-                          adjusting your search terms or filter settings.
+                          {adminList.length === 0
+                            ? "You haven't added any staff members yet."
+                            : "No staff members match your search criteria."}
                         </p>
                       </div>
                     </td>
