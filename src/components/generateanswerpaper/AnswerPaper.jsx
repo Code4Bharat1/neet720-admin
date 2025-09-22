@@ -1,9 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Settings, FileText, Eye, Printer, RotateCcw, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Settings,
+  FileText,
+  Eye,
+  Printer,
+  RotateCcw,
+  Download,
+} from "lucide-react";
 import axios from "axios";
-
+import { IoIosArrowBack } from "react-icons/io";
+import { useRouter } from "next/navigation";
 export default function AnswerPaper() {
+  const router = useRouter();
   const [showWatermark, setShowWatermark] = useState(false);
   const [showSolutions, setShowSolutions] = useState(true);
   const [showSubjects, setShowSubjects] = useState(false);
@@ -21,17 +31,19 @@ export default function AnswerPaper() {
       const optionsObj = {};
       if (item.options && Array.isArray(item.options)) {
         item.options.forEach((option, idx) => {
-          const letters = ['a', 'b', 'c', 'd'];
+          const letters = ["a", "b", "c", "d"];
           optionsObj[letters[idx]] = option;
         });
       }
 
       // Find correct answer key
-      let correctAnswerKey = '';
+      let correctAnswerKey = "";
       if (item.correctanswer && item.options) {
-        const correctIndex = item.options.findIndex(option => option === item.correctanswer);
+        const correctIndex = item.options.findIndex(
+          (option) => option === item.correctanswer
+        );
         if (correctIndex !== -1) {
-          const letters = ['a', 'b', 'c', 'd'];
+          const letters = ["a", "b", "c", "d"];
           correctAnswerKey = letters[correctIndex];
         }
       }
@@ -41,16 +53,17 @@ export default function AnswerPaper() {
         question_text: item.question_text || "",
         options: Object.keys(optionsObj).length > 0 ? optionsObj : null,
         correctanswer: correctAnswerKey,
-        solution: item.solution || `The correct answer is: ${item.correctanswer}`,
+        solution:
+          item.solution || `The correct answer is: ${item.correctanswer}`,
         marks: item.marks || 4,
-        subject: item.subject || "General"
+        subject: item.subject || "General",
       };
     });
   };
 
   useEffect(() => {
     // Load the backend data
-    const loadQuestions = async() => {
+    const loadQuestions = async () => {
       setLoading(true);
       try {
         const testid = localStorage.getItem("testid");
@@ -60,14 +73,17 @@ export default function AnswerPaper() {
         }
 
         // Sample backend data - replace this with your actual API call
-        const data = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`, {testid})
-        console.log(data.data)
+        const data = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/get-questions`,
+          { testid }
+        );
+        console.log(data.data);
         const transformedData = transformQuestionData(data.data.data);
         setQuestions(transformedData);
         setError(null);
       } catch (err) {
-        setError('Failed to load questions');
-        console.error('Error loading questions:', err);
+        setError("Failed to load questions");
+        console.error("Error loading questions:", err);
       } finally {
         setLoading(false);
       }
@@ -107,34 +123,64 @@ export default function AnswerPaper() {
           <div class="question-block">
             <div class="question-number">${idx + 1}.</div>
             <div class="question-main">
-              <div class="question-text">${q.question_text.replace(/\n/g, '<br>')}</div>
-              ${q.options ? `
+              <div class="question-text">${q.question_text.replace(
+                /\n/g,
+                "<br>"
+              )}</div>
+              ${
+                q.options
+                  ? `
                 <div class="options-block">
                   ${Object.entries(q.options)
-              .map(([key, value]) => `
-                      <div class="option-row${q.correctanswer && q.correctanswer.toLowerCase() === key.toLowerCase()
-                  ? " correct"
-                  : ""
-                }">
+                    .map(
+                      ([key, value]) => `
+                      <div class="option-row${
+                        q.correctanswer &&
+                        q.correctanswer.toLowerCase() === key.toLowerCase()
+                          ? " correct"
+                          : ""
+                      }">
                         <span class="option-letter">${key.toUpperCase()})</span>
                         <span>${value}</span>
                       </div>
-                    `).join("")}
+                    `
+                    )
+                    .join("")}
                 </div>
-              ` : ""}
-              ${showMarks ? `
-                <div class="marks-label">[${q.marks || 4} Mark${(q.marks || 4) > 1 ? "s" : ""}]</div>
-              ` : ""}
-              ${showSolutions ? `
+              `
+                  : ""
+              }
+              ${
+                showMarks
+                  ? `
+                <div class="marks-label">[${q.marks || 4} Mark${
+                      (q.marks || 4) > 1 ? "s" : ""
+                    }]</div>
+              `
+                  : ""
+              }
+              ${
+                showSolutions
+                  ? `
                 <div class="solution-block">
                   <div class="solution-title">Solution & Answer</div>
-                  ${q.correctanswer ? `
+                  ${
+                    q.correctanswer
+                      ? `
                     <div class="correct-answer">
-                      <strong>Correct Answer:</strong> ${q.correctanswer.toUpperCase()}) ${q.options ? q.options[q.correctanswer.toLowerCase()] : ''}
+                      <strong>Correct Answer:</strong> ${q.correctanswer.toUpperCase()}) ${
+                          q.options
+                            ? q.options[q.correctanswer.toLowerCase()]
+                            : ""
+                        }
                     </div>
-                  ` : ""}
+                  `
+                      : ""
+                  }
                 </div>
-              ` : ""}
+              `
+                  : ""
+              }
             </div>
           </div>
         `;
@@ -337,7 +383,9 @@ export default function AnswerPaper() {
       <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-base sm:text-lg text-gray-600">Loading questions...</p>
+          <p className="text-base sm:text-lg text-gray-600">
+            Loading questions...
+          </p>
         </div>
       </div>
     );
@@ -348,7 +396,9 @@ export default function AnswerPaper() {
       <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-md w-full">
           <div className="text-red-500 text-4xl sm:text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Error Loading Questions</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+            Error Loading Questions
+          </h2>
           <p className="text-gray-600 mb-4 text-sm sm:text-base">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -365,16 +415,18 @@ export default function AnswerPaper() {
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg gap-4 sm:gap-0">
-          <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-2 sm:p-3 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:shadow-xl transform hover:scale-105 order-1 sm:order-none">
-            <ArrowLeft size={16} className="sm:hidden" />
-            <ArrowLeft size={20} className="hidden sm:block" />
-          </button>
-
-          <div className="text-center order-2 sm:order-none">
+        <button
+          onClick={() => router.push("/offline_mode")}
+          className="flex items-center gap-1 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
+        >
+          <IoIosArrowBack className="text-xl" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+          <div className="text-center">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
               <FileText className="text-blue-600" size={20} />
-              <span className="text-center">Answer Paper Generator</span>
+              <span>Answer Paper Generator</span>
             </h1>
             <p className="text-gray-600 text-sm sm:text-base px-2">
               Generate printable answer keys with solutions and explanations
@@ -383,8 +435,6 @@ export default function AnswerPaper() {
               {questions.length} questions loaded
             </div>
           </div>
-
-          <div className="w-8 sm:w-12 order-3 sm:order-none"></div>
         </div>
 
         {/* Configuration Section */}
@@ -425,7 +475,9 @@ export default function AnswerPaper() {
                   onChange={(e) => setShowWatermark(e.target.checked)}
                 />
                 <div className="flex-1">
-                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Watermark</span>
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">
+                    Show Watermark
+                  </span>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Adds "ANSWER KEY" watermark to prevent copying
                   </p>
@@ -440,7 +492,9 @@ export default function AnswerPaper() {
                   onChange={(e) => setShowSubjects(e.target.checked)}
                 />
                 <div className="flex-1">
-                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Subject Headers</span>
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">
+                    Show Subject Headers
+                  </span>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Groups questions by subject with clear headers
                   </p>
@@ -461,7 +515,9 @@ export default function AnswerPaper() {
                   onChange={(e) => setShowSolutions(e.target.checked)}
                 />
                 <div className="flex-1">
-                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Solutions</span>
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">
+                    Show Solutions
+                  </span>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Includes detailed explanations and solutions
                   </p>
@@ -476,7 +532,9 @@ export default function AnswerPaper() {
                   onChange={(e) => setShowMarks(e.target.checked)}
                 />
                 <div className="flex-1">
-                  <span className="font-medium text-gray-800 text-sm sm:text-base">Show Marks</span>
+                  <span className="font-medium text-gray-800 text-sm sm:text-base">
+                    Show Marks
+                  </span>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Displays mark allocation for each question
                   </p>
@@ -516,7 +574,8 @@ export default function AnswerPaper() {
                   Answer Paper Preview
                 </h2>
                 <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                  Review your answer key before printing • {questions.length} questions
+                  Review your answer key before printing • {questions.length}{" "}
+                  questions
                 </p>
               </div>
 
@@ -549,15 +608,20 @@ export default function AnswerPaper() {
                 {(() => {
                   let currentSubject = null;
                   return questions.map((q, index) => (
-                    <div key={q.id || index} className="mb-6 sm:mb-8 border-l-2 sm:border-l-4 border-blue-200 pl-3 sm:pl-6 ml-1 sm:ml-2">
-                      {showSubjects && q.subject !== currentSubject && (() => {
-                        currentSubject = q.subject;
-                        return (
-                          <h3 className="text-lg sm:text-xl font-bold text-center uppercase border-b-2 border-blue-400 pb-2 sm:pb-3 mb-4 sm:mb-6 mt-4 sm:mt-6 text-blue-700 bg-blue-50 p-3 sm:p-4 rounded-lg">
-                            {q.subject}
-                          </h3>
-                        );
-                      })()}
+                    <div
+                      key={q.id || index}
+                      className="mb-6 sm:mb-8 border-l-2 sm:border-l-4 border-blue-200 pl-3 sm:pl-6 ml-1 sm:ml-2"
+                    >
+                      {showSubjects &&
+                        q.subject !== currentSubject &&
+                        (() => {
+                          currentSubject = q.subject;
+                          return (
+                            <h3 className="text-lg sm:text-xl font-bold text-center uppercase border-b-2 border-blue-400 pb-2 sm:pb-3 mb-4 sm:mb-6 mt-4 sm:mt-6 text-blue-700 bg-blue-50 p-3 sm:p-4 rounded-lg">
+                              {q.subject}
+                            </h3>
+                          );
+                        })()}
 
                       <div className="flex mb-3 sm:mb-4 items-start">
                         <span className="font-bold mr-3 sm:mr-4 mt-1 min-w-[30px] sm:min-w-[40px] text-gray-800 text-base sm:text-lg flex-shrink-0">
@@ -574,15 +638,20 @@ export default function AnswerPaper() {
                               {Object.entries(q.options).map(([key, value]) => (
                                 <div
                                   key={key}
-                                  className={`flex items-start p-2 sm:p-3 rounded-lg transition-all duration-200 ${q.correctanswer && q.correctanswer.toLowerCase() === key.toLowerCase()
+                                  className={`flex items-start p-2 sm:p-3 rounded-lg transition-all duration-200 ${
+                                    q.correctanswer &&
+                                    q.correctanswer.toLowerCase() ===
+                                      key.toLowerCase()
                                       ? "bg-green-100 border-l-2 sm:border-l-4 border-green-500 shadow-sm"
                                       : "hover:bg-gray-50 border border-gray-200"
-                                    }`}
+                                  }`}
                                 >
                                   <span className="font-semibold mr-2 sm:mr-4 min-w-[25px] sm:min-w-[30px] text-blue-600 flex-shrink-0 text-sm sm:text-base">
                                     {key.toUpperCase()})
                                   </span>
-                                  <span className="leading-relaxed flex-1 text-sm sm:text-base break-words">{value}</span>
+                                  <span className="leading-relaxed flex-1 text-sm sm:text-base break-words">
+                                    {value}
+                                  </span>
                                 </div>
                               ))}
                             </div>
@@ -590,7 +659,8 @@ export default function AnswerPaper() {
 
                           {showMarks && (
                             <div className="text-right text-xs sm:text-sm text-red-600 mb-3 sm:mb-4 italic font-medium">
-                              [{q.marks || 4} Mark{(q.marks || 4) > 1 ? "s" : ""}]
+                              [{q.marks || 4} Mark
+                              {(q.marks || 4) > 1 ? "s" : ""}]
                             </div>
                           )}
 
@@ -602,9 +672,14 @@ export default function AnswerPaper() {
 
                               {q.correctanswer && (
                                 <div className="bg-green-100 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4 border-l-2 sm:border-l-4 border-green-500">
-                                  <strong className="text-green-800 text-sm sm:text-base lg:text-lg">Correct Answer: </strong>
+                                  <strong className="text-green-800 text-sm sm:text-base lg:text-lg">
+                                    Correct Answer:{" "}
+                                  </strong>
                                   <span className="ml-1 sm:ml-2 font-semibold text-green-700 text-sm sm:text-base lg:text-lg break-words">
-                                    {q.correctanswer.toUpperCase()}) {q.options ? q.options[q.correctanswer.toLowerCase()] : ''}
+                                    {q.correctanswer.toUpperCase()}){" "}
+                                    {q.options
+                                      ? q.options[q.correctanswer.toLowerCase()]
+                                      : ""}
                                   </span>
                                 </div>
                               )}

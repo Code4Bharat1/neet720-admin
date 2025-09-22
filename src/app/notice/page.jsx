@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import MobileNavbar from "@/components/mobilenav/mobilenav";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
 import LayoutWithNav from "../mainLayout";
+import { IoMdCreate } from "react-icons/io";
 const Page = () => {
   const [formData, setFormData] = useState({
     adminId: "",
@@ -228,7 +229,7 @@ const Page = () => {
 
   return (
     <LayoutWithNav>
-      <div className="p-6 md:ml-20 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20">
+      <div className="p-6 max-w-7xl mx-auto ml-10 max-md:ml-0 max-md:max-w-full max-sm:p-2 max-sm:mt-20">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col items-center text-center mb-4">
@@ -240,21 +241,9 @@ const Page = () => {
               </p>
               <button
                 onClick={() => setShowCreateForm(!showCreateForm)}
-                className="mt-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                className="mt-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-4"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
+                <IoMdCreate className="w-5 h-5" />
                 {showCreateForm ? "Cancel" : "Create New Notice"}
               </button>
             </div>

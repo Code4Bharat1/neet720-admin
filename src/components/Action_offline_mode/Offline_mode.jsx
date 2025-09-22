@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import {
   ArrowLeft,
@@ -189,6 +190,9 @@ const TestGeneratorUI = () => {
         </div>
       </header> */}
 
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
         onClick={() => router.push("/test_preview")}
         className="flex items-center gap-1 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
@@ -196,9 +200,6 @@ const TestGeneratorUI = () => {
         <IoIosArrowBack className="text-xl" />
         <span className="text-sm font-medium">Back</span>
       </button>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <section className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-6 shadow-lg shadow-blue-500/25">

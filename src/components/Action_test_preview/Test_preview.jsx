@@ -7,7 +7,9 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Loading from "../Loading/Loading";
-
+import { IoCloudOffline } from "react-icons/io5";
+import { FaRegEdit } from "react-icons/fa";
+import { IoIosArrowBack } from "react-icons/io";
 const TestPreview = () => {
   const router = useRouter();
   const [testData, setTestData] = useState(null);
@@ -117,7 +119,7 @@ const TestPreview = () => {
         />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* Header with Back Button */}
         {/* <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center">
@@ -131,6 +133,13 @@ const TestPreview = () => {
             <h1 className="text-xl font-bold text-gray-800">Back</h1>
           </div>
         </header> */}
+        <button
+          onClick={() => router.push("/generatetest")}
+          className="flex items-center gap-1 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
+        >
+          <IoIosArrowBack className="text-xl" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
 
         <main className="max-w-5xl mx-auto px-4 py-6">
           {/* Action Buttons */}
@@ -145,13 +154,13 @@ const TestPreview = () => {
               onClick={() => router.push("./offline_mode")}
               className="bg-amber-500 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-amber-600 transition-colors"
             >
-              <FaQuestionCircle /> Offline Mode
+              <IoCloudOffline /> Offline Mode
             </button>
             <button
               onClick={() => router.push("./edit_test")}
               className="bg-green-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors"
             >
-              <MdOutlineSchedule /> Edit Test
+              <FaRegEdit /> Edit Test
             </button>
           </div>
 
