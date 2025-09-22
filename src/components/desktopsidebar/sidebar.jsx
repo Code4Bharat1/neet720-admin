@@ -12,7 +12,8 @@ import { GiTestTubes } from "react-icons/gi";
 import { LuFileInput } from "react-icons/lu";
 import { PiStudent, PiBook } from "react-icons/pi";
 import { Scan, Layers, ChevronRight } from "lucide-react";
-
+import { LuScanText } from "react-icons/lu";
+import { IoIosPeople } from "react-icons/io";
 const Sidebar = () => {
   const pathname = usePathname();
 
@@ -136,7 +137,7 @@ const Sidebar = () => {
       },
       {
         label: "Chapter-wise question",
-        icon: <Scan className="text-xl" />,
+        icon: <LuScanText className="text-2xl" />,
         href: "/chapterwisequestion",
         allowedRoles: ["admin", "content_manager"],
         description: "Question Bank",
@@ -150,7 +151,7 @@ const Sidebar = () => {
       },
       {
         label: "Manage Staff",
-        icon: <Layers className="text-xl" />,
+        icon: <IoIosPeople className="text-2xl" />,
         href: "/add-staff",
         allowedRoles: ["admin"],
         description: "Staff Administration",
