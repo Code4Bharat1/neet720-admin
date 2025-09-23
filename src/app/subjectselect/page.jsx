@@ -5,11 +5,8 @@ import LayoutWithNav from "@/app/mainLayout";
 const Page = () => {
   return (
     <LayoutWithNav>
-      <div className="hidden md:block">
+      <div>
         <SelectSubjectPage />
-      </div>
-      <div className="md:hidden">
-        <SubjectSelectMobile />
       </div>
     </LayoutWithNav>
   );

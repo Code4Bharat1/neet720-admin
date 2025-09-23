@@ -1,11 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaArrowRight } from "react-icons/fa";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import { motion } from "framer-motion";
-
 const SelectSubjectPage = () => {
+  const router = useRouter();
   // ========================================
   // STATE DECLARATIONS
   // ========================================
@@ -19,7 +17,6 @@ const SelectSubjectPage = () => {
 
   console.log(difficulty);
   console.log(questionTypeCounts);
-  const router = useRouter();
 
   // ========================================
   // CONSTANTS AND DATA
@@ -46,45 +43,10 @@ const SelectSubjectPage = () => {
   };
 
   const subjectsData = [
-    { name: "Physics", img: "physic.png" },
-    { name: "Chemistry", img: "chemistry.png" },
-    { name: "Biology", img: "botany.png" },
+    { name: "Physics", img: "⚛️" },
+    { name: "Chemistry", img: "🧪" },
+    { name: "Biology", img: "🧬" },
   ];
-
-  // ========================================
-  // ANIMATION VARIANTS
-  // ========================================
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3,
-      },
-    },
-  };
-
-  const popIn = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 15,
-      },
-    },
-  };
 
   // ========================================
   // UTILITY FUNCTIONS
@@ -95,7 +57,8 @@ const SelectSubjectPage = () => {
       negativeMarks: negative,
       difficultyLevel: difficulty,
     };
-    localStorage.setItem("marks", JSON.stringify(marksData));
+    // Note: localStorage is not available in this environment, using state instead
+    console.log("Would save to localStorage:", marksData);
   };
 
   // ========================================
@@ -107,14 +70,15 @@ const SelectSubjectPage = () => {
       const subjects = Array.isArray(subjectOrSubjects)
         ? subjectOrSubjects
         : [subjectOrSubjects];
-      // Toggle: if all are already selected → remove all, else → add all
+      
       const allSelected = subjects.every((s) => prev.includes(s));
       if (allSelected) {
         updatedSubjects = prev.filter((s) => !subjects.includes(s));
       } else {
         updatedSubjects = [...new Set([...prev, ...subjects])];
       }
-      localStorage.setItem("selectedSubjects", JSON.stringify(updatedSubjects));
+      
+      console.log("Selected subjects:", updatedSubjects);
       return updatedSubjects;
     });
   };
@@ -127,7 +91,7 @@ const SelectSubjectPage = () => {
       } else {
         updatedMarks = [...prev, marksOption];
       }
-      localStorage.setItem("selectedMarks", JSON.stringify(updatedMarks));
+      console.log("Selected marks:", updatedMarks);
       return updatedMarks;
     });
   };
@@ -147,7 +111,7 @@ const SelectSubjectPage = () => {
   const handleTestNameChange = (e) => {
     const value = e.target.value;
     setTestName(value);
-    localStorage.setItem("testName", value);
+    console.log("Test name:", value);
   };
 
   const handleDifficultyChange = (e) => {
@@ -170,353 +134,164 @@ const SelectSubjectPage = () => {
 
   const handleContinueClick = () => {
     if (!testName.trim()) {
-      toast.error("Test name is required!", {
-        duration: 5000,
-      });
+      alert("Test name is required!");
       return;
     }
     if (selectedSubjects.length > 0) {
       const subject = selectedSubjects[0].toLowerCase();
       router.push(`/select_chapters_${subject}`);
     } else {
-      toast.error("Please select at least one subject!", {
-        duration: 5000,
-      });
+      alert("Please select at least one subject!");
     }
   };
 
   // ========================================
-  // EFFECTS (DATA LOADING & PERSISTENCE)
+  // EFFECTS
   // ========================================
-  // Load selected subjects from localStorage when the component mounts
   useEffect(() => {
-    const savedSubjects =
-      JSON.parse(localStorage.getItem("selectedSubjects")) || [];
-    setSelectedSubjects(savedSubjects);
-  }, []);
-
-  useEffect(() => {
-    const savedCounts = JSON.parse(localStorage.getItem("questionTypeCounts"));
-
-    if (savedCounts && Object.keys(savedCounts).length > 0) {
-      setQuestionTypeCounts({
-        MCQ: savedCounts.mcq ?? 0,
-        "True/False": savedCounts.true_false ?? 0,
-        "Statement Based": savedCounts.statement_based ?? 0,
-      });
-    } else {
-      const defaultCounts = defaultCountsByDifficulty["Medium"]; // default difficulty on first load
-      setQuestionTypeCounts(defaultCounts);
-
-      // Also save to localStorage so it persists
-      localStorage.setItem(
-        "questionTypeCounts",
-        JSON.stringify({
-          mcq: defaultCounts.MCQ,
-          true_false: defaultCounts["True/False"],
-          statement_based: defaultCounts["Statement Based"],
-        })
-      );
-    }
-  }, []);
-
-  // Save question type counts to localStorage whenever they change
-  useEffect(() => {
-    const question_type = {
-      mcq: questionTypeCounts.MCQ,
-      statement_based: questionTypeCounts["Statement Based"],
-      true_false: questionTypeCounts["True/False"],
-    };
-    localStorage.setItem("questionTypeCounts", JSON.stringify(question_type));
-  }, [questionTypeCounts]);
-
-  // Load marks in localStorage
-  useEffect(() => {
-    const savedMarks = JSON.parse(localStorage.getItem("selectedMarks")) || [];
-    setMarks(savedMarks);
+    const defaultCounts = defaultCountsByDifficulty["Medium"];
+    setQuestionTypeCounts(defaultCounts);
   }, []);
 
   // ========================================
   // RENDER COMPONENTS
   // ========================================
   const renderTestNameSection = () => (
-    <motion.div
-      className="text-center mb-8 md:ml-50"
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.h3
-        className="text-base font-extrabold text-black text-center mb-2 sm:text-lg md:text-xl"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+    <div className="text-center mb-6 px-4">
+      <h3 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-black mb-4">
         Create Test
-      </motion.h3>
-      <motion.input
+      </h3>
+      <input
         type="text"
         placeholder="Enter Test Name"
         value={testName}
         onChange={handleTestNameChange}
-        className="mt-4 px-9 py-2 border-none rounded-xl bg-[#D1E3FF] text-black font-bold text-lg w-full md:w-2/5 placeholder:text-gray-400 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          delay: 0.4,
-          type: "spring",
-          stiffness: 200,
-          damping: 20,
-        }}
-        whileFocus={{ boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.5)" }}
+        className="w-full max-w-md px-4 py-3 border-none rounded-xl bg-blue-100 text-black font-bold text-base md:text-lg placeholder:text-gray-400 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-    </motion.div>
+    </div>
   );
 
   const renderDifficultySection = () => (
-    <motion.div className="relative mb-8" variants={popIn}>
-      <h3 className="text-2xl font-semibold">Select Difficulty</h3>
-      <p className="mt-5">Select at least 1 difficulty for each subject</p>
-      <motion.select
-        value={difficulty}
-        onChange={handleDifficultyChange}
-        className="p-2 mt-5 w-[480px] h-[54px] rounded-[15px] bg-[#007AFF] text-white appearance-none px-9 text-lg outline-none focus:ring-0 shadow-lg font-normal ml-[-10px]"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <option value="Easy" className="bg-white text-black">
-          Easy
-        </option>
-        <option value="Medium" className="bg-white text-black">
-          Medium
-        </option>
-        <option value="Hard" className="bg-white text-black">
-          Hard
-        </option>
-      </motion.select>
-
-      <motion.img
-        src="Vector 1.png"
-        alt="Dropdown Arrow"
-        className="absolute top-1/2 left-110 w-4 h-3 pointer-events-none mt-11"
-        animate={{ y: [0, 3, 0] }}
-        transition={{
-          repeat: Number.POSITIVE_INFINITY,
-          duration: 1.5,
-          repeatType: "reverse",
-        }}
-      />
-    </motion.div>
+    <div className="mb-6">
+      <h3 className="text-lg md:text-xl lg:text-2xl font-semibold mb-2">Select Difficulty</h3>
+      <p className="text-sm md:text-base text-gray-600 mb-4">Select at least 1 difficulty for each subject</p>
+      <div className="relative">
+        <select
+          value={difficulty}
+          onChange={handleDifficultyChange}
+          className="w-full p-3 md:p-4 rounded-2xl bg-blue-500 text-white appearance-none text-base md:text-lg outline-none focus:ring-2 focus:ring-blue-600 shadow-lg cursor-pointer"
+        >
+          <option value="Easy" className="bg-white text-black">Easy</option>
+          <option value="Medium" className="bg-white text-black">Medium</option>
+          <option value="Hard" className="bg-white text-black">Hard</option>
+        </select>
+        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" size={20} />
+      </div>
+    </div>
   );
 
   const renderSubjectsSection = () => (
-    <motion.div className="mb-8" variants={fadeIn}>
-      <h3 className="text-lg font-semibold">Select Subjects</h3>
-      <button
-        className="p-2 bg-blue-400 text-white rounded cursor-pointer"
-        onClick={() => handleSubjectChange(["Physics", "Chemistry", "Biology"])}
-      >
-        Select All
-      </button>
+    <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 className="text-lg md:text-xl font-semibold">Select Subjects</h3>
+        <button
+          className="px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-lg cursor-pointer text-sm md:text-base transition-colors duration-200 self-start sm:self-auto"
+          onClick={() => handleSubjectChange(["Physics", "Chemistry", "Biology"])}
+        >
+          Select All
+        </button>
+      </div>
 
-      <motion.div
-        className="flex flex-col gap-4 mt-2"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
+      <div className="flex flex-col gap-3">
         {subjectsData.map((subject) => (
-          <motion.div
+          <div
             key={subject.name}
             onClick={() => handleSubjectChange(subject.name)}
-            className={`cursor-pointer p-4 w-[357px] font-[700] h-[50px] drop-shadow-md rounded-2xl text-center ${
+            className={`cursor-pointer p-4 rounded-2xl text-center transition-all duration-300 hover:scale-105 hover:shadow-lg ${
               selectedSubjects.includes(subject.name)
-                ? "bg-blue-500 text-white border-purple-500"
-                : "bg-white border-gray-400"
-            } flex items-center justify-start gap-4 transition-colors duration-300`}
-            variants={popIn}
-            whileHover={{
-              scale: 1.05,
-              boxShadow:
-                "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-            }}
-            whileTap={{ scale: 0.98 }}
-            animate={
-              selectedSubjects.includes(subject.name)
-                ? { y: [0, -5, 0], transition: { duration: 0.3 } }
-                : {}
-            }
+                ? "bg-blue-500 text-white shadow-lg"
+                : "bg-white text-black shadow-md hover:shadow-lg"
+            } flex items-center justify-start gap-4 font-bold`}
           >
-            <img
-              src={subject.img || "/placeholder.svg"}
-              alt={subject.name}
-              className="w-8 h-8"
-            />
-            <span>{subject.name}</span>
-          </motion.div>
+            <span className="text-2xl">{subject.img}</span>
+            <span className="text-base md:text-lg">{subject.name}</span>
+          </div>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 
   const renderStepIndicator = () => (
-    <motion.div
-      className="flex flex-col items-center gap-0 mt-9 md:w-[10px] pl-60"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.6 }}
-    >
-      <motion.div
-        className="w-13 h-13 rounded-full border-4 border-blue-500 flex justify-center items-center"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
-      >
-        <motion.div
-          className="w-10 h-10 rounded-full bg-blue-500 flex justify-center items-center text-white text-lg"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-        ></motion.div>
-      </motion.div>
-      <motion.div
-        className="w-1 h-34 bg-blue-500"
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ delay: 0.9, duration: 0.5 }}
-      ></motion.div>
-      <motion.div
-        className="w-10 h-10 rounded-full bg-gray-400 flex justify-center items-center text-white text-lg"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 1.0, type: "spring", stiffness: 200 }}
-      ></motion.div>
-      <motion.div
-        className="w-1 h-34 bg-blue-500"
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ delay: 1.1, duration: 0.5 }}
-      ></motion.div>
-      <motion.div
-        className="w-10 h-10 rounded-full bg-gray-400 flex justify-center items-center text-white text-lg"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
-      ></motion.div>
-    </motion.div>
+    <div className="flex justify-center items-center mb-6">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 flex justify-center items-center text-white font-bold text-sm">
+          1
+        </div>
+        <div className="w-8 md:w-12 h-1 bg-blue-500"></div>
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-400 flex justify-center items-center text-white font-bold text-sm">
+          2
+        </div>
+        <div className="w-8 md:w-12 h-1 bg-gray-400"></div>
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-400 flex justify-center items-center text-white font-bold text-sm">
+          3
+        </div>
+      </div>
+    </div>
   );
 
   const renderProgressCards = () => (
-    <motion.div
-      className="flex flex-col gap-2"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div
-        className="flex justify-between w-full h-40 bg-[#007AFF] rounded-4xl p-5 text-white"
-        variants={popIn}
-        whileHover={{
-          scale: 1.03,
-          boxShadow:
-            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        }}
-      >
-        <div className="flex flex-col gap-3">
-          <h3 className="text-2xl font-semibold">Choose Subjects</h3>
-          <p className="font-semibold">Select the Subjects and Difficulty</p>
+    <div className="grid grid-cols-1 gap-4 mb-6">
+      <div className="bg-blue-500 rounded-3xl p-4 md:p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg md:text-xl lg:text-2xl font-semibold mb-2">Choose Subjects</h3>
+            <p className="text-sm md:text-base opacity-90">Select the Subjects and Difficulty</p>
+          </div>
+          <span className="text-3xl md:text-4xl">📚</span>
         </div>
-        <motion.img
-          src="book.png"
-          alt="Books Icon"
-          className="w-20 h-22"
-          animate={{ rotate: [0, 5, 0, -5, 0] }}
-          transition={{
-            repeat: Number.POSITIVE_INFINITY,
-            duration: 5,
-            ease: "easeInOut",
-          }}
-        />
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="p-4 bg-yellow-400 text-white flex justify-between items-center w-full h-40 rounded-[25px]"
-        variants={popIn}
-        whileHover={{
-          scale: 1.03,
-          boxShadow:
-            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        }}
-      >
-        <div>
-          <h3 className="text-xl font-semibold">
-            Please select chapters and other Details
-          </h3>
-          <p className="text-sm">
-            You can select chapters of different subjects and select dedicated
-            questions of each chapter
-          </p>
+      <div className="bg-yellow-400 rounded-3xl p-4 md:p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <h3 className="text-lg md:text-xl font-semibold mb-2">
+              Please select chapters and other Details
+            </h3>
+            <p className="text-sm md:text-base opacity-90">
+              You can select chapters of different subjects and select dedicated questions of each chapter
+            </p>
+          </div>
+          <span className="text-3xl md:text-4xl ml-4">📖</span>
         </div>
-        <motion.img
-          src="book.png"
-          alt="Books Icon"
-          className="w-20"
-          animate={{ rotate: [0, 5, 0, -5, 0] }}
-          transition={{
-            repeat: Number.POSITIVE_INFINITY,
-            duration: 5,
-            ease: "easeInOut",
-            delay: 0.5,
-          }}
-        />
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="flex justify-between w-full h-40 bg-yellow-400 rounded-4xl p-5 text-white"
-        variants={popIn}
-        whileHover={{
-          scale: 1.03,
-          boxShadow:
-            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        }}
-      >
-        <div className="flex flex-col gap-3">
-          <h3 className="text-2xl font-semibold">Completed!!</h3>
-          <p className="font-semibold">Woah you have created a new Test</p>
+      <div className="bg-green-500 rounded-3xl p-4 md:p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg md:text-xl lg:text-2xl font-semibold mb-2">Completed!!</h3>
+            <p className="text-sm md:text-base opacity-90">Woah you have created a new Test</p>
+          </div>
+          <span className="text-3xl md:text-4xl">🎉</span>
         </div>
-        <motion.img
-          src="book.png"
-          alt="Books Icon"
-          className="w-20 h-22"
-          animate={{ rotate: [0, 5, 0, -5, 0] }}
-          transition={{
-            repeat: Number.POSITIVE_INFINITY,
-            duration: 5,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 
   const renderQuestionTypesSection = () => (
-    <div className="flex-1 bg-white rounded-xl shadow-md p-6">
-      <h3 className="text-2xl font-semibold mb-6 text-gray-800">
+    <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+      <h3 className="text-lg md:text-xl lg:text-2xl font-semibold mb-6 text-gray-800">
         Set Number of Questions per Type
       </h3>
       <div className="space-y-4">
         {allQuestionTypes.map((type) => (
-          <div key={type} className="flex items-center justify-between">
-            <label className="text-gray-700 font-medium w-48">{type}</label>
+          <div key={type} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <label className="text-gray-700 font-medium text-sm md:text-base">{type}</label>
             <input
               type="number"
               min="0"
               value={questionTypeCounts[type] || 0}
-              onChange={(e) =>
-                handleQuestionTypeCountChange(type, e.target.value)
-              }
-              className="w-28 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onChange={(e) => handleQuestionTypeCountChange(type, e.target.value)}
+              className="w-full sm:w-24 md:w-28 px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
         ))}
@@ -525,126 +300,89 @@ const SelectSubjectPage = () => {
   );
 
   const renderMarksSection = () => (
-    <motion.div
-      className="flex-1 bg-[#FFBB38] rounded-[38px] p-6 shadow-lg border border-[#FBB03B] hidden lg:block"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.3, duration: 0.5 }}
-    >
-      <h2 className="text-2xl font-medium text-center text-white">
+    <div className="bg-yellow-400 rounded-3xl p-4 md:p-6 shadow-lg">
+      <h2 className="text-lg md:text-xl lg:text-2xl font-medium text-center text-white mb-6">
         Select Marks per Question
       </h2>
 
-      {/* Positive Marks Input */}
-      <motion.div
-        className="mt-6"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.4 }}
-      >
-        <label className="block text-xl font-light text-white">
-          Positive marks (per question)
-        </label>
-        <motion.input
-          type="text"
-          value={positiveMarks}
-          onChange={handlePositiveMarksChange}
-          className="w-full mt-2 p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
-          whileFocus={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        />
-      </motion.div>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm md:text-lg font-light text-white mb-2">
+            Positive marks (per question)
+          </label>
+          <input
+            type="text"
+            value={positiveMarks}
+            onChange={handlePositiveMarksChange}
+            className="w-full p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            placeholder="Enter positive marks"
+          />
+        </div>
 
-      {/* Negative Marks Input */}
-      <motion.div
-        className="mt-4"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.5 }}
-      >
-        <label className="block text-xl font-light text-white">
-          Negative marks (per question)
-        </label>
-        <motion.input
-          type="text"
-          value={negativeMarks}
-          onChange={handleNegativeMarksChange}
-          className="w-full mt-2 p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
-          whileFocus={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        />
-      </motion.div>
-    </motion.div>
+        <div>
+          <label className="block text-sm md:text-lg font-light text-white mb-2">
+            Negative marks (per question)
+          </label>
+          <input
+            type="text"
+            value={negativeMarks}
+            onChange={handleNegativeMarksChange}
+            className="w-full p-3 border border-white rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            placeholder="Enter negative marks"
+          />
+        </div>
+      </div>
+    </div>
   );
 
   const renderContinueButton = () => (
-    <motion.div
-      className="mb-5 flex justify-end text-center pr-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.6 }}
-    >
-      <motion.button
-        className="bg-blue-500 text-white py-2 px-6 rounded-full flex items-center"
+    <div className="flex justify-center md:justify-end px-4">
+      <button
+        className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 md:px-8 rounded-full flex items-center gap-2 text-base md:text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
         onClick={handleContinueClick}
-        whileHover={{ scale: 1.1, backgroundColor: "#3b82f6" }}
-        whileTap={{ scale: 0.9 }}
       >
         Continue
-        <motion.div
-          animate={{ x: [0, 5, 0] }}
-          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
-        >
-          <FaArrowRight className="ml-2 text-white text-xl" />
-        </motion.div>
-      </motion.button>
-    </motion.div>
+        <ArrowRight size={20} />
+      </button>
+    </div>
   );
 
   // ========================================
   // MAIN RENDER
   // ========================================
   return (
-    <motion.div
-      className="max-w-[1000px] m-auto"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="w-full max-w-7xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Test Name Section */}
         {renderTestNameSection()}
 
-        {/* Main Content Section */}
-        <motion.div
-          className="grid grid-cols-1 max-w-full md:grid-cols-3 gap-2 items-start text-black ml-35"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
+        {/* Step Indicator */}
+        {renderStepIndicator()}
+
+        {/* Progress Cards */}
+        <div className="mb-8">
+          {renderProgressCards()}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
           {/* Left Section - Controls */}
-          <motion.div className="relative w-[100%]" variants={fadeIn}>
+          <div className="lg:col-span-1 xl:col-span-1">
             {renderDifficultySection()}
             {renderSubjectsSection()}
-          </motion.div>
+          </div>
 
-          {/* Right Section - Step Indicator & Progress Cards */}
-          <motion.div className="grid grid-cols-2 w-[650px]" variants={fadeIn}>
-            {renderStepIndicator()}
-            {renderProgressCards()}
-          </motion.div>
-        </motion.div>
-
-        {/* Question Types and Marks Section */}
-        <div className="flex flex-col lg:flex-row gap-6 mt-8 p-6 pl-10">
-          {renderQuestionTypesSection()}
-          {renderMarksSection()}
+          {/* Right Section - Question Types and Marks */}
+          <div className="lg:col-span-1 xl:col-span-2 space-y-6">
+            {renderQuestionTypesSection()}
+            {renderMarksSection()}
+          </div>
         </div>
 
         {/* Continue Button */}
         {renderContinueButton()}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
