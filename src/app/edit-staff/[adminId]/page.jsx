@@ -1,10 +1,12 @@
-import AdminDetailsPage from '@/components/controll-staff/AdminDetailsPage'
-import React from 'react'
-
+import AdminDetailsPage from "@/components/controll-staff/AdminDetailsPage";
+import React from "react";
+import LayoutWithNav from "../../mainLayout";
 export default function page() {
   return (
     <div>
-      <AdminDetailsPage />
+      <LayoutWithNav>
+        <AdminDetailsPage />
+      </LayoutWithNav>
     </div>
-  )
+  );
 }

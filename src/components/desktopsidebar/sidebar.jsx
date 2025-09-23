@@ -30,7 +30,7 @@ const Sidebar = () => {
         if (!token) return;
 
         const decoded = jwtDecode(token);
-        const id = decoded?.id;
+        const id = decoded?.adminId;
         const tokenRole = decoded?.role || decoded?.userRole || null;
         const tokenPerms = decoded?.permissions || [];
 
@@ -44,7 +44,7 @@ const Sidebar = () => {
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/colors`,
             { id }
           );
-
+          
           if (res.data?.success) {
             const colors = res.data.colors || {};
             // setSidebarColor(colors.sidebarColor || "#1e293b");

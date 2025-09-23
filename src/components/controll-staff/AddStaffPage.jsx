@@ -133,11 +133,11 @@ export default function AddStaffPage() {
     const token = getAuthToken();
     if (!token) return { token: null, creatorId: null, claims: null };
     const claims = decodeJwtNoVerify(token);
-    console.log("response : ", claims.id);
+    console.log("response : ", claims.adminId);
 
     try {
       const payload = {
-        created_by_admin_id: claims.id,
+        addedByAdminId: claims.adminId,
         PassKey: formData.PassKey,
         name: formData.name,
         Course: formData.Course,
@@ -201,9 +201,9 @@ export default function AddStaffPage() {
                 <Shield className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Add Admin</h1>
+                <h1 className="text-xl font-bold text-gray-900">Add Staff Member</h1>
                 <p className="text-sm text-gray-500">
-                  Create a new admin account
+                  Create a new staff member account
                 </p>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function AddStaffPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 <UserMinus className="w-4 h-4" />
-                Remove Admin
+                Remove Staff
               </Link>
               
               {/* <div className="hidden md:block">
@@ -538,7 +538,7 @@ export default function AddStaffPage() {
                 ) : (
                   <>
                     <UserPlus className="w-6 h-6" />
-                    <span>Create Admin Account</span>
+                    <span>Create Staff Member Account</span>
                   </>
                 )}
               </button>

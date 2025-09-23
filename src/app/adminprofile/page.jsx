@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import MobilebottomNavbar from "@/components/mobilenav/MobileBottomNavbar";
 import MobileNavbar from "@/components/mobilenav/mobilenav";
-
+import LayoutWithNav from "../mainLayout";
 export default function AdminDashboardPage() {
   // Admin Profile States
   const [adminData, setAdminData] = useState(null);
@@ -303,446 +303,449 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-screen max-sm:-ml-56 ml-20 bg-gray-50">
-      <div className="block md:hidden fixed top-0 z-10">
-        <MobileNavbar />
-      </div>
-      {/* Sidebar */}
-      <div className="w-55">
-        <Sidebar />
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 py-8 px-6 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto ">
-          {/* Page Header with stats */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="mx-auto text-center">
-                <h1 className="text-4xl font-bold text-gray-800">
-                  Admin Dashboard
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Welcome back, {adminData?.name || "Admin"}
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0"></div>
-            </div>
-
-            {/* Stats cards */}
-            {/* Update the Stats cards section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              {/* Total Tests Card */}
-              <div
-                className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
-                onClick={() => {
-                  setSelectedFilter("all");
-                  setFilterFromCard(null);
-                  // Scroll to table
-                  document
-                    .getElementById("test-table-section")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-blue-100">Total Tests</p>
-                    <h3 className="text-3xl font-bold mt-1">
-                      {testData.length}
-                    </h3>
-                  </div>
-                  <div className="bg-blue-400 bg-opacity-30 p-3 rounded-lg">
-                    <FileText size={24} />
-                  </div>
+    <LayoutWithNav>
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Main content */}
+        <div className="flex-1 py-8 px-6 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto ">
+            {/* Page Header with stats */}
+            <div className="mb-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="mx-auto text-center">
+                  <h1 className="text-4xl font-bold text-gray-800">
+                    Admin Dashboard
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Welcome back, {adminData?.name || "Admin"}
+                  </p>
                 </div>
-                <div className="mt-4 text-sm flex items-center">
-                  <span>View all tests</span>
-                  <ChevronRight size={16} className="ml-1" />
-                </div>
+                <div className="mt-4 md:mt-0"></div>
               </div>
 
-              {/* Active Tests Card */}
-              <div
-                className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
-                onClick={() => {
-                  setSelectedFilter("active");
-                  setFilterFromCard("active");
-                  document
-                    .getElementById("test-table-section")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-green-100">Active Tests</p>
-                    <h3 className="text-3xl font-bold mt-1">
-                      {
-                        testData.filter((test) => test.status === "Active")
-                          .length
-                      }
-                    </h3>
-                  </div>
-                  <div className="bg-green-400 bg-opacity-30 p-3 rounded-lg">
-                    <Eye size={24} />
-                  </div>
-                </div>
-                <div className="mt-4 text-sm flex items-center">
-                  <span>View active tests</span>
-                  <ChevronRight size={16} className="ml-1" />
-                </div>
-              </div>
-
-              {/* Upcoming Tests Card */}
-              <div
-                className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
-                onClick={() => {
-                  setSelectedFilter("upcoming");
-                  setFilterFromCard("upcoming");
-                  document
-                    .getElementById("test-table-section")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-purple-100">Upcoming Tests</p>
-                    <h3 className="text-3xl font-bold mt-1">
-                      {
-                        testData.filter((test) => test.status === "Upcoming")
-                          .length
-                      }
-                    </h3>
-                  </div>
-                  <div className="bg-purple-400 bg-opacity-30 p-3 rounded-lg">
-                    <Calendar size={24} />
-                  </div>
-                </div>
-                <div className="mt-4 text-sm flex items-center">
-                  <span>View upcoming tests</span>
-                  <ChevronRight size={16} className="ml-1" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Admin Profile Section */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <User size={20} className="text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-800 ml-3">
-                  Admin Profile
-                </h2>
-              </div>
-              <div className="flex space-x-3"></div>
-            </div>
-
-            {adminData && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {profileFields.map(
-                  ({ label, key, icon, readonly, required }) => (
-                    <div
-                      key={key}
-                      className={`bg-gray-50 p-5 rounded-lg border ${
-                        editMode && !readonly
-                          ? "border-blue-200"
-                          : "border-gray-200"
-                      } transition-all hover:shadow-md`}
-                    >
-                      <div className="flex items-center mb-2">
-                        <span className="text-blue-600 mr-2">{icon}</span>
-                        <label className="font-medium text-gray-700">
-                          {label}
-                          {required && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        name={key}
-                        value={formData[key] || ""}
-                        onChange={handleChange}
-                        readOnly={readonly || !editMode}
-                        className={`w-full p-3 border-gray-300 rounded-lg transition-all focus:outline-none ${
-                          readonly || !editMode
-                            ? "bg-gray-100 text-gray-800 cursor-default"
-                            : "bg-white border-gray-100 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                        }`}
-                        placeholder={`Enter ${label.toLowerCase()}`}
-                      />
-                      {editMode && required && !formData[key] && (
-                        <p className="mt-1 text-sm text-red-500">
-                          This field is required
-                        </p>
-                      )}
+              {/* Stats cards */}
+              {/* Update the Stats cards section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                {/* Total Tests Card */}
+                <div
+                  className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
+                  onClick={() => {
+                    setSelectedFilter("all");
+                    setFilterFromCard(null);
+                    // Scroll to table
+                    document
+                      .getElementById("test-table-section")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-blue-100">Total Tests</p>
+                      <h3 className="text-3xl font-bold mt-1">
+                        {testData.length}
+                      </h3>
                     </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Test Table Section */}
-          <div
-            id="test-table-section"
-            className="bg-white rounded-xl shadow-md p-6"
-          >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <div className="flex items-center">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <FileText size={20} className="text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-800 ml-3">
-                  Test Management
-                </h2>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                {/* Search Filter */}
-                <div className="relative flex-grow">
-                  <input
-                    type="text"
-                    placeholder="Search by Test, Batch..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  />
-                  <Search className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
+                    <div className="bg-blue-400 bg-opacity-30 p-3 rounded-lg">
+                      <FileText size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm flex items-center">
+                    <span>View all tests</span>
+                    <ChevronRight size={16} className="ml-1" />
+                  </div>
                 </div>
 
-                {/* Filter Dropdown */}
-                <div className="relative">
-                  <select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="w-full sm:w-auto appearance-none bg-white p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  >
-                    <option value="all">All Tests</option>
-                    <option value="active">Active</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                  <Filter className="h-4 w-4 absolute right-3 top-4 text-gray-500" />
+                {/* Active Tests Card */}
+                <div
+                  className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
+                  onClick={() => {
+                    setSelectedFilter("active");
+                    setFilterFromCard("active");
+                    document
+                      .getElementById("test-table-section")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-green-100">Active Tests</p>
+                      <h3 className="text-3xl font-bold mt-1">
+                        {
+                          testData.filter((test) => test.status === "Active")
+                            .length
+                        }
+                      </h3>
+                    </div>
+                    <div className="bg-green-400 bg-opacity-30 p-3 rounded-lg">
+                      <Eye size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm flex items-center">
+                    <span>View active tests</span>
+                    <ChevronRight size={16} className="ml-1" />
+                  </div>
                 </div>
 
-                {/* Sort Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setSortOrder("latest")}
-                    className={`px-4 py-3 rounded-lg font-medium transition flex items-center ${
-                      sortOrder === "latest"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
-                  >
-                    <ArrowDown size={16} className="mr-1" />
-                    Latest
-                  </button>
-                  <button
-                    onClick={() => setSortOrder("oldest")}
-                    className={`px-4 py-3 rounded-lg font-medium transition flex items-center ${
-                      sortOrder === "oldest"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
-                  >
-                    <ArrowUp size={16} className="mr-1" />
-                    Oldest
-                  </button>
+                {/* Upcoming Tests Card */}
+                <div
+                  className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition"
+                  onClick={() => {
+                    setSelectedFilter("upcoming");
+                    setFilterFromCard("upcoming");
+                    document
+                      .getElementById("test-table-section")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-purple-100">Upcoming Tests</p>
+                      <h3 className="text-3xl font-bold mt-1">
+                        {
+                          testData.filter((test) => test.status === "Upcoming")
+                            .length
+                        }
+                      </h3>
+                    </div>
+                    <div className="bg-purple-400 bg-opacity-30 p-3 rounded-lg">
+                      <Calendar size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm flex items-center">
+                    <span>View upcoming tests</span>
+                    <ChevronRight size={16} className="ml-1" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {[
-                      "Test Name",
-                      "Difficulty",
-                      "Subject",
-                      "Marks",
-                      "Duration",
-                      "Start Date",
-                      "End Date",
-                      "Batch",
-                      "Status",
-                    ].map((title) => (
-                      <th
-                        key={title}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {title}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedData.length > 0 ? (
-                    paginatedData.map((item, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-blue-600">
-                            {item.testname}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            ID: {item.id || "N/A"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.difficulty === "Easy"
-                                ? "bg-green-100 text-green-800"
-                                : item.difficulty === "Medium"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {item.difficulty}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {item.subject}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {item.marks}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {item.duration} min
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {formatDate(item.exam_start_date)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {formatDate(item.exam_end_date)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {item.batch_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.status === "Active"
-                                ? "bg-green-100 text-green-800"
-                                : item.status === "Completed"
-                                ? "bg-gray-100 text-gray-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="10"
-                        className="px-6 py-8 text-center text-sm text-gray-500"
-                      >
-                        {searchQuery ? (
-                          <div className="flex flex-col items-center">
-                            <Search size={24} className="text-gray-400 mb-2" />
-                            <p>No tests found matching your search criteria</p>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center">
-                            <FileText
-                              size={24}
-                              className="text-gray-400 mb-2"
-                            />
-                            <p>No tests available</p>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {paginatedData.length > 0 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-                <div className="text-sm text-gray-600">
-                  Showing{" "}
-                  {Math.min(
-                    sortedData.length,
-                    (currentPage - 1) * rowsPerPage + 1
-                  )}
-                  -{Math.min(currentPage * rowsPerPage, sortedData.length)} of{" "}
-                  {sortedData.length} tests
-                </div>
+            {/* Admin Profile Section */}
+            <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                  {/* Page Numbers */}
-                  <div className="hidden md:flex mr-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (page) =>
-                          page === 1 ||
-                          page === totalPages ||
-                          (page >= currentPage - 1 && page <= currentPage + 1)
-                      )
-                      .map((page, index, array) => (
-                        <React.Fragment key={page}>
-                          {index > 0 && array[index - 1] !== page - 1 && (
-                            <span className="px-2 py-2 text-gray-500">...</span>
-                          )}
-                          <button
-                            onClick={() => setCurrentPage(page)}
-                            className={`w-10 h-10 flex items-center justify-center rounded-lg mx-1 ${
-                              currentPage === page
-                                ? "bg-blue-600 text-white font-medium"
-                                : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        </React.Fragment>
-                      ))}
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <User size={20} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-800 ml-3">
+                    Admin Profile
+                  </h2>
+                </div>
+                <div className="flex space-x-3"></div>
+              </div>
+
+              {adminData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  {profileFields.map(
+                    ({ label, key, icon, readonly, required }) => (
+                      <div
+                        key={key}
+                        className={`bg-gray-50 p-5 rounded-lg border ${
+                          editMode && !readonly
+                            ? "border-blue-200"
+                            : "border-gray-200"
+                        } transition-all hover:shadow-md`}
+                      >
+                        <div className="flex items-center mb-2">
+                          <span className="text-blue-600 mr-2">{icon}</span>
+                          <label className="font-medium text-gray-700">
+                            {label}
+                            {required && (
+                              <span className="text-red-500 ml-1">*</span>
+                            )}
+                          </label>
+                        </div>
+                        <input
+                          type="text"
+                          name={key}
+                          value={formData[key] || ""}
+                          onChange={handleChange}
+                          readOnly={readonly || !editMode}
+                          className={`w-full p-3 border-gray-300 rounded-lg transition-all focus:outline-none ${
+                            readonly || !editMode
+                              ? "bg-gray-100 text-gray-800 cursor-default"
+                              : "bg-white border-gray-100 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                          }`}
+                          placeholder={`Enter ${label.toLowerCase()}`}
+                        />
+                        {editMode && required && !formData[key] && (
+                          <p className="mt-1 text-sm text-red-500">
+                            This field is required
+                          </p>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Test Table Section */}
+            <div
+              id="test-table-section"
+              className="bg-white rounded-xl shadow-md p-6"
+            >
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div className="flex items-center">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <FileText size={20} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-800 ml-3">
+                    Test Management
+                  </h2>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                  {/* Search Filter */}
+                  <div className="relative flex-grow">
+                    <input
+                      type="text"
+                      placeholder="Search by Test, Batch..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <Search className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
                   </div>
 
-                  {/* Prev/Next Buttons */}
+                  {/* Filter Dropdown */}
+                  <div className="relative">
+                    <select
+                      value={selectedFilter}
+                      onChange={(e) => setSelectedFilter(e.target.value)}
+                      className="w-full sm:w-auto appearance-none bg-white p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      <option value="all">All Tests</option>
+                      <option value="active">Active</option>
+                      <option value="upcoming">Upcoming</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                    <Filter className="h-4 w-4 absolute right-3 top-4 text-gray-500" />
+                  </div>
+
+                  {/* Sort Buttons */}
                   <div className="flex space-x-2">
                     <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="flex items-center px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                      onClick={() => setSortOrder("latest")}
+                      className={`px-4 py-3 rounded-lg font-medium transition flex items-center ${
+                        sortOrder === "latest"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
                     >
-                      <ChevronLeft size={16} className="mr-1" />
-                      Previous
+                      <ArrowDown size={16} className="mr-1" />
+                      Latest
                     </button>
                     <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage >= totalPages}
-                      className="flex items-center px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                      onClick={() => setSortOrder("oldest")}
+                      className={`px-4 py-3 rounded-lg font-medium transition flex items-center ${
+                        sortOrder === "oldest"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
                     >
-                      Next
-                      <ChevronRight size={16} className="ml-1" />
+                      <ArrowUp size={16} className="mr-1" />
+                      Oldest
                     </button>
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Table */}
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {[
+                        "Test Name",
+                        "Difficulty",
+                        "Subject",
+                        "Marks",
+                        "Duration",
+                        "Start Date",
+                        "End Date",
+                        "Batch",
+                        "Status",
+                      ].map((title) => (
+                        <th
+                          key={title}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {title}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((item, idx) => (
+                        <tr
+                          key={idx}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-blue-600">
+                              {item.testname}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              ID: {item.id || "N/A"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.difficulty === "Easy"
+                                  ? "bg-green-100 text-green-800"
+                                  : item.difficulty === "Medium"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {item.difficulty}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {item.subject}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {item.marks}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {item.duration} min
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {formatDate(item.exam_start_date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {formatDate(item.exam_end_date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {item.batch_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.status === "Active"
+                                  ? "bg-green-100 text-green-800"
+                                  : item.status === "Completed"
+                                  ? "bg-gray-100 text-gray-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="10"
+                          className="px-6 py-8 text-center text-sm text-gray-500"
+                        >
+                          {searchQuery ? (
+                            <div className="flex flex-col items-center">
+                              <Search
+                                size={24}
+                                className="text-gray-400 mb-2"
+                              />
+                              <p>
+                                No tests found matching your search criteria
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <FileText
+                                size={24}
+                                className="text-gray-400 mb-2"
+                              />
+                              <p>No tests available</p>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {paginatedData.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+                  <div className="text-sm text-gray-600">
+                    Showing{" "}
+                    {Math.min(
+                      sortedData.length,
+                      (currentPage - 1) * rowsPerPage + 1
+                    )}
+                    -{Math.min(currentPage * rowsPerPage, sortedData.length)} of{" "}
+                    {sortedData.length} tests
+                  </div>
+                  <div className="flex items-center">
+                    {/* Page Numbers */}
+                    <div className="hidden md:flex mr-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(
+                          (page) =>
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                        )
+                        .map((page, index, array) => (
+                          <React.Fragment key={page}>
+                            {index > 0 && array[index - 1] !== page - 1 && (
+                              <span className="px-2 py-2 text-gray-500">
+                                ...
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setCurrentPage(page)}
+                              className={`w-10 h-10 flex items-center justify-center rounded-lg mx-1 ${
+                                currentPage === page
+                                  ? "bg-blue-600 text-white font-medium"
+                                  : "text-gray-600 hover:bg-gray-100"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          </React.Fragment>
+                        ))}
+                    </div>
+
+                    {/* Prev/Next Buttons */}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="flex items-center px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                      >
+                        <ChevronLeft size={16} className="mr-1" />
+                        Previous
+                      </button>
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage >= totalPages}
+                        className="flex items-center px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                      >
+                        Next
+                        <ChevronRight size={16} className="ml-1" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        {/* Mobile Bottom Nav */}
+        <div className="md:hidden fixed bottom-0 left-0 w-full z-10">
+          <MobilebottomNavbar />
+        </div>
       </div>
-      {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full z-10">
-        <MobilebottomNavbar />
-      </div>
-    </div>
+    </LayoutWithNav>
   );
 }

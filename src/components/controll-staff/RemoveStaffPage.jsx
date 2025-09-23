@@ -58,7 +58,7 @@ export default function RemoveStaffPage() {
       const claims = decodeJwtNoVerify(token);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/superadmin/getStaff`,
-        { params: { adminId: claims.id } }
+        { params: { adminId: claims.adminId } }
       );
       setAdminList(res.data?.data || []);
     } catch (err) {

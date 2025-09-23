@@ -233,10 +233,10 @@ export default function AdminDetailsPage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Admin Details
+                  Staff Member Details
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Detailed information for Admin ID:{" "}
+                  Detailed information for Staff Member ID:{" "}
                   <span className="font-semibold">{adminId}</span>
                 </p>
               </div>
@@ -282,7 +282,7 @@ export default function AdminDetailsPage() {
                 </div>
               )}
 
-              <div className="hidden md:block">
+              {/* <div className="hidden md:block">
                 <Image
                   src="/neet720_logo.jpg"
                   alt="Neet720 Logo"
@@ -290,7 +290,7 @@ export default function AdminDetailsPage() {
                   height={20}
                   className="object-fit"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function AdminDetailsPage() {
               <div className="hidden sm:flex flex-col items-end text-white/90">
                 <div className="flex items-center gap-2">
                   <IdCard className="w-4 h-4" />
-                  <span className="text-sm">Admin ID</span>
+                  <span className="text-sm">Staff Member ID</span>
                 </div>
                 <div className="text-lg font-semibold">{admin?.AdminId || adminId}</div>
               </div>
@@ -335,7 +335,7 @@ export default function AdminDetailsPage() {
             {loading ? (
               <div className="py-24 flex flex-col items-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-gray-600">Loading admin details…</p>
+                <p className="mt-4 text-gray-600">Loading staff member details…</p>
               </div>
             ) : error ? (
               <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
@@ -395,7 +395,7 @@ export default function AdminDetailsPage() {
                       <div className="p-6 border-b border-gray-100">
                         <h3 className="text-lg font-bold text-gray-900 flex items-center">
                           <UserCog className="w-5 h-5 text-indigo-600 mr-2" />
-                          Admin Meta
+                          Staff Member Meta
                         </h3>
                       </div>
                       <div className="p-6 space-y-4">
