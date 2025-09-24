@@ -57,6 +57,7 @@ const SelectSubjectPage = () => {
       negativeMarks: negative,
       difficultyLevel: difficulty,
     };
+    localStorage.setItem("marksData", JSON.stringify(marksData));
     // Note: localStorage is not available in this environment, using state instead
     console.log("Would save to localStorage:", marksData);
   };
@@ -77,7 +78,7 @@ const SelectSubjectPage = () => {
       } else {
         updatedSubjects = [...new Set([...prev, ...subjects])];
       }
-      
+      localStorage.setItem("selectedSubjects", JSON.stringify(updatedSubjects));
       console.log("Selected subjects:", updatedSubjects);
       return updatedSubjects;
     });
@@ -111,6 +112,7 @@ const SelectSubjectPage = () => {
   const handleTestNameChange = (e) => {
     const value = e.target.value;
     setTestName(value);
+    localStorage.setItem("testName", value);
     console.log("Test name:", value);
   };
 

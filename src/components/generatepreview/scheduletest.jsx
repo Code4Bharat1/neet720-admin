@@ -82,6 +82,7 @@ function Scheduletest() {
   }, []);
 
   const openModal = () => setIsModalOpen(true);
+  
   const closeModal = () => setIsModalOpen(false);
 
   const handleInputChange = (e) => {
@@ -238,7 +239,7 @@ function Scheduletest() {
       <div className="flex justify-between items-center sm:mx-8 mt-10rem mb-15rem">
         <button
           className="flex items-center px-8 py-2 bg-[#FFBB38] text-white rounded-full hover:bg-[#FFBB38] transition"
-          onClick={() => router.push("/select_chapters_biology")}
+          onClick={() => router.back()}
         >
           <FaArrowLeft className="mr-2 font-bold" />
           Back
@@ -354,16 +355,16 @@ function Scheduletest() {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4 mt-6">
+            <div className="flex flex-col sm:flex-row justify-center sm:justify-end gap-3 mt-6 sm:mt-6">
               <button
                 onClick={closeModal}
-                className="bg-[#CEDFFC] text-[#000000] py-2 px-9 rounded-full"
+                className="bg-[#CEDFFC] text-[#000000] py-2 px-6 sm:px-9 rounded-full w-full sm:w-auto text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateTest}
-                className="bg-[#EB3D3C] text-white py-2 px-8 rounded-full"
+                className="bg-[#EB3D3C] text-white py-2 px-6 sm:px-8 rounded-full w-full sm:w-auto text-sm sm:text-base"
               >
                 Create Test
               </button>
