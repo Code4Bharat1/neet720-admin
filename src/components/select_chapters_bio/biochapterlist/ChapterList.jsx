@@ -233,14 +233,6 @@ export default function BiologyChapterList() {
       transition: { type: "spring", stiffness: 100, damping: 12 },
     },
   };
-  const expandVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: {
-      opacity: 1,
-      height: "auto",
-      transition: { duration: 0.3, ease: "easeInOut" },
-    },
-  };
 
   const handleFullLengthTest = () => {
     const TOTAL_QUESTIONS = 90;
@@ -328,6 +320,209 @@ export default function BiologyChapterList() {
     );
   }
 
+  const MobileChapterCard = ({ chapter, index }) => (
+    <motion.div
+      className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
+      variants={itemVariants}
+      layout
+    >
+      {/* Card Header */}
+      <div className="p-4 sm:p-5 border-b border-gray-200 ">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <motion.div
+              className={`w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer shadow-sm ${
+                chapter.isChecked
+                  ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                  : "bg-gray-300 hover:bg-gray-400"
+              }`}
+              onClick={() => handleCheckboxChange(chapter.id)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {chapter.isChecked && (
+                <motion.svg
+                  className="w-5 h-5 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </motion.svg>
+              )}
+            </motion.div>
+            <span className="text-sm font-semibold text-gray-600 bg-white px-3 py-1 rounded-full">
+              Chapter {index + 1}
+            </span>
+          </div>
+          <motion.div
+            className="px-3 py-2 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200 min-w-[60px] text-center"
+            animate={{
+              backgroundColor:
+                chapter.totalMarks > 0
+                  ? ["#f5f3ff", "#ede9fe", "#f5f3ff"]
+                  : "#f5f3ff",
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: chapter.totalMarks > 0 ? Infinity : 0,
+              repeatType: "reverse",
+            }}
+          >
+            <span className="text-sm font-bold text-purple-700">
+              {chapter.totalMarks}
+            </span>
+            <span className="text-xs text-gray-500 block">marks</span>
+          </motion.div>
+        </div>
+
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="p-2 bg-purple-100 rounded-xl">
+            <Image
+              src="/Atoms.svg"
+              alt="Physics"
+              width={24}
+              height={24}
+              className="w-6 h-6"
+            />
+          </div>
+          <h3 className="font-semibold text-gray-800 text-base leading-tight flex-1">
+            {chapter.name}
+          </h3>
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-4 sm:p-5">
+        {/* Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Topic Selector */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+              Select Topic
+            </label>
+            <div className="relative">
+              <select
+                value={chapter.selectedTopic || ""}
+                onChange={(e) =>
+                  handleTopicChange(chapter.id, e.target.value || null)
+                }
+                className={`w-full h-12 bg-gray-50 text-sm font-medium outline-none rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 appearance-none pr-10 px-4 ${
+                  chapter.isChecked
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-60"
+                }`}
+                disabled={!chapter.isChecked}
+              >
+                <option value="">
+                  All Topics ({chapter.topicsList.length})
+                </option>
+                {chapter.topicsList.map((t, idx) => (
+                  <option key={idx} value={t}>
+                    {t} ({chapter.topics[t].questions.length})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Questions Input */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+              Questions
+            </label>
+            <div className="flex items-center space-x-2">
+              <motion.input
+                type="number"
+                value={chapter.numQuestions}
+                onChange={(e) => handleQuestionChange(chapter.id, e)}
+                className="flex-1 h-12 bg-gray-50 text-center text-sm font-semibold outline-none rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+                min={0}
+                max={
+                  chapter.selectedTopic && chapter.topics[chapter.selectedTopic]
+                    ? chapter.topics[chapter.selectedTopic].questions.length
+                    : chapter.maxQuestions
+                }
+                whileFocus={{ scale: 1.02 }}
+              />
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                /{" "}
+                {chapter.selectedTopic && chapter.topics[chapter.selectedTopic]
+                  ? chapter.topics[chapter.selectedTopic].questions.length
+                  : chapter.maxQuestions}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Questions Section - Add this back from your original code */}
+      <AnimatePresence>
+        {chapter.isChecked && chapter.numQuestions > 0 && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 bg-gray-50">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                Selected Questions:
+              </h4>
+              <div className="space-y-3">
+                {chapter.rows.length ? (
+                  chapter.rows.map((row, idx) => (
+                    <motion.div
+                      key={`${row.id}-${idx}`}
+                      className="bg-white rounded-lg p-3 border border-gray-200"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-purple-600">
+                            Q{idx + 1}
+                          </span>
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                            {row.topicName}
+                          </span>
+                        </div>
+                        <motion.div
+                          onClick={() => handleReplaceQuestion(chapter.id, idx)}
+                          className="cursor-pointer p-1 bg-purple-100 rounded-full hover:bg-purple-200"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <ShuffleIcon className="w-4 h-4 text-purple-600" />
+                        </motion.div>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {row.question}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No questions available for this chapter/topic
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+
   /* ------------------------------------------------------------------ */
   /*  RENDER TABLE (identical markup to your original)                  */
   /* ------------------------------------------------------------------ */
@@ -338,335 +533,398 @@ export default function BiologyChapterList() {
       animate="visible"
       variants={containerVariants}
     >
-      <div className="bg-white hidden md:block w-full max-w-6xl rounded-xl overflow-hidden border-none shadow-lg">
+      <div className="bg-white w-full max-w-6xl rounded-xl overflow-x-auto md:overflow-hidden border-none shadow-lg">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-green-600 to-green-800 px-6 py-6 text-white rounded-t-xl"
+          className="bg-gradient-to-r from-green-600 to-green-800 px-4 sm:px-6 py-4 sm:py-6 text-white rounded-t-xl"
           variants={itemVariants}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">Biology Chapters</h2>
-              <p className="text-sm text-green-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            {/* Title Section */}
+            <div className="text-center sm:text-left">
+              <h2 className="text-lg sm:text-xl font-semibold">
+                Biology Chapters
+              </h2>
+              <p className="text-xs sm:text-sm text-green-100 mt-1">
                 Select chapters, topics and specify the number of questions
               </p>
             </div>
 
-            <button
-              onClick={handleFullLengthTest}
-              className="bg-white text-green-800 font-semibold px-4 py-2 rounded-lg hover:bg-green-100 transition"
-            >
-              Generate Full Length Test (90 Qs)
-            </button>
+            {/* Button Section */}
+            <div className="flex justify-center sm:justify-end">
+              <button
+                onClick={handleFullLengthTest}
+                className="bg-white text-green-800 font-semibold px-3 sm:px-4 py-2 rounded-lg hover:bg-green-100 transition text-sm sm:text-base w-full sm:w-auto"
+              >
+                Generate Full Length Test (90 Qs)
+              </button>
+            </div>
           </div>
         </motion.div>
-
-        {/* Rows */}
-        {chapters.map((chapter, index) => (
-          <motion.div
-            key={chapter.id}
-            className="mb-4 overflow-hidden"
-            variants={itemVariants}
-          >
-            <div className="overflow-x-auto px-4 py-2">
-              <table className="w-full text-sm text-left font-Poppins text-[#181C32]">
-                <thead className="bg-[#B1CEFB] text-[#181C32] font-Mulish font-semibold">
-                  <tr>
-                    {[
-                      "Selected",
-                      "Sr.no",
-                      "Chapter Name",
-                      "Topic",
-                      "Questions",
-                      "Total Marks",
-                    ].map((header, i) => (
-                      <th
-                        key={i}
-                        className={`py-3 px-4 text-center ${
-                          i === 0 ? "rounded-tl-xl w-24" : ""
-                        } ${i === 6 ? "rounded-tr-xl w-32" : ""} ${
-                          i === 2 ? "w-1/4" : ""
-                        } ${i === 4 ? "w-1/5" : ""}`}
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Top‑level chapter row */}
-                  <tr className="border-b border-gray-200">
-                    {/* checkbox */}
-                    <td className="py-4 px-4 text-center">
-                      <motion.div
-                        className={`w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer mx-auto ${
-                          chapter.isChecked ? "bg-purple-500" : "bg-gray-300"
-                        }`}
-                        onClick={() => handleCheckboxChange(chapter.id)}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {chapter.isChecked && (
-                          <motion.svg
-                            className="w-5 h-5 text-white"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </motion.svg>
-                        )}
-                      </motion.div>
-                    </td>
-                    {/* sr no */}
-                    <td className="py-4 px-4 text-center font-Mulish font-semibold text-black">
-                      {index + 1}
-                    </td>
-                    {/* chapter name */}
-                    <td className="py-4 px-4 text-left font-Mulish font-semibold text-black">
-                      <div className="flex items-center">
-                        <div className="p-1 bg-purple-100 rounded-full mr-2">
-                          <Bug className="w-5 h-5 text-green-700" />
-                        </div>
-                        <span
-                          className="truncate max-w-xs"
-                          title={chapter.name}
-                        >
-                          {chapter.name}
-                        </span>
-                      </div>
-                    </td>
-                    {/* unit */}
-                    {/* <td className="py-4 px-4 text-center font-Mulish font-semibold text-black">{chapter.unit}</td> */}
-                    {/* topic selector */}
-                    <td className="py-4 px-4 text-center">
-                      <div className="relative">
-                        <select
-                          value={chapter.selectedTopic || ""}
-                          onChange={(e) =>
-                            handleTopicChange(
-                              chapter.id,
-                              e.target.value || null
-                            )
-                          }
-                          className={`w-full ${
-                            chapter.isChecked
-                              ? "cursor-pointer"
-                              : "cursor-not-allowed"
-                          } h-10 bg-gray-100 text-center font-Mulish font-semibold outline-none rounded-md border border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 appearance-none pr-8`}
-                          disabled={!chapter.isChecked}
-                        >
-                          <option value="">
-                            All Topics ({chapter.topicsList.length})
-                          </option>
-                          {chapter.topicsList.map((t, idx) => (
-                            <option key={idx} value={t}>
-                              {t} ({chapter.topics[t].questions.length})
-                            </option>
+        {/* Desktop View */}
+        <div className="bg-white hidden md:block w-full max-w-6xl rounded-xl overflow-hidden border-none shadow-lg">
+          <div className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <div className="">
+                {" "}
+                {/* Reduced minimum width */}
+                {chapters.map((chapter, index) => (
+                  <motion.div
+                    key={chapter.id}
+                    className="border-b border-gray-100 last:border-b-0"
+                    variants={itemVariants}
+                  >
+                    <table className="w-full text-sm text-left font-Poppins text-[#181C32]">
+                      <thead className="bg-gradient-to-r from-blue-50 to-purple-50 text-[#181C32] font-Mulish font-semibold">
+                        <tr>
+                          {[
+                            { title: "Selected", width: "w-24" },
+                            { title: "Sr.no", width: "w-20" },
+                            { title: "Chapter Name", width: "w-96" },
+                            { title: "Select Topic", width: "w-64" },
+                            { title: "Questions", width: "w-36" },
+                            { title: "Total Marks", width: "w-32" },
+                          ].map((header, i) => (
+                            <th
+                              key={i}
+                              className={`py-4 px-4 text-center text-sm font-semibold ${
+                                header.width
+                              } ${i === 0 ? "rounded-tl-xl" : ""} ${
+                                i === 5 ? "rounded-tr-xl" : ""
+                              }`}
+                            >
+                              {header.title}
+                            </th>
                           ))}
-                        </select>
-                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                      </div>
-                    </td>
-                    {/* num questions */}
-                    <td className="py-4 px-4 text-center">
-                      <div className="flex items-center justify-center">
-                        <motion.input
-                          type="number"
-                          value={chapter.numQuestions}
-                          onChange={(e) => handleQuestionChange(chapter.id, e)}
-                          className="w-16 h-10 bg-gray-100 text-center font-Mulish font-semibold outline-none rounded-md border border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                          min={0}
-                          max={
-                            chapter.selectedTopic &&
-                            chapter.topics[chapter.selectedTopic]
-                              ? chapter.topics[chapter.selectedTopic].questions
-                                  .length
-                              : chapter.maxQuestions
-                          }
-                          whileFocus={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.98 }}
-                        />
-                        <span className="text-xs text-gray-500 ml-2">
-                          /{" "}
-                          {chapter.selectedTopic &&
-                          chapter.topics[chapter.selectedTopic]
-                            ? chapter.topics[chapter.selectedTopic].questions
-                                .length
-                            : chapter.maxQuestions}
-                        </span>
-                      </div>
-                    </td>
-                    {/* marks */}
-                    <td className="py-4 px-4 text-center font-Mulish font-semibold">
-                      <motion.div
-                        className="w-16 h-10 bg-purple-50 flex items-center justify-center rounded-md mx-auto border border-purple-100"
-                        animate={{
-                          backgroundColor:
-                            chapter.totalMarks > 0
-                              ? ["#f5f3ff", "#ede9fe", "#f5f3ff"]
-                              : "#f5f3ff",
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: chapter.totalMarks > 0 ? Infinity : 0,
-                          repeatType: "reverse",
-                        }}
-                      >
-                        {chapter.totalMarks}
-                      </motion.div>
-                    </td>
-                  </tr>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                          {/* Checkbox */}
+                          <td className="py-4 px-4 text-center">
+                            <motion.div
+                              className={`w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer mx-auto shadow-sm ${
+                                chapter.isChecked
+                                  ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                                  : "bg-gray-300 hover:bg-gray-400"
+                              }`}
+                              onClick={() => handleCheckboxChange(chapter.id)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {chapter.isChecked && (
+                                <motion.svg
+                                  className="w-5 h-5 text-white"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  initial={{ pathLength: 0 }}
+                                  animate={{ pathLength: 1 }}
+                                  transition={{ duration: 0.3 }}
+                                >
+                                  <polyline points="20 6 9 17 4 12" />
+                                </motion.svg>
+                              )}
+                            </motion.div>
+                          </td>
 
-                  {/* Expanded question rows */}
-                  <AnimatePresence>
-                    {chapter.isChecked && chapter.numQuestions > 0 && (
-                      <motion.tr
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                        variants={expandVariants}
-                      >
-                        <td colSpan={7} className="p-0">
-                          <motion.div
-                            className="rounded-xl shadow-md w-[98%] mx-auto my-3 overflow-hidden bg-gray-50 border border-gray-200"
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <table className="w-full text-sm text-left font-Poppins text-[#181C32] border-collapse">
-                              <thead className="bg-gray-100 text-black border-b border-gray-200">
-                                <tr>
-                                  {[
-                                    "Q.no",
-                                    "Subject",
-                                    "Topic",
-                                    "Question",
-                                    "Action",
-                                  ].map((h, i) => (
-                                    <th
-                                      key={i}
-                                      className={`py-3 px-4 font-Mulish font-semibold ${
-                                        i === 0
-                                          ? "rounded-tl-xl w-20 text-center"
-                                          : ""
-                                      } ${
-                                        i === 4
-                                          ? "rounded-tr-xl w-24 text-center"
-                                          : ""
-                                      } ${i === 3 ? "w-2/5" : ""} ${
-                                        i === 2 ? "w-1/6" : ""
-                                      }`}
-                                    >
-                                      {h}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <AnimatePresence>
-                                  {chapter.rows.length ? (
-                                    chapter.rows.map((row, idx) => (
-                                      <motion.tr
-                                        key={`${row.id}-${idx}`}
-                                        className={`hover:bg-purple-50 transition ${
-                                          idx === chapter.rows.length - 1
-                                            ? "border-none"
-                                            : "border-b border-gray-200"
-                                        }`}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                      >
-                                        <td className="py-3 px-4 text-center font-Mulish font-bold">
-                                          {idx + 1}
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                          <div className="font-Mulish font-semibold flex items-center justify-center space-x-1">
-                                            <div className="p-1 bg-purple-100 rounded-full">
-                                              <Bug className="w-5 h-5 text-green-700" />
-                                            </div>
-                                            <span className="text-sm font-semibold">
-                                              biology
-                                            </span>
-                                          </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-center font-Mulish font-medium text-gray-600">
-                                          <span className="text-xs bg-purple-100 px-2 py-1 rounded-full inline-block">
-                                            {row.topicName}
-                                          </span>
-                                        </td>
-                                        <td className="py-3 px-4 font-Mulish font-medium text-gray-700">
-                                          <div
-                                            className="line-clamp-2"
-                                            title={row.question}
-                                          >
-                                            {row.question}
-                                          </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                          <div className="flex justify-center space-x-3">
-                                            {/* Replace button */}
-                                            <motion.div
-                                              onClick={() =>
-                                                handleReplaceQuestion(
-                                                  chapter.id,
-                                                  idx
-                                                )
-                                              }
-                                              className="cursor-pointer p-1 bg-purple-100 rounded-full hover:bg-purple-200"
+                          {/* Sr No */}
+                          <td className="py-4 px-4 text-center font-Mulish font-semibold text-black">
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                              {index + 1}
+                            </span>
+                          </td>
+
+                          {/* Chapter Name */}
+                          <td className="py-4 px-4 text-left font-Mulish font-semibold text-black">
+                            <div className="flex items-center space-x-3">
+                              <div className="p-2 bg-purple-100 rounded-xl flex-shrink-0">
+                                <Image
+                                  src="/Atoms.svg"
+                                  alt="Physics"
+                                  width={20}
+                                  height={20}
+                                  className="w-5 h-5"
+                                />
+                              </div>
+                              <span className="font-semibold text-gray-800 leading-tight">
+                                {chapter.name}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Topic Selector */}
+                          <td className="py-4 px-4 text-center">
+                            <div className="relative">
+                              <select
+                                value={chapter.selectedTopic || ""}
+                                onChange={(e) =>
+                                  handleTopicChange(
+                                    chapter.id,
+                                    e.target.value || null
+                                  )
+                                }
+                                className={`w-full h-12 bg-gray-50 text-center font-Mulish font-semibold outline-none rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 appearance-none pr-10 ${
+                                  chapter.isChecked
+                                    ? "cursor-pointer"
+                                    : "cursor-not-allowed opacity-60"
+                                }`}
+                                disabled={!chapter.isChecked}
+                              >
+                                <option value="">
+                                  All Topics ({chapter.topicsList.length})
+                                </option>
+                                {chapter.topicsList.map((t, idx) => (
+                                  <option key={idx} value={t}>
+                                    {t} ({chapter.topics[t].questions.length})
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                            </div>
+                          </td>
+
+                          {/* Questions Input */}
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <motion.input
+                                type="number"
+                                value={chapter.numQuestions}
+                                onChange={(e) =>
+                                  handleQuestionChange(chapter.id, e)
+                                }
+                                className="w-20 h-12 bg-gray-50 text-center font-Mulish font-semibold outline-none rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+                                min={0}
+                                max={
+                                  chapter.selectedTopic &&
+                                  chapter.topics[chapter.selectedTopic]
+                                    ? chapter.topics[chapter.selectedTopic]
+                                        .questions.length
+                                    : chapter.maxQuestions
+                                }
+                                whileFocus={{ scale: 1.02 }}
+                              />
+                              <div className="text-xs text-gray-500 font-medium">
+                                <span className="block">max</span>
+                                <span className="block">
+                                  {chapter.selectedTopic &&
+                                  chapter.topics[chapter.selectedTopic]
+                                    ? chapter.topics[chapter.selectedTopic]
+                                        .questions.length
+                                    : chapter.maxQuestions}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Total Marks */}
+                          <td className="py-4 px-4 text-center font-Mulish font-semibold">
+                            <motion.div
+                              className="w-20 h-12 bg-gradient-to-r from-purple-50 to-blue-50 flex flex-col items-center justify-center rounded-xl mx-auto border-2 border-purple-200 shadow-sm"
+                              animate={{
+                                backgroundColor:
+                                  chapter.totalMarks > 0
+                                    ? ["#f5f3ff", "#ede9fe", "#f5f3ff"]
+                                    : "#f5f3ff",
+                              }}
+                              transition={{
+                                duration: 1.5,
+                                repeat: chapter.totalMarks > 0 ? Infinity : 0,
+                                repeatType: "reverse",
+                              }}
+                            >
+                              <span className="text-lg font-bold text-purple-700">
+                                {chapter.totalMarks}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                marks
+                              </span>
+                            </motion.div>
+                          </td>
+                        </tr>
+
+                        {/* Expanded question rows */}
+                        <AnimatePresence>
+                          {chapter.isChecked && chapter.numQuestions > 0 && (
+                            <motion.tr
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <td colSpan={6} className="p-4">
+                                {" "}
+                                {/* Updated colspan */}
+                                <motion.div
+                                  className="rounded-xl shadow-lg bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 overflow-hidden"
+                                  initial={{ opacity: 0, y: -20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                >
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left font-Poppins text-[#181C32] min-w-[800px]">
+                                      <thead className="bg-gradient-to-r from-gray-100 to-purple-100 text-black border-b border-gray-200">
+                                        <tr>
+                                          {[
+                                            { title: "Q.no", width: "w-16" },
+                                            {
+                                              title: "Subject",
+                                              width: "w-32",
+                                            },
+                                            { title: "Topic", width: "w-48" },
+                                            {
+                                              title: "Question",
+                                              width: "flex-1",
+                                            },
+                                            {
+                                              title: "Action",
+                                              width: "w-24",
+                                            },
+                                          ].map((h, i) => (
+                                            <th
+                                              key={i}
+                                              className={`py-3 px-4 font-Mulish font-semibold text-center ${
+                                                h.width
+                                              } ${
+                                                i === 0 ? "rounded-tl-xl" : ""
+                                              } ${
+                                                i === 4 ? "rounded-tr-xl" : ""
+                                              }`}
                                             >
-                                              <ShuffleIcon className="w-5 h-5 text-purple-600" />
-                                            </motion.div>
-                                            {/* View button */}
-                                            {/* <motion.div
-                                              whileHover={{ scale: 1.2, x: 3 }}
-                                              whileTap={{ scale: 0.9 }}
-                                              className="cursor-pointer p-1 bg-gray-100 rounded-full hover:bg-gray-200"
-                                            >
-                                              <Image
-                                                src="/placeholder.svg?height=20&width=20"
-                                                alt="View"
-                                                width={20}
-                                                height={20}
-                                                className="w-5 h-5"
-                                              />
-                                            </motion.div> */}
-                                          </div>
-                                        </td>
-                                      </motion.tr>
-                                    ))
-                                  ) : (
-                                    <tr>
-                                      <td
-                                        colSpan={5}
-                                        className="py-4 text-center text-gray-500"
-                                      >
-                                        No questions available for this
-                                        chapter/topic
-                                      </td>
-                                    </tr>
-                                  )}
-                                </AnimatePresence>
-                              </tbody>
-                            </table>
-                          </motion.div>
-                        </td>
-                      </motion.tr>
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
+                                              {h.title}
+                                            </th>
+                                          ))}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <AnimatePresence>
+                                          {chapter.rows.length ? (
+                                            chapter.rows.map((row, idx) => (
+                                              <motion.tr
+                                                key={`${row.id}-${idx}`}
+                                                className={`hover:bg-white transition-colors ${
+                                                  idx ===
+                                                  chapter.rows.length - 1
+                                                    ? "border-none"
+                                                    : "border-b border-gray-200"
+                                                }`}
+                                                initial={{
+                                                  opacity: 0,
+                                                  y: 10,
+                                                }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{
+                                                  delay: idx * 0.05,
+                                                }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                              >
+                                                <td className="py-4 px-4 text-center font-Mulish font-bold">
+                                                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm">
+                                                    {idx + 1}
+                                                  </span>
+                                                </td>
+                                                <td className="py-4 px-4 text-center">
+                                                  <div className="font-Mulish font-semibold flex items-center justify-center space-x-2">
+                                                    <div className="p-1.5 bg-purple-100 rounded-lg">
+                                                      <Image
+                                                        src="/Atoms.svg"
+                                                        alt="Physics"
+                                                        width={16}
+                                                        height={16}
+                                                        className="w-4 h-4"
+                                                      />
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-gray-700">
+                                                      Physics
+                                                    </span>
+                                                  </div>
+                                                </td>
+                                                <td className="py-4 px-4 text-center font-Mulish font-medium text-gray-600">
+                                                  <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full inline-block font-medium">
+                                                    {row.topicName}
+                                                  </span>
+                                                </td>
+                                                <td className="py-4 px-4 font-Mulish font-medium text-gray-700">
+                                                  <div className="leading-relaxed">
+                                                    {row.question}
+                                                  </div>
+                                                </td>
+                                                <td className="py-4 px-4 text-center">
+                                                  <div className="flex justify-center">
+                                                    <motion.div
+                                                      onClick={() =>
+                                                        handleReplaceQuestion(
+                                                          chapter.id,
+                                                          idx
+                                                        )
+                                                      }
+                                                      className="cursor-pointer p-2 bg-purple-100 rounded-xl hover:bg-purple-200 shadow-sm"
+                                                      whileHover={{
+                                                        scale: 1.1,
+                                                      }}
+                                                      whileTap={{
+                                                        scale: 0.9,
+                                                      }}
+                                                    >
+                                                      <ShuffleIcon className="w-5 h-5 text-purple-600" />
+                                                    </motion.div>
+                                                  </div>
+                                                </td>
+                                              </motion.tr>
+                                            ))
+                                          ) : (
+                                            <tr>
+                                              <td
+                                                colSpan={5}
+                                                className="py-8 text-center text-gray-500"
+                                              >
+                                                <div className="flex flex-col items-center space-y-2">
+                                                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                                                    <span className="text-2xl text-gray-400">
+                                                      📝
+                                                    </span>
+                                                  </div>
+                                                  <p className="font-medium">
+                                                    No questions available for
+                                                    this chapter/topic
+                                                  </p>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </AnimatePresence>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </motion.tr>
+                          )}
+                        </AnimatePresence>
+                      </tbody>
+                    </table>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        </div>
+
+        {/* Mobile View */}
+        <div className="lg:hidden w-full max-w-md mx-auto space-y-4">
+          <div className="grid gap-4">
+            {chapters.map((chapter, index) => (
+              <MobileChapterCard
+                key={chapter.id}
+                chapter={chapter}
+                index={index}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

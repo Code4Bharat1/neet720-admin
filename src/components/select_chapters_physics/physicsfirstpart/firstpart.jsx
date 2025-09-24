@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { BsSearch, BsBook, BsGraphUp } from "react-icons/bs";
+import { BsBook, BsGraphUp } from "react-icons/bs";
 import { FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
-export default function PhysicsFirstPart() {
+export default function SubjectSelection() {
   const router = useRouter();
+  const pathname = usePathname(); // Get current URL path
   const [availableSubjects, setAvailableSubjects] = useState([]);
 
   useEffect(() => {
@@ -19,20 +20,18 @@ export default function PhysicsFirstPart() {
             setAvailableSubjects(parsed.map((s) => s.toLowerCase()));
           }
         } catch (error) {
-          console.error(
-            "Error parsing selectedSubjects from localStorage:",
-            error
-          );
+          console.error("Error parsing selectedSubjects:", error);
         }
       }
     }
   }, []);
 
   const handleSubjectClick = (subject) => {
-    if (subject) {
-      router.push(`/select_chapters_${subject.toLowerCase()}`);
-    }
+    if (subject) router.push(`/select_chapters_${subject.toLowerCase()}`);
   };
+
+  // Extract the current subject from the URL, e.g., "/select_chapters_chemistry"
+  const currentSubject = pathname?.split("_")[2] || "";
 
   return (
     <section className="font-['Segoe_UI'] bg-gray-50 rounded-xl shadow-sm p-4 sm:p-6 mb-6">
@@ -59,7 +58,7 @@ export default function PhysicsFirstPart() {
           <span className="bg-blue-500 p-1.5 rounded-full text-white shadow-sm">
             <BsBook className="text-lg" />
           </span>
-          Select Physics Chapters
+          Select Chapters
         </motion.h1>
       </div>
 
@@ -82,31 +81,57 @@ export default function PhysicsFirstPart() {
           </div>
 
           {/* Subject Chips */}
-          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-3 w-full sm:w-auto mt-3 sm:mt-0">
             {availableSubjects.includes("physics") && (
               <div
-                className="bg-blue-50 cursor-pointer border-2 border-blue-600 text-blue-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer ${
+                  currentSubject === "physics"
+                    ? "bg-blue-600 text-white "
+                    : "bg-blue-50 text-blue-700 "
+                }`}
                 onClick={() => handleSubjectClick("physics")}
               >
-                <span className="bg-blue-600 w-3 h-3 rounded-full"></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentSubject === "physics" ? "bg-white" : "bg-blue-600"
+                  }`}
+                ></span>
                 Physics
               </div>
             )}
+
             {availableSubjects.includes("chemistry") && (
               <div
-                className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg border cursor-pointer border-purple-100 font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer  ${
+                  currentSubject === "chemistry"
+                    ? "bg-purple-600 text-white "
+                    : "bg-purple-50 text-purple-700 "
+                }`}
                 onClick={() => handleSubjectClick("chemistry")}
               >
-                <span className="bg-purple-600 w-3 h-3 rounded-full"></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentSubject === "chemistry" ? "bg-white" : "bg-purple-600"
+                  }`}
+                ></span>
                 Chemistry
               </div>
             )}
+
             {availableSubjects.includes("biology") && (
               <div
-                className="bg-green-50 cursor-pointer text-green-700 px-4 py-2 rounded-lg border border-green-100 font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer  ${
+                  currentSubject === "biology"
+                    ? "bg-green-600 text-white "
+                    : "bg-green-50 text-green-700 "
+                }`}
                 onClick={() => handleSubjectClick("biology")}
               >
-                <span className="bg-green-600 w-3 h-3 rounded-full"></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentSubject === "biology" ? "bg-white" : "bg-green-600"
+                  }`}
+                ></span>
                 Biology
               </div>
             )}
