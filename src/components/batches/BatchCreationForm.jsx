@@ -32,13 +32,13 @@ const BatchCreationForm = () => {
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showStudentSelector, setShowStudentSelector] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const cleanName = (...parts) => {
     const raw = parts
-    .map((s) => (s ?? "").toString().trim())
-    .filter(Boolean)
-    .join(" ");
+      .map((s) => (s ?? "").toString().trim())
+      .filter(Boolean)
+      .join(" ");
     const cleaned = raw
       .replace(/\b(null|undefined|n\/a|na)\b/gi, "")
       .replace(/\s+/g, " ")
@@ -49,16 +49,13 @@ const BatchCreationForm = () => {
   // Get admin ID from localStorage or token
   const getAdminId = () => {
     if (typeof window !== "undefined") {
-      // Try to get from localStorage first
-      const adminId = localStorage.getItem("adminId");
-      if (adminId) return adminId;
-
       // If not found, try to decode from token
       const token = localStorage.getItem("adminAuthToken");
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split(".")[1]));
-          return payload.adminId || payload.id;
+          let adminId = localStorage.getItem("adminId");
+          return adminId;
         } catch (e) {
           console.error("Error decoding token:", e);
         }
@@ -75,8 +72,7 @@ const BatchCreationForm = () => {
         : null;
 
     return axios.create({
-      baseURL:
-        process.env.NEXT_PUBLIC_API_BASE_URL ,
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -93,14 +89,14 @@ const BatchCreationForm = () => {
     setError(""); // Clear previous errors
 
     try {
-      const adminId = getAdminId();
+      const token = localStorage.getItem("adminAuthToken");
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const adminId = payload.id;
       if (!adminId) {
         setError("Admin ID not found. Please log in again.");
         setIsLoadingStudents(false);
         return;
       }
-
-      const token = localStorage.getItem("adminAuthToken");
       if (!token) {
         setError("Authentication token not found. Please log in again.");
         setIsLoadingStudents(false);
@@ -108,7 +104,7 @@ const BatchCreationForm = () => {
       }
 
       const api = createAxiosInstance();
-
+      console.log("Fetching students for adminId:", adminId);
       const response = await api.post("/studentdata/info", {
         addedByAdminId: parseInt(adminId),
       });
@@ -343,10 +339,7 @@ const BatchCreationForm = () => {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-800">
-                              {cleanName(
-                                student.firstName,
-                                student.lastName
-                              )}
+                              {cleanName(student.firstName, student.lastName)}
                             </p>
                             <p className="text-xs text-gray-500">
                               {student.email}
