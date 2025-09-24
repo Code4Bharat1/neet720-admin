@@ -236,7 +236,7 @@ const TestResultDownload = () => {
   const sortedResults = getSortedResults();
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md overflow-auto w-full max-w-[500px] h-[420px] relative">
+    <div className="bg-white p-6 rounded-lg shadow-md overflow-auto w-full max-w-full h-full relative">
       <div className='flex justify-between items-center mb-4'>
         <h2 className="text-xl font-bold text-gray-800">Last Test Results</h2>
         

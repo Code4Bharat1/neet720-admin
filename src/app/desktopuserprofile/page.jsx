@@ -28,9 +28,12 @@ export default function Page() {
           return;
         }
 
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/test-result`, {
-          studentId,
-        });
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/test-result`,
+          {
+            studentId,
+          }
+        );
 
         setSubjectTotals(response.data.data.subjectTotals || {});
       } catch (error) {
@@ -57,24 +60,24 @@ export default function Page() {
 
   return (
     <LayoutWithNav>
-      <main className="px-6 py-4">
-        <ModeSwitcheruserProfile
+      <ModeSwitcheruserProfile
+        selectedMode={selectedMode}
+        setSelectedMode={handleModeChange}
+      />
+      <section className="mt-10 p-6 space-y-8">
+      <ProfileCard />
+      <StatsCarddesktop />
+      <AttendanceComponent selectedMode={selectedMode} />
+      <div className="flex flex-col-reverse lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6 w-full">
+        {/* On mobile, stack vertically with ModeSwitcherChart on top */}
+        <ModeSwitcherChart
           selectedMode={selectedMode}
-          setSelectedMode={handleModeChange}
+          subjectTotals={subjectTotals}
         />
-        <section className="max-w-6xl mx-auto mt-10 p-6 space-y-8">
-          <ProfileCard />
-          <StatsCarddesktop />
-          <AttendanceComponent selectedMode={selectedMode} />
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            <TestResultDownload />
-            <ModeSwitcherChart
-              selectedMode={selectedMode}
-              subjectTotals={subjectTotals}
-            />
-          </div>
-        </section>
-      </main>
+
+        <TestResultDownload />
+      </div>
+      </section>
     </LayoutWithNav>
   );
 }

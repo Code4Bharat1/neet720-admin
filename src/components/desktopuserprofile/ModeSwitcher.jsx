@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 const ModeSwitcheruserProfile = ({ selectedMode, setSelectedMode }) => {
   const router = useRouter();
   return (
-    <div className="flex justify-between w-full my-10 px-10">
+    <div className="flex justify-between w-full my-10 px-4">
       {/* Back Button */}
       <button
         onClick={() => router.back()}

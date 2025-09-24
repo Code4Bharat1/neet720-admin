@@ -103,23 +103,32 @@ export default function AnswerPaper() {
   };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
+    // Check if we're on mobile
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
-    const renderQuestions = (questions, showSubjects) => {
-      let output = "";
-      let lastSubject = null;
+    if (isMobile) {
+      // For mobile devices, create a temporary print-friendly page in the current window
+      const originalContent = document.body.innerHTML;
+      const originalTitle = document.title;
 
-      questions.forEach((q, idx) => {
-        if (showSubjects && q.subject !== lastSubject) {
-          output += `
+      const renderQuestions = (questions, showSubjects) => {
+        let output = "";
+        let lastSubject = null;
+
+        questions.forEach((q, idx) => {
+          if (showSubjects && q.subject !== lastSubject) {
+            output += `
             <div class="subject-header">
               ${q.subject}
             </div>
           `;
-          lastSubject = q.subject;
-        }
+            lastSubject = q.subject;
+          }
 
-        output += `
+          output += `
           <div class="question-block">
             <div class="question-number">${idx + 1}.</div>
             <div class="question-main">
@@ -184,11 +193,332 @@ export default function AnswerPaper() {
             </div>
           </div>
         `;
-      });
-      return output;
-    };
+        });
+        return output;
+      };
 
-    const printContent = `
+      const printStyles = `
+      <style>
+        @media print {
+          body { margin: 0; padding: 20px; }
+          .no-print { display: none !important; }
+        }
+        @page {
+          size: A4;
+          margin: 1.5cm;
+        }
+        body {
+          font-family: 'Times New Roman', serif;
+          font-size: 10pt;
+          margin: 0;
+          padding: 0;
+          color: #000;
+          background: #fff;
+          position: relative;
+        }
+        .header {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-bottom: 2px solid #222;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+          position: relative;
+        }
+        .title {
+          font-size: 20pt;
+          font-weight: bold;
+          text-transform: uppercase;
+          text-align: center;
+        }
+        .question-columns {
+          column-count: 1;
+          column-gap: 30px;
+        }
+        .subject-header {
+          background: #ede9fe;
+          color: #5b21b6;
+          font-weight: bold;
+          font-size: 12pt;
+          text-transform: uppercase;
+          border-bottom: 2px solid #a78bfa;
+          margin: 20px 0 15px 0;
+          padding: 10px;
+          break-inside: avoid;
+        }
+        .question-block {
+          margin-bottom: 25px;
+          break-inside: avoid;
+          display: flex;
+          gap: 15px;
+          border-left: 3px solid #ede9fe;
+          padding-left: 15px;
+          min-height: 40px;
+        }
+        .question-number {
+          font-weight: bold;
+          min-width: 35px;
+          color: #222;
+          font-size: 11pt;
+        }
+        .question-main {
+          flex: 1;
+        }
+        .question-text {
+          font-weight: 600;
+          margin-bottom: 8px;
+          line-height: 1.5;
+          font-size: 11pt;
+        }
+        .options-block {
+          margin: 8px 0 10px 20px;
+        }
+        .option-row {
+          display: flex;
+          align-items: start;
+          margin-bottom: 4px;
+          padding: 3px 0;
+          font-size: 10pt;
+        }
+        .option-row.correct {
+          background: #dcfce7;
+          border-left: 3px solid #16a34a;
+          border-radius: 4px;
+          padding-left: 8px;
+          font-weight: 500;
+        }
+        .option-letter {
+          font-weight: bold;
+          margin-right: 10px;
+          min-width: 25px;
+          color: #2563eb;
+        }
+        .marks-label {
+          text-align: right;
+          color: #dc2626;
+          font-style: italic;
+          font-size: 9pt;
+          margin: 5px 0;
+          font-weight: 500;
+        }
+        .solution-block {
+          background: #f0f9ff;
+          border: 1px solid #38bdf8;
+          border-radius: 6px;
+          padding: 12px;
+          margin-top: 10px;
+          font-size: 10pt;
+        }
+        .solution-title {
+          font-weight: bold;
+          color: #0369a1;
+          margin-bottom: 8px;
+          border-bottom: 1px solid #bae6fd;
+          padding-bottom: 4px;
+          font-size: 11pt;
+        }
+        .correct-answer {
+          background: #dcfce7;
+          padding: 6px 8px;
+          border-radius: 4px;
+          margin-bottom: 6px;
+          border-left: 3px solid #22c55e;
+          font-weight: 500;
+        }
+        .solution-text {
+          color: #374151;
+          line-height: 1.4;
+          margin-bottom: 4px;
+        }
+        .footer {
+          text-align: center;
+          font-size: 10pt;
+          margin-top: 40px;
+          border-top: 1px solid #e5e7eb;
+          padding-top: 15px;
+          color: #6b7280;
+        }
+        .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-30deg);
+          font-size: 80px;
+          color: rgba(91, 33, 182, 0.08);
+          font-weight: bold;
+          z-index: 0;
+          pointer-events: none;
+          font-family: Arial, sans-serif;
+          user-select: none;
+          text-align: center;
+          width: 100vw;
+        }
+        .print-button {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+          background: #059669;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        .close-button {
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1000;
+          background: #dc2626;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        @media print {
+          .print-button, .close-button { display: none !important; }
+        }
+      </style>
+    `;
+
+      const printContent = `
+      ${printStyles}
+      ${showWatermark ? `<div class="watermark">ANSWER KEY</div>` : ""}
+      <button class="close-button no-print" onclick="window.location.reload();">Close</button>
+      <button class="print-button no-print" onclick="window.print();">Print</button>
+      <div class="header">
+        <div class="title">${paperTitle}</div>
+      </div>
+      <div class="question-columns">
+        ${renderQuestions(questions, showSubjects)}
+      </div>
+      <div class="footer">--- End of Answer Key ---</div>
+    `;
+
+      // Store original content in window object so it's accessible in onclick
+      window.originalContent = originalContent;
+      window.originalTitle = originalTitle;
+
+      // Replace current page content with print content
+      document.title = paperTitle || "Answer Key";
+      document.body.innerHTML = printContent;
+
+      // Add event listener to restore content after printing
+      const closeBtn = document.querySelector(".close-button");
+      const printBtn = document.querySelector(".print-button");
+
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        };
+      }
+
+      if (printBtn) {
+        printBtn.onclick = () => {
+          window.print();
+        };
+      }
+
+      // Auto-restore after print dialog closes (with delay for print completion)
+      window.onafterprint = () => {
+        setTimeout(() => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        }, 1000);
+      };
+    } else {
+      // Desktop version - use the original popup method
+      const printWindow = window.open("", "_blank");
+
+      const renderQuestions = (questions, showSubjects) => {
+        let output = "";
+        let lastSubject = null;
+
+        questions.forEach((q, idx) => {
+          if (showSubjects && q.subject !== lastSubject) {
+            output += `
+            <div class="subject-header">
+              ${q.subject}
+            </div>
+          `;
+            lastSubject = q.subject;
+          }
+
+          output += `
+          <div class="question-block">
+            <div class="question-number">${idx + 1}.</div>
+            <div class="question-main">
+              <div class="question-text">${q.question_text.replace(
+                /\n/g,
+                "<br>"
+              )}</div>
+              ${
+                q.options
+                  ? `
+                <div class="options-block">
+                  ${Object.entries(q.options)
+                    .map(
+                      ([key, value]) => `
+                      <div class="option-row${
+                        q.correctanswer &&
+                        q.correctanswer.toLowerCase() === key.toLowerCase()
+                          ? " correct"
+                          : ""
+                      }">
+                        <span class="option-letter">${key.toUpperCase()})</span>
+                        <span>${value}</span>
+                      </div>
+                    `
+                    )
+                    .join("")}
+                </div>
+              `
+                  : ""
+              }
+              ${
+                showMarks
+                  ? `
+                <div class="marks-label">[${q.marks || 4} Mark${
+                      (q.marks || 4) > 1 ? "s" : ""
+                    }]</div>
+              `
+                  : ""
+              }
+              ${
+                showSolutions
+                  ? `
+                <div class="solution-block">
+                  <div class="solution-title">Solution & Answer</div>
+                  ${
+                    q.correctanswer
+                      ? `
+                    <div class="correct-answer">
+                      <strong>Correct Answer:</strong> ${q.correctanswer.toUpperCase()}) ${
+                          q.options
+                            ? q.options[q.correctanswer.toLowerCase()]
+                            : ""
+                        }
+                    </div>
+                  `
+                      : ""
+                  }
+                </div>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+        });
+        return output;
+      };
+
+      const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -359,14 +689,15 @@ export default function AnswerPaper() {
       </html>
     `;
 
-    printWindow.document.write(printContent);
-    printWindow.document.close();
+      printWindow.document.write(printContent);
+      printWindow.document.close();
 
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    }
   };
 
   const resetOptions = () => {
@@ -646,10 +977,10 @@ export default function AnswerPaper() {
                                       : "hover:bg-gray-50 border border-gray-200"
                                   }`}
                                 >
-                                  <span className="font-semibold mr-2 sm:mr-4 min-w-[25px] sm:min-w-[30px] text-blue-600 flex-shrink-0 text-sm sm:text-base">
+                                  <span className="font-semibold mr-2 sm:mr-4 min-w-[25px] sm:min-w-[30px] text-blue-600 flex-shrink-0 text-sm sm:text-base leading-tight">
                                     {key.toUpperCase()})
                                   </span>
-                                  <span className="leading-relaxed flex-1 text-sm sm:text-base break-words">
+                                  <span className="leading-relaxed flex-1 text-sm sm:text-base break-words overflow-wrap-anywhere hyphens-auto min-w-0">
                                     {value}
                                   </span>
                                 </div>

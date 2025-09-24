@@ -16,6 +16,31 @@ const TestUpdateForm = ({ testId }) => {
     exam_end_date: "",
     status: "",
   });
+  const [batches, setBatches] = useState([]);
+  const [loadingBatches, setLoadingBatches] = useState(true);
+
+  // Add this function to fetch batches:
+  const fetchBatches = async () => {
+    try {
+      setLoadingBatches(true);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/getbatch`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("adminAuthToken")}`,
+          },
+        }
+      );
+      console.log("Batches response:", response.data);
+      setBatches(response.data.batchData || []);
+    } catch (err) {
+      console.error("Failed to fetch batches:", err);
+      setError("Failed to fetch batches");
+    } finally {
+      setLoadingBatches(false);
+    }
+  };
+
   // Convert UTC date string to datetime-local format (YYYY-MM-DDTHH:mm)
   const toLocalDateTimeInput = (dateString) => {
     if (!dateString) return "";
@@ -48,14 +73,14 @@ const TestUpdateForm = ({ testId }) => {
         );
 
         const test = response.data.test;
-        console.log("data :",test)
+        console.log("data :", test);
         setFormData({
           testname: test.testname || "",
           batch_name: test.batch_name || "",
           duration: test.duration || "",
           exam_start_date: toLocalDateTimeInput(test.exam_start_date),
           exam_end_date: toLocalDateTimeInput(test.exam_end_date),
-          status: (test.status || "").toLowerCase(), 
+          status: (test.status || "").toLowerCase(),
         });
       } catch (err) {
         setError("Failed to fetch test details");
@@ -66,6 +91,7 @@ const TestUpdateForm = ({ testId }) => {
     };
 
     fetchTestDetails();
+    fetchBatches(); // Add this line
   }, [testId]);
 
   const handleInputChange = (e) => {
@@ -148,15 +174,26 @@ const TestUpdateForm = ({ testId }) => {
         {/* Batch Name */}
         <div>
           <label className="block font-medium text-gray-700">Batch Name</label>
-          <input
-            type="text"
-            name="batch_name"
-            value={formData.batch_name}
-            onChange={handleInputChange}
-            className="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300"
-          />
+          {loadingBatches ? (
+            <div className="mt-1 w-full border border-gray-300 rounded-lg p-2 bg-gray-50 text-gray-500">
+              Loading batches...
+            </div>
+          ) : (
+            <select
+              name="batch_name"
+              value={formData.batch_name}
+              onChange={handleInputChange}
+              className="mt-1 w-full border border-gray-300 rounded-lg p-2 bg-white focus:ring focus:ring-blue-300"
+            >
+              <option value="">-- Select Batch --</option>
+              {batches.map((batch) => (
+                <option key={batch.batchId} value={batch.batchName}>
+                  {batch.batchName}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
-
         {/* Duration */}
         <div>
           <label className="block font-medium text-gray-700">

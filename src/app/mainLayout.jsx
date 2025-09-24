@@ -17,9 +17,9 @@ export default function LayoutWithNav({ children }) {
         <main className="flex-1 pb-20 px-4">{children}</main>
 
         {/* Bottom Navbar */}
-        <div className="fixed bottom-0 left-0 w-full z-30">
+        {/* <div className="fixed bottom-0 left-0 w-full z-30">
           <MobilebottomNavbar />
-        </div>
+        </div> */}
       </div>
 
       {/* ---------- DESKTOP LAYOUT ---------- */}

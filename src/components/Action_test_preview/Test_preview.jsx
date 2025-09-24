@@ -135,7 +135,7 @@ const TestPreview = () => {
         </header> */}
         <button
           onClick={() => router.push("/generatetest")}
-          className="flex items-center gap-1 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
+          className="flex items-center gap-1 mt-5 px-3 py-2 mb-4 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-sm transition"
         >
           <IoIosArrowBack className="text-xl" />
           <span className="text-sm font-medium">Back</span>
@@ -292,7 +292,7 @@ const TestPreview = () => {
                 </div>
 
                 {/* Topics Table */}
-                <div className="px-4 py-3">
+                <div className="px-2 py-5">
                   <h4 className="font-medium text-gray-700 mb-3">Topics</h4>
                   <div className="overflow-hidden rounded-lg border border-gray-200">
                     <table className="min-w-full divide-y divide-gray-200">

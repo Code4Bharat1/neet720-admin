@@ -1,17 +1,25 @@
-"use client"
+"use client";
 import { useState, useEffect } from "react";
-import axios from "axios"
-import { FaPrint, FaEye, FaDownload, FaClipboardList, FaFileAlt, FaCog } from "react-icons/fa";
+import axios from "axios";
+import {
+  FaPrint,
+  FaEye,
+  FaDownload,
+  FaClipboardList,
+  FaFileAlt,
+  FaCog,
+} from "react-icons/fa";
 import { MdPreview, MdDescription } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { IoIosArrowBack } from "react-icons/io";
 export default function SimplePaperPrinter() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
     duration: "120",
     marks: "100",
     date: "2024-12-01",
-    instruction: "Read all questions carefully. Mark your answers clearly on the OMR sheet. Use only blue or black pen.",
+    instruction:
+      "Read all questions carefully. Mark your answers clearly on the OMR sheet. Use only blue or black pen.",
     title: "Sample Question Paper",
   });
 
@@ -21,7 +29,8 @@ export default function SimplePaperPrinter() {
   const [questionsBySubject, setQuestionsBySubject] = useState({});
   const [isPreviewReady, setIsPreviewReady] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
-  const testid = typeof window !== "undefined" ? localStorage.getItem("testid") : null;
+  const testid =
+    typeof window !== "undefined" ? localStorage.getItem("testid") : null;
   const [loading, setLoading] = useState(true);
 
   // ✅ Fetch Questions from API
@@ -101,9 +110,12 @@ export default function SimplePaperPrinter() {
     }, 100);
   };
 
-  // Question Paper Print Logic
+  // Question Paper Print Logic - Mobile Compatible
   const handlePrintQuestionPaper = () => {
-    const printWindow = window.open("", "_blank");
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
     const renderQuestions = (questionsBySubject) => {
       let output = "";
@@ -111,39 +123,177 @@ export default function SimplePaperPrinter() {
       Object.entries(questionsBySubject).forEach(([subject, questions]) => {
         output += `<div class="subject-header">${subject}</div>`;
         questions.forEach((q) => {
-          const optionLayout = q.options.some((opt) => opt.length > 50) ? "single" : "double";
-          const optionsHTML = optionLayout === "double"
-            ? `
-            <div class="options-double">
-              <div class="row">
-                <div class="option"><strong>A)</strong> ${q.options[0] || ""}</div>
-                <div class="option"><strong>B)</strong> ${q.options[1] || ""}</div>
-              </div>
-              <div class="row">
-                <div class="option"><strong>C)</strong> ${q.options[2] || ""}</div>
-                <div class="option"><strong>D)</strong> ${q.options[3] || ""}</div>
-              </div>
+          const optionLayout = q.options.some((opt) => opt.length > 50)
+            ? "single"
+            : "double";
+          const optionsHTML =
+            optionLayout === "double"
+              ? `
+          <div class="options-double">
+            <div class="row">
+              <div class="option"><strong>A)</strong> ${
+                q.options[0] || ""
+              }</div>
+              <div class="option"><strong>B)</strong> ${
+                q.options[1] || ""
+              }</div>
             </div>
-          `
-            : `
-            <div class="options-single">
-              ${q.options.map((opt, i) =>
-              `<div class="option"><strong>${String.fromCharCode(65 + i)})</strong> ${opt}</div>`
-            ).join("")}
+            <div class="row">
+              <div class="option"><strong>C)</strong> ${
+                q.options[2] || ""
+              }</div>
+              <div class="option"><strong>D)</strong> ${
+                q.options[3] || ""
+              }</div>
             </div>
-          `;
+          </div>
+        `
+              : `
+          <div class="options-single">
+            ${q.options
+              .map(
+                (opt, i) =>
+                  `<div class="option"><strong>${String.fromCharCode(
+                    65 + i
+                  )})</strong> ${opt}</div>`
+              )
+              .join("")}
+          </div>
+        `;
           output += `
-        <div class="question">
-          <div class="question-number">${serial++}. ${q.question}</div>
-          ${optionsHTML}
-        </div>
-      `;
+      <div class="question">
+        <div class="question-number">${serial++}. ${q.question}</div>
+        ${optionsHTML}
+      </div>
+    `;
         });
       });
       return output;
     };
 
-    const printContent = `
+    if (isMobile) {
+      const originalContent = document.body.innerHTML;
+      const originalTitle = document.title;
+
+      const printStyles = `
+      <style>
+        @media print {
+          body { margin: 0; padding: 20px; }
+          .no-print { display: none !important; }
+        }
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: 'Times New Roman', serif; font-size: 11pt; margin: 0; padding: 0; color: #000; }
+        .page { padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+        .title { font-size: 20pt; font-weight: bold; text-transform: uppercase; }
+        .logo { max-width: 80px; max-height: 80px; }
+        .info { display: flex; justify-content: space-between; margin: 15px 0; font-size: 12pt; }
+        .instructions { border: 2px solid #000; padding: 15px; background: #f8f8f8; margin: 15px 0; }
+        .instructions strong { font-size: 13pt; }
+        .question-columns { column-count: 2; column-gap: 30px; column-rule: 1px solid #ccc; }
+        .question { break-inside: avoid; margin-bottom: 20px; }
+        .question-number { font-weight: bold; margin-bottom: 8px; font-size: 12pt; }
+        .options-single { margin-left: 20px; }
+        .options-double { margin-left: 20px; }
+        .options-double .row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .options-double .option { flex: 1; padding-right: 10px; }
+        .options-single .option { margin-bottom: 4px; }
+        .footer { text-align: center; font-size: 12pt; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; }
+        .subject-header { 
+          background: #e0e7ff; 
+          color: #1e40af; 
+          font-weight: bold; 
+          font-size: 14pt; 
+          text-transform: uppercase; 
+          padding: 10px; 
+          margin: 20px 0 15px 0; 
+          break-inside: avoid;
+          border-left: 4px solid #1e40af;
+        }
+        .print-button {
+          position: fixed; top: 20px; right: 20px; z-index: 1000;
+          background: #059669; color: white; border: none;
+          padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        .close-button {
+          position: fixed; top: 20px; left: 20px; z-index: 1000;
+          background: #dc2626; color: white; border: none;
+          padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        @media print {
+          .print-button, .close-button { display: none !important; }
+        }
+      </style>
+    `;
+
+      const printContent = `
+      ${printStyles}
+      <button class="close-button no-print">Close</button>
+      <button class="print-button no-print">Print</button>
+      <div class="page">
+        <div class="header">
+          <div class="title">${formData.title || "Question Paper"}</div>
+          ${
+            logoBase64
+              ? `<img src="${logoBase64}" class="logo" alt="Logo" />`
+              : ""
+          }
+        </div>
+        <div class="info">
+          <div>
+            <div><strong>Duration:</strong> ${formData.duration} minutes</div>
+            <div><strong>Date:</strong> ${formData.date || "N/A"}</div>
+          </div>
+          <div>
+            <div><strong>Total Marks:</strong> ${formData.marks}</div>
+            <div><strong>Total Questions:</strong> ${allQuestions.length}</div>
+          </div>
+        </div>
+        ${
+          formData.instruction
+            ? `<div class="instructions"><strong>Instructions:</strong><br/>${formData.instruction}</div>`
+            : ""
+        }
+        <div class="question-columns">
+          ${renderQuestions(questionsBySubject)}
+        </div>
+        ${footerText ? `<div class="footer">${footerText}</div>` : ""}
+      </div>
+    `;
+
+      window.originalContent = originalContent;
+      window.originalTitle = originalTitle;
+
+      document.title = formData.title || "Question Paper";
+      document.body.innerHTML = printContent;
+
+      const closeBtn = document.querySelector(".close-button");
+      const printBtn = document.querySelector(".print-button");
+
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        };
+      }
+
+      if (printBtn) {
+        printBtn.onclick = () => {
+          window.print();
+        };
+      }
+
+      window.onafterprint = () => {
+        setTimeout(() => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        }, 1000);
+      };
+    } else {
+      // Desktop version
+      const printWindow = window.open("", "_blank");
+
+      const printContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -184,7 +334,11 @@ export default function SimplePaperPrinter() {
       <div class="page">
         <div class="header">
           <div class="title">${formData.title || "Question Paper"}</div>
-          ${logoBase64 ? `<img src="${logoBase64}" class="logo" alt="Logo" />` : ""}
+          ${
+            logoBase64
+              ? `<img src="${logoBase64}" class="logo" alt="Logo" />`
+              : ""
+          }
         </div>
         <div class="info">
           <div>
@@ -196,7 +350,11 @@ export default function SimplePaperPrinter() {
             <div><strong>Total Questions:</strong> ${allQuestions.length}</div>
           </div>
         </div>
-        ${formData.instruction ? `<div class="instructions"><strong>Instructions:</strong><br/>${formData.instruction}</div>` : ""}
+        ${
+          formData.instruction
+            ? `<div class="instructions"><strong>Instructions:</strong><br/>${formData.instruction}</div>`
+            : ""
+        }
         <div class="question-columns">
           ${renderQuestions(questionsBySubject)}
         </div>
@@ -204,125 +362,243 @@ export default function SimplePaperPrinter() {
       </div>
     </body>
     </html>
-  `;
+    `;
 
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    }
   };
 
-  // OMR Sheet Print Logic
+  // OMR Sheet Print Logic - Mobile Compatible
   const handlePrintOMRSheet = () => {
-    const printWindow = window.open("", "_blank");
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
     const totalQuestions = allQuestions.length;
-    const questionsPerColumn = Math.ceil(totalQuestions / 4); // split into 4 columns
+    const questionsPerColumn = Math.ceil(totalQuestions / 4);
 
-    // Helper function to render one column
     const renderOMRColumn = (start, end) => {
       let columnContent = "";
       for (let i = start; i <= end; i++) {
         if (i > totalQuestions) break;
         columnContent += `
-        <div class="question-row">
-          <span class="question-number">${i}</span>
-          <div class="options-bubbles">
-            <div class="bubble-option">A</div>
-            <div class="bubble-option">B</div>
-            <div class="bubble-option">C</div>
-            <div class="bubble-option">D</div>
-          </div>
+      <div class="question-row">
+        <span class="question-number">${i}</span>
+        <div class="options-bubbles">
+          <div class="bubble-option">A</div>
+          <div class="bubble-option">B</div>
+          <div class="bubble-option">C</div>
+          <div class="bubble-option">D</div>
         </div>
-      `;
+      </div>
+    `;
       }
       return columnContent;
     };
 
     const col1 = renderOMRColumn(1, questionsPerColumn);
-    const col2 = renderOMRColumn(questionsPerColumn + 1, questionsPerColumn * 2);
-    const col3 = renderOMRColumn(questionsPerColumn * 2 + 1, questionsPerColumn * 3);
+    const col2 = renderOMRColumn(
+      questionsPerColumn + 1,
+      questionsPerColumn * 2
+    );
+    const col3 = renderOMRColumn(
+      questionsPerColumn * 2 + 1,
+      questionsPerColumn * 3
+    );
     const col4 = renderOMRColumn(questionsPerColumn * 3 + 1, totalQuestions);
 
-    const omrHTML = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>OMR Sheet - ${formData.title || "Question Paper"}</title>
-    <style>
-      @page { size: A4; margin: 1.5cm; }
-      body { font-family: Arial, sans-serif; font-size: 10pt; background: white; color: #000; }
-      .omr-page { padding: 0; }
-      .omr-flex-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 12px; padding: 2px 10px; border: 1px solid black;
+    if (isMobile) {
+      const originalContent = document.body.innerHTML;
+      const originalTitle = document.title;
+
+      const printStyles = `
+      <style>
+        @media print {
+          body { margin: 0; padding: 20px; }
+          .no-print { display: none !important; }
+        }
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; background: white; color: #000; }
+        .omr-page { padding: 0; }
+        .omr-flex-header {
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 12px; padding: 2px 10px; border: 1px solid black;
+        }
+        .omr-left-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 180px; gap: 6px; }
+        .logo-omr { max-width: 100px; max-height: 80px; margin-bottom: 6px; border-radius: 5px; border: 1px solid #ddd; background: #fff; }
+        .omr-center-title { text-align: center; flex: 1; }
+        .omr-title { font-size: 16pt; font-weight: bold; margin-bottom: 4px; }
+        .omr-subtitle { font-size: 11pt; color: #444; margin-bottom: 0; }
+        .omr-table { display: flex; justify-content: space-between; gap: 12px; }
+        .column { flex: 1; border: 1px solid black; padding: 10px; }
+        .question-row { display: flex; align-items: center; margin-bottom: 3px; font-size: 7pt; }
+        .question-number { min-width: 20px; font-weight: bold; }
+        .options-bubbles { display: flex; gap: 10px; margin-left: 10px; }
+        .bubble-option { width: 14px; height: 14px; border: 1px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 6pt; font-weight: bold; }
+        .info-line { display: inline-block; width: 100px; margin-left: 5px; border-bottom:1px dotted #aaa; min-height:12px; }
+        .print-button {
+          position: fixed; top: 20px; right: 20px; z-index: 1000;
+          background: #059669; color: white; border: none;
+          padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        .close-button {
+          position: fixed; top: 20px; left: 20px; z-index: 1000;
+          background: #dc2626; color: white; border: none;
+          padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        @media print {
+          .print-button, .close-button { display: none !important; }
+        }
+      </style>
+    `;
+
+      const printContent = `
+      ${printStyles}
+      <button class="close-button no-print">Close</button>
+      <button class="print-button no-print">Print</button>
+      <div class="omr-page">
+        <div class="omr-flex-header">
+          <div class="omr-left-info">
+            <div>Name: <span class="info-line">&nbsp;</span></div>
+            <div>Roll No: <span class="info-line">&nbsp;</span></div>
+            <div>Date: <span class="info-line">&nbsp;</span></div>
+          </div>
+          <div class="omr-center-title">
+            <div class="omr-title">${
+              formData.title || "OMR QUESTION SHEET"
+            }</div>
+            <div class="omr-subtitle">**Do not write anything on the OMR bubbles**</div>
+          </div>
+          <div style="min-width:80px">
+            ${logoBase64 ? `<img src="${logoBase64}" class="logo-omr" />` : ""}
+          </div>
+        </div>
+        <div class="omr-table">
+          <div class="column">${col1}</div>
+          <div class="column">${col2}</div>
+          <div class="column">${col3}</div>
+          <div class="column">${col4}</div>
+        </div>
+      </div>
+    `;
+
+      window.originalContent = originalContent;
+      window.originalTitle = originalTitle;
+
+      document.title = `OMR Sheet - ${formData.title || "Question Paper"}`;
+      document.body.innerHTML = printContent;
+
+      const closeBtn = document.querySelector(".close-button");
+      const printBtn = document.querySelector(".print-button");
+
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        };
       }
-      .omr-left-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 180px; gap: 6px; }
-      .logo-omr { max-width: 100px; max-height: 80px; margin-bottom: 6px; border-radius: 5px; border: 1px solid #ddd; background: #fff; }
-      .omr-center-title { text-align: center; flex: 1; }
-      .omr-title { font-size: 16pt; font-weight: bold; margin-bottom: 4px; }
-      .omr-subtitle { font-size: 11pt; color: #444; margin-bottom: 0; }
-      .omr-table { display: flex; justify-content: space-between; gap: 12px; }
-      .column { flex: 1; border: 1px solid black; padding: 10px; }
-      .question-row { display: flex; align-items: center; margin-bottom: 3px; font-size: 7pt; }
-      .question-number { min-width: 20px; font-weight: bold; }
-      .options-bubbles { display: flex; gap: 10px; margin-left: 10px; }
-      .bubble-option { width: 14px; height: 14px; border: 1px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 6pt; font-weight: bold; }
-      .info-line { display: inline-block; width: 100px; margin-left: 5px; border-bottom:1px dotted #aaa; min-height:12px; }
-    </style>
-  </head>
-  <body>
-    <div class="omr-page">
-      <div class="omr-flex-header">
-        <div class="omr-left-info">
-          <div>Name: <span class="info-line">&nbsp;</span></div>
-          <div>Roll No: <span class="info-line">&nbsp;</span></div>
-          <div>Date: <span class="info-line">&nbsp;</span></div>
-        </div>
-        <div class="omr-center-title">
-          <div class="omr-title">${formData.title || "OMR QUESTION SHEET"}</div>
-          <div class="omr-subtitle">**Do not write anything on the OMR bubbles**</div>
-        </div>
-        <div style="min-width:80px">
-          ${logoBase64 ? `<img src="${logoBase64}" class="logo-omr" />` : ""}
-        </div>
-      </div>
-      <div class="omr-table">
-        <div class="column">${col1}</div>
-        <div class="column">${col2}</div>
-        <div class="column">${col3}</div>
-        <div class="column">${col4}</div>
-      </div>
-    </div>
-  </body>
-  </html>
-  `;
 
-    printWindow.document.write(omrHTML);
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
+      if (printBtn) {
+        printBtn.onclick = () => {
+          window.print();
+        };
+      }
+
+      window.onafterprint = () => {
+        setTimeout(() => {
+          document.body.innerHTML = window.originalContent;
+          document.title = window.originalTitle;
+        }, 1000);
+      };
+    } else {
+      // Desktop version
+      const printWindow = window.open("", "_blank");
+
+      const omrHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>OMR Sheet - ${formData.title || "Question Paper"}</title>
+      <style>
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; background: white; color: #000; }
+        .omr-page { padding: 0; }
+        .omr-flex-header {
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 12px; padding: 2px 10px; border: 1px solid black;
+        }
+        .omr-left-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 180px; gap: 6px; }
+        .logo-omr { max-width: 100px; max-height: 80px; margin-bottom: 6px; border-radius: 5px; border: 1px solid #ddd; background: #fff; }
+        .omr-center-title { text-align: center; flex: 1; }
+        .omr-title { font-size: 16pt; font-weight: bold; margin-bottom: 4px; }
+        .omr-subtitle { font-size: 11pt; color: #444; margin-bottom: 0; }
+        .omr-table { display: flex; justify-content: space-between; gap: 12px; }
+        .column { flex: 1; border: 1px solid black; padding: 10px; }
+        .question-row { display: flex; align-items: center; margin-bottom: 3px; font-size: 7pt; }
+        .question-number { min-width: 20px; font-weight: bold; }
+        .options-bubbles { display: flex; gap: 10px; margin-left: 10px; }
+        .bubble-option { width: 14px; height: 14px; border: 1px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 6pt; font-weight: bold; }
+        .info-line { display: inline-block; width: 100px; margin-left: 5px; border-bottom:1px dotted #aaa; min-height:12px; }
+      </style>
+    </head>
+    <body>
+      <div class="omr-page">
+        <div class="omr-flex-header">
+          <div class="omr-left-info">
+            <div>Name: <span class="info-line">&nbsp;</span></div>
+            <div>Roll No: <span class="info-line">&nbsp;</span></div>
+            <div>Date: <span class="info-line">&nbsp;</span></div>
+          </div>
+          <div class="omr-center-title">
+            <div class="omr-title">${
+              formData.title || "OMR QUESTION SHEET"
+            }</div>
+            <div class="omr-subtitle">**Do not write anything on the OMR bubbles**</div>
+          </div>
+          <div style="min-width:80px">
+            ${logoBase64 ? `<img src="${logoBase64}" class="logo-omr" />` : ""}
+          </div>
+        </div>
+        <div class="omr-table">
+          <div class="column">${col1}</div>
+          <div class="column">${col2}</div>
+          <div class="column">${col3}</div>
+          <div class="column">${col4}</div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+      printWindow.document.write(omrHTML);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    }
   };
-
-
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-lg text-gray-700 font-medium">Fetching questions...</p>
+          <p className="text-lg text-gray-700 font-medium">
+            Fetching questions...
+          </p>
         </div>
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -338,12 +614,18 @@ export default function SimplePaperPrinter() {
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Paper & OMR Printer</h1>
-              <p className="text-gray-600 mt-1">Print question papers and OMR sheets</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Paper & OMR Printer
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Print question papers and OMR sheets
+              </p>
             </div>
             <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
               <MdDescription className="text-blue-600" />
-              <span className="text-blue-700 font-medium">{allQuestions.length} Questions</span>
+              <span className="text-blue-700 font-medium">
+                {allQuestions.length} Questions
+              </span>
             </div>
           </div>
         </div>
@@ -368,7 +650,9 @@ export default function SimplePaperPrinter() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Duration:</span>
-                  <span className="font-medium">{formData.duration} minutes</span>
+                  <span className="font-medium">
+                    {formData.duration} minutes
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Total Marks:</span>
@@ -423,7 +707,9 @@ export default function SimplePaperPrinter() {
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-600">Pages:</span>
-                  <span className="font-medium">{Math.ceil(allQuestions.length / 40)}</span>
+                  <span className="font-medium">
+                    {Math.ceil(allQuestions.length / 40)}
+                  </span>
                 </div>
               </div>
 
@@ -445,9 +731,15 @@ export default function SimplePaperPrinter() {
           >
             <div className="flex items-center gap-3">
               <FaCog className="text-xl text-gray-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Paper Configuration</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Paper Configuration
+              </h3>
             </div>
-            <div className={`text-xl text-gray-600 transition-transform ${isConfigExpanded ? 'rotate-90' : ''}`}>
+            <div
+              className={`text-xl text-gray-600 transition-transform ${
+                isConfigExpanded ? "rotate-90" : ""
+              }`}
+            >
               →
             </div>
           </div>
@@ -456,7 +748,9 @@ export default function SimplePaperPrinter() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Paper Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Paper Title
+                  </label>
                   <input
                     name="title"
                     value={formData.title}
@@ -467,7 +761,9 @@ export default function SimplePaperPrinter() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Duration (minutes)
+                  </label>
                   <input
                     name="duration"
                     value={formData.duration}
@@ -479,7 +775,9 @@ export default function SimplePaperPrinter() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Marks</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Total Marks
+                  </label>
                   <input
                     name="marks"
                     value={formData.marks}
@@ -491,7 +789,9 @@ export default function SimplePaperPrinter() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Exam Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Exam Date
+                  </label>
                   <input
                     name="date"
                     value={formData.date}
@@ -502,7 +802,9 @@ export default function SimplePaperPrinter() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo Upload</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Logo Upload
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -512,7 +814,9 @@ export default function SimplePaperPrinter() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Footer Text</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Footer Text
+                  </label>
                   <input
                     value={footerText}
                     onChange={(e) => setFooterText(e.target.value)}
@@ -523,7 +827,9 @@ export default function SimplePaperPrinter() {
               </div>
 
               <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Instructions for Candidates</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Instructions for Candidates
+                </label>
                 <textarea
                   name="instruction"
                   value={formData.instruction}
@@ -539,7 +845,10 @@ export default function SimplePaperPrinter() {
 
         {/* Preview Section */}
         {isPreviewReady && (
-          <div id="previewSection" className="mt-8 bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div
+            id="previewSection"
+            className="mt-8 bg-white rounded-2xl shadow-xl overflow-hidden"
+          >
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
               <div className="flex items-center gap-3">
                 <MdPreview className="text-2xl" />
@@ -550,7 +859,9 @@ export default function SimplePaperPrinter() {
             <div className="p-8">
               <div className="flex justify-between items-center mb-8 pb-4 border-b-2 border-gray-300">
                 <div>
-                  <h2 className="text-3xl font-bold uppercase text-gray-900">{formData.title}</h2>
+                  <h2 className="text-3xl font-bold uppercase text-gray-900">
+                    {formData.title}
+                  </h2>
                 </div>
                 {logoFile && (
                   <img
@@ -563,12 +874,20 @@ export default function SimplePaperPrinter() {
 
               <div className="grid grid-cols-2 gap-8 text-sm mb-6 p-4 bg-gray-50 rounded-lg">
                 <div className="space-y-2">
-                  <p><strong>Duration:</strong> {formData.duration} minutes</p>
-                  <p><strong>Date:</strong> {formData.date}</p>
+                  <p>
+                    <strong>Duration:</strong> {formData.duration} minutes
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {formData.date}
+                  </p>
                 </div>
                 <div className="space-y-2 text-right">
-                  <p><strong>Total Marks:</strong> {formData.marks}</p>
-                  <p><strong>Total Questions:</strong> {allQuestions.length}</p>
+                  <p>
+                    <strong>Total Marks:</strong> {formData.marks}
+                  </p>
+                  <p>
+                    <strong>Total Questions:</strong> {allQuestions.length}
+                  </p>
                 </div>
               </div>
 
@@ -581,7 +900,10 @@ export default function SimplePaperPrinter() {
 
               <div className="space-y-6">
                 {allQuestions.map((q) => (
-                  <div key={q.number} className="border-l-4 border-blue-500 pl-4 py-2">
+                  <div
+                    key={q.number}
+                    className="border-l-4 border-blue-500 pl-4 py-2"
+                  >
                     <p className="font-semibold text-lg mb-3">
                       {q.number}. {q.question}
                     </p>
