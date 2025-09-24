@@ -34,8 +34,7 @@ const BatchesInfoPage = () => {
         typeof window !== "undefined" ? localStorage.getItem("batchId") : null;
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/batchesInfo`,
-        { params: { batchId } }
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/batchesInfo/${batchId}`,
       );
 
       const { batch, students, tests } = response.data;
