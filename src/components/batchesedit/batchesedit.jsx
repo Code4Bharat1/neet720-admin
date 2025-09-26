@@ -19,14 +19,14 @@ import {
   Save,
   Settings,
   UserCheck,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
 const UpdateBatchForm = ({ batchId }) => {
   // Form fields
-  const router = useRouter()
+  const router = useRouter();
   const [batchName, setBatchName] = useState("");
   const [status, setStatus] = useState(true);
 
@@ -62,17 +62,10 @@ const UpdateBatchForm = ({ batchId }) => {
 
   // Helper: Get admin ID
   const getAdminId = () => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("adminId");
-    if (stored) return stored;
     const token = localStorage.getItem("adminAuthToken");
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.adminId || payload.id;
-    } catch {
-      return null;
-    }
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    let adminId = payload.id;
+    return adminId;
   };
 
   // Axios instance
@@ -136,7 +129,7 @@ const UpdateBatchForm = ({ batchId }) => {
     setError("");
     try {
       const api = createAxios();
-      const adminId = getAdminId();
+      let adminId = getAdminId();
       const { data } = await api.post(`/studentdata/info`, {
         addedByAdminId: parseInt(adminId),
       });
@@ -279,13 +272,13 @@ const UpdateBatchForm = ({ batchId }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-          <button
-            onClick={() => router.push("/batches")}
-            className="inline-flex items-center px-4 py-2 mb-6 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="font-medium">Back</span>
-          </button>
+        <button
+          onClick={() => router.push("/batches")}
+          className="inline-flex items-center px-4 py-2 mb-6 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          <span className="font-medium">Back</span>
+        </button>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Update Batch
