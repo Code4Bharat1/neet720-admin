@@ -1,7 +1,7 @@
 "use client";
 import Head from "next/head";
-import { FaEye, FaQuestionCircle, FaClock, FaArrowLeft , FaCheck , FaTrash } from "react-icons/fa";
-import { MdOutlineSchedule, MdQuiz, MdGrade, MdSubject  } from "react-icons/md";
+import { FaEye, FaQuestionCircle, FaClock, FaArrowLeft, FaCheck, FaTrash } from "react-icons/fa";
+import { MdOutlineSchedule, MdQuiz, MdGrade, MdSubject } from "react-icons/md";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -10,12 +10,19 @@ import Loading from "../Loading/Loading";
 import { IoCloudOffline } from "react-icons/io5";
 import { FaRegEdit } from "react-icons/fa";
 import { IoIosArrowBack } from "react-icons/io";
+import jwt_decode from "jwt-decode";
 const TestPreview = () => {
   const router = useRouter();
   const [testData, setTestData] = useState(null);
   const [subjectTopics, setSubjectTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState("");
+  const [batches, setBatches] = useState([]);
+  const [assignedBatches, setAssignedBatches] = useState([]); // Add this new state
+  const [loadingAssignments, setLoadingAssignments] = useState(false); // Add loading state
 
   // Utility function to format date properly
   const formatDate = (dateString) => {
@@ -29,9 +36,24 @@ const TestPreview = () => {
     });
   };
 
+  const fetchAssignedBatches = async () => {
+    try {
+      setLoadingAssignments(true);
+      const testid = localStorage.getItem("testid");
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/testInfo/${testid}`
+      );
+      console.log(response.data)
+      setAssignedBatches(response.data.test.batches || []);
+    } catch (error) {
+      console.error("Failed to fetch assigned batches:", error);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
   useEffect(() => {
     const testid = localStorage.getItem("testid");
-    console.log("testid :", testid);
 
     if (!testid) {
       setError("No test ID found in localStorage.");
@@ -41,19 +63,21 @@ const TestPreview = () => {
 
     const fetchTestData = async () => {
       try {
+        const token = localStorage.getItem('adminAuthToken')
+        const [header, payload, signature] = token.split('.');
+        // Decode the Base64 encoded payload
+        const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+        const decodedToken = JSON.parse(decodedPayload);
+
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/test-data-by-id`,
           { testid }
         );
         setTestData(response.data.test);
-        console.log("response data : ", response.data.test);
 
-        // Process question_ids to get subject-wise topic distribution
         if (response.data.test.question_ids) {
           try {
             const questionData = JSON.parse(response.data.test.question_ids);
-
-            // Group by subject and topic
             const subjectsMap = new Map();
 
             questionData.forEach((item) => {
@@ -73,15 +97,22 @@ const TestPreview = () => {
 
             setSubjectTopics(Array.from(subjectsMap.values()));
           } catch (parseError) {
-            console.error("Error parsing question_ids:", parseError);
             setError("Failed to parse question distribution data.");
           }
         }
+
+
+
+        // Fetch batches for assignment
+        const batchResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/${decodedToken.id}`);
+        console.log("res :", batchResponse.data)
+        setBatches(batchResponse.data.batches);
+
+        // Fetch assigned batches - ADD THIS LINE HERE
+        await fetchAssignedBatches();
+
       } catch (err) {
-        console.error(
-          "Error fetching test data:",
-          err.response ? err.response.data : err
-        );
+        console.log(err)
         setError("Failed to fetch test data.");
       } finally {
         setLoading(false);
@@ -130,12 +161,12 @@ const TestPreview = () => {
 
   const assignTestToBatch = async () => {
     try {
-      const testid = testData.id; // Assuming the testData contains the test ID
-      const batchId = "YOUR_BATCH_ID"; // Replace with the actual batch ID you want to assign
+      const testid = localStorage.getItem("testid"); // Assuming the testData contains the test ID
+      const batchId = selectedBatch; // Replace with the actual batch ID you want to assign
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/assign-test-to-batch`,
-        { testid, batchId }
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/${testid}/assign-batches`,
+        { batchIds : [batchId] }
       );
 
       // Handle success response
@@ -145,6 +176,28 @@ const TestPreview = () => {
     } catch (error) {
       console.error("Error assigning test:", error);
       alert("Failed to assign the test.");
+    }
+  };
+
+
+  const removeTestFromBatch = async (batchId) => {
+    try {
+      console.log(batchId)
+      const testid = localStorage.getItem("testid");
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/test/${testid}/remove-batches`,
+        {
+        data: {  batchIds :  [batchId]  }
+
+         } 
+      );
+
+      if (response.status === 200) {
+        alert("Test removed from batch successfully!");
+        fetchAssignedBatches(); // Refresh the list
+      }
+    } catch (error) {
+      alert("Failed to remove test from batch.");
     }
   };
 
@@ -208,7 +261,7 @@ const TestPreview = () => {
               <FaTrash /> Delete Test
             </button>
             <button
-              onClick={assignTestToBatch}
+              onClick={() => setBatchModalOpen(true)}
               className="bg-blue-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
             >
               <FaCheck /> Assign Test
@@ -391,6 +444,118 @@ const TestPreview = () => {
             ))}
           </div>
         </main>
+        {batchModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">Manage Test Assignment</h2>
+                  <button
+                    onClick={() => setBatchModalOpen(false)}
+                    className="text-white hover:text-gray-200 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {/* Currently Assigned Batches Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <FaCheck className="text-green-500" />
+                    Currently Assigned To
+                  </h3>
+
+                  {loadingAssignments ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-gray-600">Loading...</span>
+                    </div>
+                  ) : assignedBatches.length > 0 ? (
+                    <div className="space-y-2">
+                      {assignedBatches.map((batch) => (
+                        <div
+                          key={batch.batchId}
+                          className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="font-medium text-green-800">{batch.batchName}</span>
+                          </div>
+                          <button
+                            onClick={() => removeTestFromBatch(batch.batchId)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                            title="Remove from batch"
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <IoCloudOffline className="mx-auto text-gray-400 text-2xl mb-2" />
+                      <p className="text-gray-500">Not assigned to any batch yet</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Assign to New Batch Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <MdOutlineSchedule className="text-blue-500" />
+                    Assign to New Batch
+                  </h3>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Batch
+                    </label>
+                    <select
+                      value={selectedBatch}
+                      onChange={(e) => setSelectedBatch(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="">-- Choose a batch --</option>
+                      {batches
+                        .filter(batch => !assignedBatches.some(assigned => assigned.batchId === batch.batchId))
+                        .map((batch) => (
+                          <option key={batch.batchId} value={batch.batchId}>
+                            {batch.batchName}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-gray-50 px-6 py-4 flex justify-between border-t">
+                <button
+                  onClick={() => {
+                    setBatchModalOpen(false);
+                    setSelectedBatch("");
+                  }}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={assignTestToBatch}
+                  disabled={!selectedBatch}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <FaCheck className="w-4 h-4" />
+                  Assign Test
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
