@@ -1,7 +1,7 @@
 "use client";
 import Head from "next/head";
-import { FaEye, FaQuestionCircle, FaClock, FaArrowLeft } from "react-icons/fa";
-import { MdOutlineSchedule, MdQuiz, MdGrade, MdSubject } from "react-icons/md";
+import { FaEye, FaQuestionCircle, FaClock, FaArrowLeft , FaCheck , FaTrash } from "react-icons/fa";
+import { MdOutlineSchedule, MdQuiz, MdGrade, MdSubject  } from "react-icons/md";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -109,6 +109,45 @@ const TestPreview = () => {
     );
   }
 
+  const deleteTest = async () => {
+    try {
+      const testid = testData.id; // Assuming the testData contains the test ID
+
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/delete-test/${testid}`
+      );
+
+      // Handle success response
+      if (response.status === 200) {
+        alert("Test deleted successfully!");
+        router.push("/tests"); // Redirect to the tests list page
+      }
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      alert("Failed to delete the test.");
+    }
+  };
+
+  const assignTestToBatch = async () => {
+    try {
+      const testid = testData.id; // Assuming the testData contains the test ID
+      const batchId = "YOUR_BATCH_ID"; // Replace with the actual batch ID you want to assign
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/assign-test-to-batch`,
+        { testid, batchId }
+      );
+
+      // Handle success response
+      if (response.status === 200) {
+        alert("Test assigned successfully to batch!");
+      }
+    } catch (error) {
+      console.error("Error assigning test:", error);
+      alert("Failed to assign the test.");
+    }
+  };
+
   return (
     <>
       <Head>
@@ -161,6 +200,18 @@ const TestPreview = () => {
               className="bg-green-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors"
             >
               <FaRegEdit /> Edit Test
+            </button>
+            <button
+              onClick={deleteTest}
+              className="bg-red-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors"
+            >
+              <FaTrash /> Delete Test
+            </button>
+            <button
+              onClick={assignTestToBatch}
+              className="bg-blue-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+            >
+              <FaCheck /> Assign Test
             </button>
           </div>
 

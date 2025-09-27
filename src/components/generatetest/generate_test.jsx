@@ -50,7 +50,7 @@ export default function TestDashboard() {
           const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/admin-tests`, {
             adminId,
           });
-          console.log(response.data)
+          console.log("test data : ",response.data)
           setTestData(response.data.tests);
           setTestCount(response.data.tests.length);
         }
@@ -323,7 +323,7 @@ export default function TestDashboard() {
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm font-medium text-gray-900">{indexOfFirstItem + index + 1}</td>
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm font-medium text-blue-600">{row.id}</td>
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm font-medium text-gray-900">{row.testname}</td>
-                        <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm text-gray-700">{row.batch_name}</td>
+                        <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm text-gray-700">{row.batches.length}</td>
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center text-sm font-medium text-gray-900">{row.marks}</td>
                         <td className="border-b border-r border-gray-300 px-6 py-4 text-center">
                           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusInfo.color}`}>
