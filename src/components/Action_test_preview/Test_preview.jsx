@@ -1,6 +1,13 @@
 "use client";
 import Head from "next/head";
-import { FaEye, FaQuestionCircle, FaClock, FaArrowLeft, FaCheck, FaTrash } from "react-icons/fa";
+import {
+  FaEye,
+  FaQuestionCircle,
+  FaClock,
+  FaArrowLeft,
+  FaCheck,
+  FaTrash,
+} from "react-icons/fa";
 import { MdOutlineSchedule, MdQuiz, MdGrade, MdSubject } from "react-icons/md";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
@@ -10,7 +17,8 @@ import Loading from "../Loading/Loading";
 import { IoCloudOffline } from "react-icons/io5";
 import { FaRegEdit } from "react-icons/fa";
 import { IoIosArrowBack } from "react-icons/io";
-import jwt_decode from "jwt-decode";
+import toast from "react-hot-toast";
+import { MdFormatListBulletedAdd } from "react-icons/md";
 const TestPreview = () => {
   const router = useRouter();
   const [testData, setTestData] = useState(null);
@@ -23,7 +31,7 @@ const TestPreview = () => {
   const [batches, setBatches] = useState([]);
   const [assignedBatches, setAssignedBatches] = useState([]); // Add this new state
   const [loadingAssignments, setLoadingAssignments] = useState(false); // Add loading state
-
+  const [showConfirm, setShowConfirm] = useState(false);
   // Utility function to format date properly
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -43,7 +51,7 @@ const TestPreview = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/testInfo/${testid}`
       );
-      console.log(response.data)
+      console.log(response.data);
       setAssignedBatches(response.data.test.batches || []);
     } catch (error) {
       console.error("Failed to fetch assigned batches:", error);
@@ -63,10 +71,12 @@ const TestPreview = () => {
 
     const fetchTestData = async () => {
       try {
-        const token = localStorage.getItem('adminAuthToken')
-        const [header, payload, signature] = token.split('.');
+        const token = localStorage.getItem("adminAuthToken");
+        const [header, payload, signature] = token.split(".");
         // Decode the Base64 encoded payload
-        const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+        const decodedPayload = atob(
+          payload.replace(/-/g, "+").replace(/_/g, "/")
+        );
         const decodedToken = JSON.parse(decodedPayload);
 
         const response = await axios.post(
@@ -101,18 +111,17 @@ const TestPreview = () => {
           }
         }
 
-
-
         // Fetch batches for assignment
-        const batchResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/${decodedToken.id}`);
-        console.log("res :", batchResponse.data)
+        const batchResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/${decodedToken.id}`
+        );
+        console.log("res :", batchResponse.data);
         setBatches(batchResponse.data.batches);
 
         // Fetch assigned batches - ADD THIS LINE HERE
         await fetchAssignedBatches();
-
       } catch (err) {
-        console.log(err)
+        console.log(err);
         setError("Failed to fetch test data.");
       } finally {
         setLoading(false);
@@ -145,13 +154,15 @@ const TestPreview = () => {
       const testid = testData.id; // Assuming the testData contains the test ID
 
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/delete-test/${testid}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/newadmin/delete-admin-test`,{
+          data : {testId : testid}
+        }
       );
 
       // Handle success response
       if (response.status === 200) {
-        alert("Test deleted successfully!");
-        router.push("/tests"); // Redirect to the tests list page
+        toast.success("Test deleted successfully!");
+        router.push("/generatetest"); // Redirect to the tests list page
       }
     } catch (error) {
       console.error("Error deleting test:", error);
@@ -166,12 +177,28 @@ const TestPreview = () => {
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/${testid}/assign-batches`,
-        { batchIds : [batchId] }
+        { batchIds: [batchId] }
       );
 
       // Handle success response
       if (response.status === 200) {
-        alert("Test assigned successfully to batch!");
+        // Find the batch that was just assigned
+        const assignedBatch = batches.find((b) => b.batchId === selectedBatch);
+
+        // Immediately update the assignedBatches state
+        setAssignedBatches((prev) => [
+          ...prev,
+          {
+            batchId: assignedBatch.batchId,
+            batchName: assignedBatch.batchName,
+          },
+        ]);
+
+        // Clear selection
+        setSelectedBatch("");
+
+        // Show success message (if you have a toast notification)
+        toast.success("Test assigned successfully!");
       }
     } catch (error) {
       console.error("Error assigning test:", error);
@@ -179,21 +206,18 @@ const TestPreview = () => {
     }
   };
 
-
   const removeTestFromBatch = async (batchId) => {
     try {
-      console.log(batchId)
       const testid = localStorage.getItem("testid");
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/batches/test/${testid}/remove-batches`,
         {
-        data: {  batchIds :  [batchId]  }
-
-         } 
-      );  
+          data: { batchIds: [batchId] },
+        }
+      );
 
       if (response.status === 200) {
-        alert("Test removed from batch successfully!");
+        toast.error("Test removed from batch successfully!");
         fetchAssignedBatches(); // Refresh the list
       }
     } catch (error) {
@@ -255,7 +279,7 @@ const TestPreview = () => {
               <FaRegEdit /> Edit Test
             </button>
             <button
-              onClick={deleteTest}
+              onClick={()=> setShowConfirm(true)}
               className="bg-red-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors"
             >
               <FaTrash /> Delete Test
@@ -445,50 +469,88 @@ const TestPreview = () => {
           </div>
         </main>
         {batchModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+          <div className="fixed inset-0 bg-gray-500/50 bg-opacity-70 flex justify-center items-center z-50 p-4 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden transform transition-all animate-slideUp">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Manage Test Assignment</h2>
+              <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-white opacity-10 transform -skew-y-6"></div>
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-xl backdrop-blur-sm">
+                      <MdFormatListBulletedAdd className="text-xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">
+                      Manage Test Assignment
+                    </h2>
+                  </div>
                   <button
                     onClick={() => setBatchModalOpen(false)}
-                    className="text-white hover:text-gray-200 transition-colors"
+                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-xl transition-all duration-200 hover:text-black hover:rotate-90"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
               </div>
 
-              <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="p-8 overflow-y-auto max-h-[calc(85vh-180px)]">
                 {/* Currently Assigned Batches Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <FaCheck className="text-green-500" />
-                    Currently Assigned To
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="bg-green-100 p-2 rounded-lg">
+                      <FaCheck className="text-green-600 w-4 h-4" />
+                    </div>
+                    <span>Currently Assigned To</span>
+                    <span className="ml-auto text-sm font-normal bg-green-100 text-green-700 px-3 py-1 ">
+                      {assignedBatches.length}{" "}
+                      {assignedBatches.length === 1 ? "Batch" : "Batches"}
+                    </span>
                   </h3>
 
                   {loadingAssignments ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600">Loading...</span>
+                    <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-2xl">
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+                      <span className="mt-3 text-gray-600 font-medium">
+                        Loading assignments...
+                      </span>
                     </div>
                   ) : assignedBatches.length > 0 ? (
-                    <div className="space-y-2">
-                      {assignedBatches.map((batch) => (
+                    <div className="space-y-3">
+                      {assignedBatches.map((batch, index) => (
                         <div
                           key={batch.batchId}
-                          className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3"
+                          className="group flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 animate-slideIn"
+                          style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="font-medium text-green-800">{batch.batchName}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                                <FaCheck className="text-white w-5 h-5" />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-green-900 block">
+                                {batch.batchName}
+                              </span>
+                              <span className="text-xs text-green-600">
+                                Active Assignment
+                              </span>
+                            </div>
                           </div>
                           <button
                             onClick={() => removeTestFromBatch(batch.batchId)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-white hover:bg-red-500 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
                             title="Remove from batch"
                           >
                             <FaTrash className="w-4 h-4" />
@@ -497,60 +559,143 @@ const TestPreview = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                      <IoCloudOffline className="mx-auto text-gray-400 text-2xl mb-2" />
-                      <p className="text-gray-500">Not assigned to any batch yet</p>
+                    <div className="text-center py-10 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-300">
+                      <div className="bg-gray-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <IoCloudOffline className="text-gray-400 text-3xl" />
+                      </div>
+                      <p className="text-gray-600 font-medium">
+                        No batches assigned yet
+                      </p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Assign this test to a batch below
+                      </p>
                     </div>
                   )}
                 </div>
 
                 {/* Assign to New Batch Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <MdOutlineSchedule className="text-blue-500" />
-                    Assign to New Batch
+                <div className="border-t-2 border-gray-200 pt-8">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <MdOutlineSchedule className="text-blue-600 w-4 h-4" />
+                    </div>
+                    <span>Assign to New Batch</span>
                   </h3>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
                       Select Batch
                     </label>
-                    <select
-                      value={selectedBatch}
-                      onChange={(e) => setSelectedBatch(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    >
-                      <option value="">-- Choose a batch --</option>
-                      {batches
-                        .filter(batch => !assignedBatches.some(assigned => assigned.batchId === batch.batchId))
-                        .map((batch) => (
-                          <option key={batch.batchId} value={batch.batchId}>
-                            {batch.batchName}
-                          </option>
-                        ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={selectedBatch}
+                        onChange={(e) => setSelectedBatch(e.target.value)}
+                        className="w-full border-2 border-gray-300 rounded-xl p-4 pr-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none font-medium text-gray-700 hover:border-gray-400 cursor-pointer"
+                      >
+                        <option value="">-- Choose a batch --</option>
+                        {batches
+                          .filter(
+                            (batch) =>
+                              !assignedBatches.some(
+                                (assigned) => assigned.batchId === batch.batchId
+                              )
+                          )
+                          .map((batch) => (
+                            <option key={batch.batchId} value={batch.batchId}>
+                              {batch.batchName}
+                            </option>
+                          ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    {batches.filter(
+                      (batch) =>
+                        !assignedBatches.some(
+                          (assigned) => assigned.batchId === batch.batchId
+                        )
+                    ).length === 0 && (
+                      <p className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        All available batches are already assigned
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="bg-gray-50 px-6 py-4 flex justify-between border-t">
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-5 flex justify-between items-center border-t-2 border-gray-200">
                 <button
                   onClick={() => {
                     setBatchModalOpen(false);
                     setSelectedBatch("");
                   }}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-medium transition-colors"
+                  className="px-6 py-3 bg-white hover:bg-gray-100 text-gray-700 rounded-xl font-semibold transition-all duration-200 border-2 border-gray-300 hover:border-gray-400 hover:shadow-md"
                 >
                   Close
                 </button>
                 <button
                   onClick={assignTestToBatch}
                   disabled={!selectedBatch}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 disabled:shadow-none"
                 >
                   <FaCheck className="w-4 h-4" />
                   Assign Test
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center  bg-gray-500/50 bg-opacity-70  z-50 p-4 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Confirm Delete
+              </h3>
+              <p className="mt-2 text-gray-600">
+                Are you sure you want to delete this test? This action cannot be
+                undone.
+              </p>
+
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteTest}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  disabled={loading}
+                >
+                  {loading ? "Deleting..." : "Yes, Delete"}
                 </button>
               </div>
             </div>
