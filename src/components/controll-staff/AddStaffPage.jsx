@@ -168,14 +168,16 @@ export default function AddStaffPage() {
         role: formData.role || "admin",
       };
 
-      await axios.post(
+      const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/superadmin/createadmin`,
         payload
       );
 
+      console.log("this is the res : ",res.data)
+
       await sendEmailToAdmin(
         formData.Email,
-        formData.AdminId,
+        res.data.admin.AdminId,
         formData.PassKey,
         formData.StartDate,
         formData.ExpiryDate
