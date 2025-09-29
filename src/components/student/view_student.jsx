@@ -15,6 +15,7 @@ import { jwtDecode } from "jwt-decode";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { CiUser, CiMail, CiPhone, CiCalendar } from "react-icons/ci";
+import crypto from "crypto";
 
 const Desktop_student = () => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -107,7 +108,6 @@ const Desktop_student = () => {
         });
         console.log(processedStudents);
         setStudents(processedStudents);
-      
       } catch (error) {
         console.error("Error processing the Excel file:", error);
       }
@@ -312,7 +312,21 @@ const Desktop_student = () => {
       return;
     }
     const birthYear = new Date(dateOfBirth).getFullYear();
-    const password = `${firstName.charAt(0)}${birthYear}`;
+    const passowrdGenerate = (firstName, studentId) => {
+      // Take first 3 letters of name (or fallback to "STU")
+      const prefix = (firstName || "STU").substring(0, 3).toUpperCase();
+
+      // Random part: 6 chars (hex = strong randomness)
+      const randomPart = crypto.randomBytes(3).toString("hex"); // e.g. "a9f4d2"
+
+      // Timestamp part (last 4 digits of ms timestamp)
+      const timePart = Date.now().toString().slice(-4); // e.g. "3842"
+
+      // Final password format: ABC-a9f4d2-3842
+      return `${prefix}-${randomPart}-${timePart}`;
+    };
+
+    const password = passowrdGenerate(firstName, Date.now());
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/save`,
@@ -948,7 +962,7 @@ const Desktop_student = () => {
             </h3>
             <p className="text-gray-600 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-medium">{studentToDelete.fullName}</span>?
+              <span className="font-medium">{studentToDelete.firstName} {studentToDelete.lastName == "none" ? "" : studentToDelete.lastName}</span>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-4">
