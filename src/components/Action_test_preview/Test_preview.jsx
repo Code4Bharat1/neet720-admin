@@ -190,7 +190,7 @@ const TestPreview = () => {
         data: {  batchIds :  [batchId]  }
 
          } 
-      );
+      );  
 
       if (response.status === 200) {
         alert("Test removed from batch successfully!");
