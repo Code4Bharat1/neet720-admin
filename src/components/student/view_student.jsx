@@ -15,7 +15,6 @@ import { jwtDecode } from "jwt-decode";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { CiUser, CiMail, CiPhone, CiCalendar } from "react-icons/ci";
-import crypto from "crypto";
 
 const Desktop_student = () => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -158,12 +157,13 @@ const Desktop_student = () => {
     const updatedStudent = {
       id: studentToUpdate.id,
       firstName: formData.get("firstName"),
-      lastName: formData.get("lastName"),
-      email: formData.get("email"),
+      lastName: formData.get("lastName"), // must match input name="lastName"
+      emailAddress: formData.get("email"), // backend expects emailAddress
       dateOfBirth: formData.get("dob"),
-      phoneNumber: formData.get("phone"),
+      mobileNumber: formData.get("phone"), // backend expects mobileNumber
       gender: formData.get("gender"),
     };
+
     // Optimistically update the UI by updating the student data in state
     setStudents((prevStudents) =>
       prevStudents.map((s) =>
@@ -312,21 +312,10 @@ const Desktop_student = () => {
       return;
     }
     const birthYear = new Date(dateOfBirth).getFullYear();
-    const passowrdGenerate = (firstName, studentId) => {
-      // Take first 3 letters of name (or fallback to "STU")
-      const prefix = (firstName || "STU").substring(0, 3).toUpperCase();
+    const password = `${firstName
+      .charAt(0)
+      .toUpperCase()}${birthYear}${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // Random part: 6 chars (hex = strong randomness)
-      const randomPart = crypto.randomBytes(3).toString("hex"); // e.g. "a9f4d2"
-
-      // Timestamp part (last 4 digits of ms timestamp)
-      const timePart = Date.now().toString().slice(-4); // e.g. "3842"
-
-      // Final password format: ABC-a9f4d2-3842
-      return `${prefix}-${randomPart}-${timePart}`;
-    };
-
-    const password = passowrdGenerate(firstName, Date.now());
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/save`,
@@ -668,7 +657,7 @@ const Desktop_student = () => {
                       className="py-4 px-6 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline font-medium border-r border-gray-200"
                       onClick={() => handleStudentClick(student.id)}
                     >
-                      {student.firstName || "N/A"} {student.lastName || "N/A"}
+                      {student.firstName || "N/A"} {student.lastName || ""}
                     </td>
                     <td className="py-4 px-6 border-r border-gray-200">
                       {student.email || "N/A"}
@@ -962,7 +951,7 @@ const Desktop_student = () => {
             </h3>
             <p className="text-gray-600 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-medium">{studentToDelete.firstName} {studentToDelete.lastName == "none" ? "" : studentToDelete.lastName}</span>?
+              <span className="font-medium">{studentToDelete.fullName}</span>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-4">
@@ -1013,12 +1002,6 @@ const Desktop_student = () => {
                   >
                     First Name
                   </label>
-                  {/* <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Last Name
-                  </label> */}
                   <CiUser className="absolute left-3 top-10 text-gray-400 text-lg" />
                   <input
                     type="text"
@@ -1029,15 +1012,6 @@ const Desktop_student = () => {
                     required
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
-                  {/* <input
-                    type="text"
-                    id="lastName"
-                    name="LastName"
-                    placeholder="Enter last name"
-                    defaultValue={studentToUpdate.lastName}
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
-                  /> */}
                 </div>
                 <div className="relative">
                   <label
@@ -1049,9 +1023,10 @@ const Desktop_student = () => {
                   <input
                     type="text"
                     id="lastName"
-                    name="LastName"
+                    name="lastName" // fixed
                     placeholder="Enter last name"
                     defaultValue={studentToUpdate.lastName}
+                    required
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none shadow-sm"
                   />
                 </div>
