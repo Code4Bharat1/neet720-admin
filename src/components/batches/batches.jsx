@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
-import { CiImageOn, CiSearch } from "react-icons/ci";
+import { CiSearch } from "react-icons/ci";
+import toast, { Toaster } from "react-hot-toast";
+
 import {
   IoSchoolOutline,
   IoAddOutline,
@@ -22,10 +24,9 @@ export default function Batches() {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState(null);
-
   const [highlightCreateBatch, setHighlightCreateBatch] = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     if (typeof window !== "undefined") {
       if (window.location.hash === "#createBatch") {
         setHighlightCreateBatch(true);
@@ -41,60 +42,40 @@ export default function Batches() {
     setShowDeleteModal(true);
   };
 
-  // Fetch batches from the backend
   useEffect(() => {
     const fetchTestCount = async () => {
       try {
-        let token = null;
-        if (typeof window !== "undefined") {
-          token = localStorage.getItem("adminAuthToken");
-        }
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admintest/getTestCount`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        let token = typeof window !== "undefined" ? localStorage.getItem("adminAuthToken") : null;
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admintest/getTestCount`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setTestCount(response.data.testCount || 0);
       } catch (error) {
-        setError(
-          "Error fetching batch data: " +
-            (error.response?.data?.message || error.message)
-        );
-      } finally {
-        setIsLoading(false);
+        setError("Error fetching test count: " + (error.response?.data?.message || error.message));
       }
     };
 
     const fetchBatches = async () => {
       setIsLoading(true);
       try {
-        let token = null;
-        if (typeof window !== "undefined") {
-          token = localStorage.getItem("adminAuthToken");
-        }
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/getbatch`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        // Check if batchData exists
-        setBatchData(response.data.batchData || []);
+        let token = typeof window !== "undefined" ? localStorage.getItem("adminAuthToken") : null;
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/getbatch`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const batchesWithStatus = (response.data.batchData || []).map((b) => ({
+          ...b,
+          active: b.active !== undefined ? b.active : true,
+        }));
+
+        // ✅ Show newest batches first
+        setBatchData(batchesWithStatus.reverse());
       } catch (error) {
-        if (error.response?.status === 404) {
-          setError("No batches found");
-        } else {
-          setError(
-            "Error fetching batch data: " +
-              (error.response?.data?.message || error.message)
-          );
-        }
-      } finally {
+        if (error.response?.status === 404) setError("No batches found");
+        else setError("Error fetching batch data: " + (error.response?.data?.message || error.message));
+      } 
+      
+      finally {
         setIsLoading(false);
       }
     };
@@ -103,15 +84,14 @@ export default function Batches() {
     fetchBatches();
   }, []);
 
-  // Add this handler inside your component
+   // ✅ Updated confirmDelete with toast notifications
   const confirmDelete = async () => {
     if (!selectedBatchId) return;
-
     try {
-      let token = null;
-      if (typeof window !== "undefined") {
-        token = localStorage.getItem("adminAuthToken");
-      }
+      let token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("adminAuthToken")
+          : null;
 
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/batch/${selectedBatchId}`,
@@ -123,23 +103,25 @@ export default function Batches() {
       setBatchData((prev) =>
         prev.filter((batch) => batch.batchId !== selectedBatchId)
       );
+
+      toast.success("Batch deleted successfully!"); // ✅ Success toast
     } catch (error) {
-      alert(
+      toast.error(
         "Error deleting batch: " +
           (error.response?.data?.message || error.message)
-      );
+      ); // ✅ Error toast
     } finally {
       setShowDeleteModal(false);
       setSelectedBatchId(null);
     }
   };
 
-  const handleIdClick = async (BatchId) => {
-    let batchId = null;
-    if (typeof window !== "undefined") {
-      batchId = localStorage.setItem("batchId", BatchId);
-    }
 
+
+  
+
+  const handleIdClick = (batchId) => {
+    if (typeof window !== "undefined") localStorage.setItem("batchId", batchId);
     router.push("/batches/batchesInfo");
   };
 
@@ -158,11 +140,7 @@ export default function Batches() {
       batch.batchName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate total students
-  const totalStudents = batchData.reduce(
-    (sum, batch) => sum + (batch.no_of_students || 0),
-    0
-  );
+  const totalStudents = batchData.reduce((sum, batch) => sum + (batch.no_of_students || 0), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b bg-white p-6">
@@ -176,11 +154,10 @@ export default function Batches() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto ">
-        {/* Search and Actions Row - Moved to top */}
+      <div className="max-w-6xl mx-auto">
+        {/* Search and Actions */}
         <div className="mb-6 bg-white shadow-md rounded-xl p-4 border border-gray-100">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            {/* Search Bar */}
             <div className="relative w-full md:w-3/5">
               <CiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
               <input
@@ -192,7 +169,6 @@ export default function Batches() {
               />
             </div>
 
-            {/* New Batch Button */}
             <Link href="/batch-add">
               <button
                 id="createBatch"
@@ -206,7 +182,9 @@ export default function Batches() {
             </Link>
           </div>
         </div>
-        {/* Summary Cards Row */}
+
+
+          {/* Summary Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Batches Count Card */}
           <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
@@ -307,111 +285,108 @@ export default function Batches() {
             <div className="overflow-x-auto max-sm:mb-10">
               <table id="summary" className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-b-2 border-gray-200 uppercase text-xs font-semibold tracking-wider">
-                    <th className="py-4 px-6 text-left border-r border-gray-200">
-                      #
-                    </th>
-                    <th className="py-4 px-6 text-left border-r border-gray-200">
-                      Batch ID
-                    </th>
-                    <th className="py-4 px-6 text-left border-r border-gray-200">
-                      Batch Name
-                    </th>
-                    <th className="py-4 px-6 text-center border-r border-gray-200">
-                      Students
-                    </th>
-                    <th className="py-4 px-6 text-center">Actions</th>
+            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-b-2 border-gray-200 uppercase text-xs font-semibold tracking-wider">
+              <th className="py-4 px-6 text-left border-r border-gray-200">#</th>
+              <th className="py-4 px-6 text-left border-r border-gray-200">Batch ID</th>
+              <th className="py-4 px-6 text-left border-r border-gray-200">Batch Name</th>
+              <th className="py-4 px-6 text-center border-r border-gray-200">Students</th>
+              <th className="py-4 px-6 text-center border-r border-gray-200">Status</th>
+              <th className="py-4 px-6 text-center">Actions</th>
+            </tr>
+</thead>
+          <tbody className="text-gray-700 text-sm divide-y divide-gray-200">
+            {filteredBatches.length > 0 ? (
+              filteredBatches.map((batch, index) => (
+                <tr key={batch.batchId} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-4 px-6 text-gray-800 font-medium border-r border-gray-200">{index + 1}</td>
+                  <td className="py-4 px-6 border-r border-gray-200">
+                    <span
+                      className="bg-blue-50 text-blue-700 py-1 px-3 rounded-full text-xs font-medium cursor-pointer"
+                      onClick={() => handleIdClick(batch.batchId)}
+                    >
+                      {batch.batchId}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 font-medium border-r border-gray-200">{batch.batchName}</td>
+                  <td className="py-4 px-6 text-center border-r border-gray-200">
+                    <div className="inline-flex items-center justify-center bg-yellow-50 px-3 py-1 rounded-full">
+                      <IoPersonOutline className="text-yellow-600 mr-1" />
+                      <span className="font-medium text-yellow-700">{batch.no_of_students || 0}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6 text-center border-r border-gray-200">
+                    <button
+                      className={`px-3 py-1 rounded text-white ${batch.active ? "bg-green-500" : "bg-red-500"}`}
+                      onClick={async () => {
+                                try {
+                                  const token = typeof window !== "undefined" ? localStorage.getItem("adminAuthToken") : null;
+                        await axios.put(
+                          `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/batch/${batch.batchId}/status`,
+                          { active: !batch.active },
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        setBatchData((prev) =>
+                          prev.map((b) => (b.batchId === batch.batchId ? { ...b, active: !b.active } : b))
+                        );
+                      } catch (error) {
+                        alert("Error updating status: " + (error.response?.data?.message || error.message));
+                      }
+                    }}
+                  >
+                    {batch.active ? "Active" : "Inactive"}
+                  </button>
+                </td>
+                <td className="py-4 px-6 text-center">
+                  <button
+                    className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
+                    onClick={() => handleAction(batch.batchId, batch.batchName, batch.no_of_students)}
+                  >
+                    <IoPencilOutline className="text-sm" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
+                    onClick={() => openDeleteModal(batch.batchId)}
+                  >
+                    <AiFillDelete className="text-sm" />
+                    <span>Delete</span>
+                  </button>
+                </td>
+              </tr>
+            ))
+                        ) : (
+                  <tr>
+                    <td colSpan="6" className="py-8 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
+                        <p className="text-gray-500 mb-2 text-xl font-semibold">No Batches Found</p>
+                        <p className="text-gray-400 text-sm mb-4">
+                          No batches match your search criteria. You can create a new batch to get started.
+                        </p>
+                        <Link href="/batch-add">
+                          <button className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all">
+                            Create New Batch
+                          </button>
+                        </Link>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="text-gray-700 text-sm divide-y divide-gray-200">
-                  {filteredBatches.length > 0 ? (
-                    filteredBatches.map((batch, index) => (
-                      <tr
-                        key={batch.batchId}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-4 px-6 text-gray-800 font-medium border-r border-gray-200">
-                          {index + 1}
-                        </td>
-                        <td className="py-4 px-6 border-r border-gray-200">
-                          <span
-                            className="bg-blue-50 text-blue-700 py-1 px-3 rounded-full text-xs font-medium cursor-pointer"
-                            onClick={() => handleIdClick(batch.batchId)}
-                          >
-                            {batch.batchId}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 font-medium border-r border-gray-200">
-                          {batch.batchName}
-                        </td>
-                        <td className="py-4 px-6 text-center border-r border-gray-200">
-                          <div className="inline-flex items-center justify-center bg-yellow-50 px-3 py-1 rounded-full">
-                            <IoPersonOutline className="text-yellow-600 mr-1" />
-                            <span className="font-medium text-yellow-700">
-                              {batch.no_of_students || 0}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-center">
-                          <button
-                            className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
-                            onClick={() =>
-                              handleAction(
-                                batch.batchId,
-                                batch.batchName,
-                                batch.no_of_students
-                              )
-                            }
-                          >
-                            <IoPencilOutline className="text-sm" />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 mx-auto my-2"
-                            onClick={() => openDeleteModal(batch.batchId)}
-                          >
-                            <AiFillDelete className="text-sm" />
-                            <span>Delete</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center">
-                        <div className="flex flex-col items-center justify-center">
-                          <IoSchoolOutline className="text-gray-300 text-5xl mb-3" />
-                          <p className="text-gray-500 mb-2 text-xl font-semibold">
-                            No Batches Found
-                          </p>
-                          <p className="text-gray-400 text-sm mb-4">
-                            No batches match your search criteria. You can
-                            create a new batch to get started.
-                          </p>
-                          <Link href="/batch-add">
-                            <button className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all">
-                              Create New Batch
-                            </button>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
+                )}
+              </tbody>
+
               </table>
             </div>
           )}
         </div>
       </div>
+
+    {/* ✅ Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Transparent overlay */}
           <div
             className="absolute inset-0"
             style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           ></div>
-
-          {/* Modal content */}
           <div className="relative bg-white rounded-lg shadow-lg p-6 w-96 max-w-sm backdrop-blur-sm">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Delete Batch
@@ -437,6 +412,12 @@ export default function Batches() {
           </div>
         </div>
       )}
+
+ {/* ✅ Toast container */}
+      <Toaster position="top-center" reverseOrder={false} />
+
     </div>
   );
 }
+
+    
