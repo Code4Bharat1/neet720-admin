@@ -564,7 +564,7 @@ const Desktop_student = () => {
               }`}
               style={{ minWidth: 0 }}
             >
-              <IoPersonAddOutline className="text-base sm:text-xl" />
+              <IoPersonAddOutline className="text-base sm:ext-xl" />
               <span className="text-sm sm:text-base">Add Student</span>
             </button>
             <button
@@ -735,17 +735,24 @@ const Desktop_student = () => {
       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 transition-all">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md border border-gray-100 transform transition-all">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-black">
                 Import Students
               </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                &times;
-              </button>
+              <p className="text-sm text-gray-800 mt-1">
+                Required Excel format:
+                (first name, last name, gender, DOB, email, phone)
+              </p>
             </div>
+            <button
+              onClick={closeModal}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              &times;
+            </button>
+          </div>
+
             <div className="flex flex-col items-center">
               <label className="w-full bg-gradient-to-r from-green-50 to-blue-50 border-2 border-dashed border-green-200 text-gray-700 py-10 px-6 rounded-xl mb-6 flex flex-col items-center space-y-3 cursor-pointer hover:border-green-400 transition-all">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
