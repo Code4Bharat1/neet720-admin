@@ -351,7 +351,7 @@ const Desktop_student = () => {
     } catch (error) {
       console.error("Error saving student data:", error);
       setIsSubmitting(false);
-      toast.error("Error saving student data", {
+      toast.error("This credential is already in use.", {
         duration: 5000,
       });
     }
