@@ -234,6 +234,8 @@ const Desktop_student = () => {
     // Save the student ID to localStorage
     localStorage.setItem("studentId", studentId);
     // Redirect to the desktopuserprofile page
+
+    
     window.location.href = "/desktopuserprofile"; // This will navigate the user to the profile page
   };
 
@@ -333,13 +335,13 @@ const Desktop_student = () => {
       setIsSubmitting(false);
       if (response.status === 201) {
         await sendEmail(email, password);
-        setStudents((prevStudents) => [response.data.student, ...prevStudents]); // <-- prepend
+        setStudents((prevStudents) => [...prevStudents, response.data.student]);
         toast.success("Student added successfully and email sent!", {
           duration: 5000,
         });
+        window.location.reload(); // Reload the page to reflect changes
         closeAddStudentModal();
       }
-
       console.log(response);
       if (response.status === 200) {
         toast.error(JSON.parse(response.request.response).message, {
@@ -351,7 +353,7 @@ const Desktop_student = () => {
     } catch (error) {
       console.error("Error saving student data:", error);
       setIsSubmitting(false);
-      toast.error("This credential is already in use.", {
+      toast.error("Error saving student data", {
         duration: 5000,
       });
     }
@@ -740,20 +742,17 @@ const Desktop_student = () => {
               <h2 className="text-xl font-semibold text-black">
                 Import Students
               </h2>
-              <div className="max-w-md mx-auto mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer">
-                <p className="text-sm text-gray-800 text-center">
-                  Required Excel format: (first name, last name, gender, DOB, email, phone)
-                </p>
-              </div>
-
+              <p className="text-sm text-gray-800 mt-1">
+                Required Excel format:
+                (first name, last name, gender, DOB, email, phone)
+              </p>
             </div>
-             {/* Close button */}
-  <button
-    onClick={closeModal}
-    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl font-bold"
-  >
-    &times;
-  </button>
+            <button
+              onClick={closeModal}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              &times;
+            </button>
           </div>
 
             <div className="flex flex-col items-center">
