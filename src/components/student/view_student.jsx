@@ -234,130 +234,122 @@ const Desktop_student = () => {
     // Save the student ID to localStorage
     localStorage.setItem("studentId", studentId);
     // Redirect to the desktopuserprofile page
-
-    
-    window.location.href = "/desktopuserprofile"; // This will navigate the user to the profile page
+    // window.location.href = "/desktopuserprofile"; // This will navigate the user to the profile page
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const formData = new FormData(e.target);
-    const firstName = formData.get("firstName");
-    const lastName = formData.get("lastName");
-    const email = formData.get("email");
-    const dateOfBirth = formData.get("dob");
-    const phoneNumber = formData.get("phone");
-    const gender = formData.get("gender");
-    // Get the JWT token from localStorage
-    const token = localStorage.getItem("adminAuthToken");
-    // Decode the token to extract the admin ID
-    let addedByAdminId = null;
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token);
-        addedByAdminId = decodedToken.id;
-        // Assuming the admin ID is stored in the "id" field of the token
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        toast.error("Invalid token", {
-          duration: 5000,
-        });
-        return;
-      }
-    }
-    // Validate if all required fields are present
-    if (
-      !email ||
-      !firstName ||
-      !lastName ||
-      !dateOfBirth ||
-      !phoneNumber ||
-      !gender
-    ) {
-      toast.error("All fields are required", {
-        duration: 5000,
-      });
-      setIsSubmitting(false); // Reset loading state
-      return;
-    }
-    // Prevent adding more students if the limit is reached
-    if (students.length >= STUDENT_LIMIT) {
-      toast.error(
-        "Student limit of 100 has been reached. Cannot add more students.",
-        {
-          duration: 5000,
-        }
-      );
-      setIsSubmitting(false); // Reset loading state
-      return;
-    }
-    // Validate email format
-    const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Invalid email format", {
-        duration: 5000,
-      });
-      setIsSubmitting(false); // Reset loading state
-      return;
-    }
-    // ✅ Validate phone number format
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      toast.error(
-        "Invalid phone number. It must be 10 digits and start with 6, 7, 8, or 9.",
-        {
-          duration: 5000,
-        }
-      );
-      setIsSubmitting(false); // Reset loading state
-      return;
-    }
-    const birthYear = new Date(dateOfBirth).getFullYear();
-    const password = `${firstName
-      .charAt(0)
-      .toUpperCase()}${birthYear}${Math.floor(1000 + Math.random() * 9000)}`;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  const formData = new FormData(e.target);
+  const firstName = formData.get("firstName");
+  const lastName = formData.get("lastName");
+  const email = formData.get("email");
+  const dateOfBirth = formData.get("dob");
+  const phoneNumber = formData.get("phone");
+  const gender = formData.get("gender");
 
+  // Validate fields
+  if (!email || !firstName || !lastName || !dateOfBirth || !phoneNumber || !gender) {
+    toast.error("All fields are required", { duration: 5000 });
+    setIsSubmitting(false);
+    return;
+  }
+
+  // Email & phone validation
+  const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+  if (!emailRegex.test(email)) {
+    toast.error("Invalid email format", { duration: 5000 });
+    setIsSubmitting(false);
+    return;
+  }
+
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!phoneRegex.test(phoneNumber)) {
+    toast.error("Invalid phone number. Must start with 6-9 and be 10 digits.", { duration: 5000 });
+    setIsSubmitting(false);
+    return;
+  }
+
+  if (students.length >= STUDENT_LIMIT) {
+    toast.error(`Student limit of ${STUDENT_LIMIT} reached`, { duration: 5000 });
+    setIsSubmitting(false);
+    return;
+  }
+
+  // Get admin ID from token
+  let addedByAdminId = null;
+  const token = localStorage.getItem("adminAuthToken");
+  if (token) {
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/save`,
-        {
-          email,
-          password,
-          firstName,
-          lastName,
-          dateOfBirth,
-          phoneNumber,
-          gender,
-          addedByAdminId,
-        }
-      );
-      setIsSubmitting(false);
-      if (response.status === 201) {
-        await sendEmail(email, password);
-        setStudents((prevStudents) => [...prevStudents, response.data.student]);
-        toast.success("Student added successfully and email sent!", {
-          duration: 5000,
-        });
-        window.location.reload(); // Reload the page to reflect changes
-        closeAddStudentModal();
-      }
-      console.log(response);
-      if (response.status === 200) {
-        toast.error(JSON.parse(response.request.response).message, {
-          duration: 5000,
-        });
-        setIsSubmitting(false); // Reset loading state
-        return;
-      }
+      const decoded = jwtDecode(token);
+      addedByAdminId = decoded.id;
     } catch (error) {
-      console.error("Error saving student data:", error);
+      toast.error("Invalid token", { duration: 5000 });
       setIsSubmitting(false);
-      toast.error("Error saving student data", {
-        duration: 5000,
-      });
+      return;
     }
-  };
+  }
+
+  const birthYear = new Date(dateOfBirth).getFullYear();
+  const password = `${firstName.charAt(0).toUpperCase()}${birthYear}${Math.floor(1000 + Math.random() * 9000)}`;
+
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/save`,
+      {
+        email,
+        password,
+        firstName,
+        lastName,
+        dateOfBirth,
+        phoneNumber,
+        gender,
+        addedByAdminId,
+      }
+    );
+
+    setIsSubmitting(false);
+
+    if (response.status === 201) {
+      // Send email
+      await sendEmail(email, password);
+
+      // Add the new student to the state (no page reload)
+     setStudents((prev) => [
+  ...prev,
+  {
+    id: response.data.student.id,
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    gender,
+    dateOfBirth,
+    status: "Active",
+  },
+]);
+
+
+      // Toast success in center
+      toast.success("Student added successfully and email sent!", {
+        duration: 5000,
+        position: "top-center",
+      });
+
+      closeAddStudentModal();
+    } else {
+      toast.error("Failed to add student", { duration: 5000 });
+    }
+  } catch (error) {
+    console.error("Error saving student data:", error);
+    setIsSubmitting(false);
+
+    // Show backend error if available
+    const message = error?.response?.data?.message || "Error saving student data";
+    toast.error(message, { duration: 5000 });
+  }
+};
+
 
   const deleteStudent = async (student) => {
     try {

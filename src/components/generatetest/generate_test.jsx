@@ -66,6 +66,8 @@ export default function TestDashboard() {
     fetchTestData();
   }, []);
 
+
+  
   // Determine test status based on dates
   const getTestStatus = (startDate, endDate) => {
     const now = new Date();
@@ -157,15 +159,13 @@ export default function TestDashboard() {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', { 
+    day: 'numeric', 
+    month: 'short', 
+    year: 'numeric'
+  });
+};
 
   if (loading) {
     return (

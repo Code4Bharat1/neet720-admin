@@ -32,6 +32,10 @@ const Page = () => {
   const [errorMsg, setErrorMsg] = useState(""); // Add this state
  const [deleteNoticeId, setDeleteNoticeId] = useState(null); // ID of notice to delete
 const [showDeletePopup, setShowDeletePopup] = useState(false); // Show/hide popup
+const [attachment, setAttachment] = useState(null);       // confirmed file
+  const [fileToConfirm, setFileToConfirm] = useState(null); // file pending confirmation
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // modal visibility
+
 
 
   // 🔑 Fetch and decode token on mount
@@ -125,37 +129,48 @@ const [showDeletePopup, setShowDeletePopup] = useState(false); // Show/hide popu
     return null;
   };
 
-  const handleSubmit = async () => {
-    const validationError = validateNoticeInput(formData);
-    if (validationError) {
-      setErrorMsg(validationError); // Show error below form
-      return;
-    }
-    setErrorMsg(""); // Clear error
+ const handleSubmit = async () => {
+  const validationError = validateNoticeInput(formData);
+  if (validationError) {
+    setErrorMsg(validationError); // Show error below form
+    return;
+  }
+  setErrorMsg(""); // Clear error
 
-    setLoading(true);
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/add-notice`,
-        formData
-      );
-      setFormData((prev) => ({
-        ...prev,
-        noticeText: "",
-        noticeTitle: "",
-        noticeStartDate: "",
-        noticeEndDate: "",
-        batchName: "",
-      }));
-      setShowCreateForm(false);
-      fetchNotices(formData.adminId);
-    } catch (error) {
-      setErrorMsg("Error creating notice. Please try again.");
-      console.error("Error saving notice:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/add-notice`,
+      formData
+    );
+
+    // Show success toast
+    toast.success("Notice created successfully!");
+
+    // Clear form fields
+    setFormData((prev) => ({
+      ...prev,
+      noticeText: "",
+      noticeTitle: "",
+      noticeStartDate: "",
+      noticeEndDate: "",
+      batchName: "",
+    }));
+
+    // Close the modal
+    setShowCreateForm(false);
+
+    // Refresh the notice list
+    fetchNotices(formData.adminId);
+
+  } catch (error) {
+    setErrorMsg("Error creating notice. Please try again.");
+    console.error("Error saving notice:", error);
+    toast.error("Error creating notice. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   
 
@@ -235,6 +250,21 @@ const handleDelete = async (id) => {
     const end = new Date(endDate);
     return today >= start && today <= end;
   };
+const handleUpdateNotice = async (id) => {
+  const formData = new FormData();
+  formData.append("title", editTitle);
+  formData.append("description", editDescription);
+  if (attachment) formData.append("file", attachment);
+
+  await axios.put(`/api/notice/update/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  toast.success("Notice updated successfully!");
+  fetchNotices();
+  setShowEditModal(false);
+};
 
   return (
     <LayoutWithNav>
@@ -616,6 +646,89 @@ const handleDelete = async (id) => {
     </div>
   </div>
 )}
+
+
+
+{/* File Upload Input */}
+{/* File Upload Input */}
+<div className="mb-4">
+  <label
+    htmlFor="attachment"
+    className="block text-gray-700 font-medium mb-2"
+  >
+    Attach File (PDF, Image, etc.)
+  </label>
+  <input
+    type="file"
+    id="attachment"
+    name="attachment"
+    accept=".pdf, .png, .jpg, .jpeg, .docx"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Show confirmation popup
+      setFileToConfirm(file);
+      setShowConfirmModal(true);
+
+      // Reset input so user can reselect if canceled
+      e.target.value = "";
+    }}
+    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+  />
+
+  {attachment && (
+    <div className="flex items-center mt-2 gap-2">
+      <p className="text-sm text-green-600">📎 {attachment.name} selected</p>
+      <button
+        type="button"
+        onClick={() => {
+          setAttachment(null);
+          document.getElementById("attachment").value = "";
+        }}
+        className="text-sm text-red-600 hover:underline"
+      >
+        Remove
+      </button>
+    </div>
+  )}
+</div>
+
+{/* Confirmation Modal with blur */}
+{showConfirmModal && (
+  <div className="fixed inset-0 bg-blur bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
+      <p className="mb-4">
+        Do you want to attach "{fileToConfirm.name}"?
+      </p>
+      <div className="flex justify-center gap-4">
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded"
+          onClick={() => {
+            setAttachment(fileToConfirm); // confirm attachment
+            setShowConfirmModal(false);
+            setFileToConfirm(null);
+          }}
+        >
+          Attach
+        </button>
+        <button
+          className="px-4 py-2 bg-red-600 text-white rounded"
+          onClick={() => {
+            setShowConfirmModal(false); // cancel attachment
+            setFileToConfirm(null);
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
 
           {/* Search and Filter Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
