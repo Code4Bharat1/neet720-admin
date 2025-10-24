@@ -39,7 +39,7 @@ const Mobile_desktop_student = () => {
 
         const processedStudents = json.map(student => {
           const firstName = student["STUDENT NAME"] || "";
-          const dob = student["DOB "] || "";
+          const dob = student["DOB"] || "";
           const yearOfBirth = dob ? (dob instanceof Date ? dob.getFullYear() : new Date(dob).getFullYear()) : "";
 
           const password = `${firstName.charAt(0)}${yearOfBirth}`;

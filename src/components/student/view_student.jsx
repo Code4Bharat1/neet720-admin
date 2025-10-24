@@ -23,6 +23,7 @@ const Desktop_student = () => {
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [newStudents, setNewStudents] = useState([]);
   const importButtonRef = useRef(null);
   const fileInputRef = useRef(null);
   const [students, setStudents] = useState([]);
@@ -70,49 +71,151 @@ const Desktop_student = () => {
   };
 
   const handleExcelUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
+  const file = e.target.files[0];
+  if (!file) {
+    toast.error("No file selected. Please choose an Excel file.", { duration: 5000 });
+    return;
+  }
+
+  const validExtensions = [".xlsx", ".xls"];
+  const fileExtension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Invalid file format. Please upload an .xlsx or .xls file.", { duration: 5000 });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
       const data = event.target.result;
-      try {
-        const workbook = XLSX.read(data, { type: "binary" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet);
-        const processedStudents = json.map((student) => {
-          const firstNameRaw = student["FIRST NAME"] || "";
-          const lastNameRaw = student["LAST NAME"] || "";
-          const firstName = cleanName(firstNameRaw);
-          const lastName = cleanName(lastNameRaw);
-          const fullName = `${firstName} ${lastName}`.trim();
-          const dob = student["DOB "] || "";
-          const year = dob
-            ? dob instanceof Date
-              ? dob.getFullYear()
-              : new Date(dob).getFullYear()
-            : "";
-          const password = `${firstName.charAt(0) || "X"}${year || "0000"}`;
-          return {
-            firstName,
-            lastName,
-            fullName,
-            emailAddress: student["EMAIL"] || "",
-            mobileNumber: student["PHONE NUMBER"] || "",
-            gender: student["GENDER"] || "",
-            dateOfBirth: dob || "",
-            password,
-            addedByAdminId: localAdmin,
-          };
-        });
-        console.log(processedStudents);
-        setStudents(processedStudents);
-      } catch (error) {
-        console.error("Error processing the Excel file:", error);
+      const workbook = XLSX.read(data, { type: "binary", cellDates: true, dateNF: "mm/dd/yyyy" });
+
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        throw new Error("No sheets found in the Excel file.");
       }
-    };
-    reader.readAsBinaryString(file);
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) {
+        throw new Error("Sheet is empty or invalid.");
+      }
+
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: "mm/dd/yyyy" });
+
+      const expectedHeaders = ["FIRST NAME", "LAST NAME", "EMAIL", "PHONE NUMBER", "GENDER", "DOB"];
+      const headers = json[0]?.map((h) => String(h).trim());
+      if (!headers || !expectedHeaders.every((h) => headers.includes(h))) {
+        throw new Error(
+          `Invalid headers. Expected: ${expectedHeaders.join(", ")}. Found: ${headers ? headers.join(", ") : "none"}`
+        );
+      }
+
+      const processedStudents = json.slice(1).filter((row, index) => {
+        if (!row || row.every((cell) => cell === undefined || cell === "")) {
+          console.log(`Skipping empty row ${index + 2}`);
+          return false;
+        }
+        return true;
+      }).map((row, index) => {
+        const rowData = {};
+        headers.forEach((header, i) => {
+          rowData[header] = row[i] !== undefined ? row[i] : "";
+        });
+
+        const firstNameRaw = String(rowData["FIRST NAME"] || "");
+        const lastNameRaw = String(rowData["LAST NAME"] || "");
+        const firstName = cleanName(firstNameRaw);
+        const lastName = cleanName(lastNameRaw);
+        const fullName = cleanName(firstName, lastName);
+        const dob = String(rowData["DOB"] || "").trim();
+        const email = String(rowData["EMAIL"] || "").trim();
+        const phoneNumber = String(rowData["PHONE NUMBER"] || "").trim();
+        const gender = String(rowData["GENDER"] || "").trim();
+
+        console.log(`Row ${index + 2} raw data:`, rowData);
+
+        if (!firstName || firstName === "Unknown") {
+          throw new Error(`Invalid or missing FIRST NAME in row ${index + 2}: ${firstNameRaw}`);
+        }
+        if (!email) {
+          throw new Error(`Missing EMAIL in row ${index + 2}`);
+        }
+        if (!phoneNumber) {
+          throw new Error(`Missing PHONE NUMBER in row ${index + 2}`);
+        }
+        if (!gender) {
+          throw new Error(`Missing GENDER in row ${index + 2}`);
+        }
+        if (!dob) {
+          throw new Error(`Missing DOB in row ${index + 2}`);
+        }
+
+        const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+        if (!emailRegex.test(email)) {
+          throw new Error(`Invalid EMAIL format in row ${index + 2}: ${email}`);
+        }
+
+        if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
+          throw new Error(
+            `Invalid PHONE NUMBER in row ${index + 2}: ${phoneNumber}. Must be 10 digits starting with 6-9.`
+          );
+        }
+
+        let parsedDate;
+        if (typeof dob === "number") {
+          parsedDate = XLSX.SSF.parse_date_code(dob);
+          if (!parsedDate) {
+            throw new Error(`Invalid date format in row ${index + 2}: ${dob} (Excel serial number)`);
+          }
+          parsedDate = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d);
+        } else {
+          const [month, day, year] = dob.split("/");
+          parsedDate = new Date(`${year}-${month}-${day}`);
+          if (isNaN(parsedDate.getTime())) {
+            throw new Error(`Invalid date format in row ${index + 2}: ${dob}. Use MM/DD/YYYY.`);
+          }
+        }
+        console.log(`Row ${index + 2} DOB:`, dob);
+
+        const birthYear = parsedDate.getFullYear();
+        const password = `${firstName.charAt(0).toUpperCase()}${birthYear}${Math.floor(1000 + Math.random() * 9000)}`;
+
+        const student = {
+          firstName,
+          lastName,
+          fullName,
+          emailAddress: email,
+          mobileNumber: phoneNumber,
+          gender: gender.toLowerCase(),
+          dateOfBirth: parsedDate.toISOString().split("T")[0],
+          password,
+          addedByAdminId: localAdmin || "30",
+        };
+
+        console.log(`Row ${index + 2} processed student:`, student);
+        return student;
+      });
+
+      if (processedStudents.length === 0) {
+        throw new Error("No valid students found in the Excel file.");
+      }
+
+      setNewStudents(processedStudents);
+      toast.success(`Excel file processed successfully. ${processedStudents.length} student(s) ready to upload.`, {
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error processing the Excel file:", error);
+      toast.error(`Error processing Excel file: ${error.message || "Please ensure the file format is correct."}`, {
+        duration: 5000,
+      });
+    }
   };
+  reader.onerror = () => {
+    console.error("FileReader error:", reader.error);
+    toast.error("Error reading the Excel file. Please try again.", { duration: 5000 });
+  };
+  reader.readAsBinaryString(file);
+};;  
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -442,58 +545,105 @@ const handleSubmit = async (e) => {
     closeModal();
   };
 
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    try {
-      const currentCount = students.length;
-      const spaceLeft = STUDENT_LIMIT - currentCount;
-      if (spaceLeft <= 0) {
-        toast.error(
-          "Student limit of 100 has been reached. Cannot upload more students.",
-          {
-            duration: 5000,
-          }
-        );
-        return;
-      }
-      let studentsToAdd = students.slice(0, spaceLeft);
-      if (students.length > spaceLeft) {
-        toast.success(
-          `Only ${spaceLeft} students were added. Student limit of 100 reached.`,
-          {
-            duration: 5000,
-          }
-        );
-      }
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/bulk-save`,
-        { students: studentsToAdd }
-      );
-      const existingEmails = response.data.existingEmails || [];
-      // If there are existing emails, display them in the toast message
-      if (existingEmails.length > 0) {
-        toast.error(
-          `Some students were not added due to existing emails: ${existingEmails.join(
-            ", "
-          )}`,
-          {
-            duration: 10000,
-          }
-        );
-      } else {
-        toast.success("Students added successfully!", {
-          duration: 5000,
-        });
-      }
-      setStudents((prev) => [...prev, ...studentsToAdd]); // Update state
-      console.log("Backend Response:", response.data);
-    } catch (error) {
-      console.error("Error submitting data:", error);
-      toast.error("Error occurred while uploading students.", {
-        duration: 5000,
-      });
+const handleFileUpload = async (e) => {
+  e.preventDefault();
+  try {
+    if (!localAdmin) {
+      console.error("localAdmin is undefined");
+      throw new Error("Admin ID is missing. Please log in again.");
     }
-  };
+
+    if (!newStudents || newStudents.length === 0) {
+      console.error("No new students to upload");
+      throw new Error("No new students to upload. Please process an Excel file first.");
+    }
+
+    const currentCount = students.length;
+    const spaceLeft = STUDENT_LIMIT - currentCount;
+    if (newStudents.length > spaceLeft) {
+      throw new Error(
+        `Student limit of ${STUDENT_LIMIT} will be exceeded. Can only add ${spaceLeft} more student(s).`
+      );
+    }
+
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/bulk-save`.replace(/\s+/g, "");
+    console.log("localAdmin:", localAdmin);
+    console.log("Request URL:", apiUrl);
+    console.log("Sending students to backend:", JSON.stringify(newStudents, null, 2));
+
+    const response = await axios.post(
+      apiUrl,
+      { students: newStudents },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const { savedStudents, existingEmails, existingPhones, whatsappSentCount, message } = response.data;
+    console.log("Backend response:", JSON.stringify(response.data, null, 2));
+
+    // Update students state
+    setStudents((prev) => {
+  const normalize = (s) => ({
+    id: s.id,
+    firstName: s.firstName || "",
+    lastName: s.lastName || "",
+    fullName: cleanName(s.firstName, s.lastName),
+    email: s.emailAddress || s.email || "",
+    phoneNumber: s.mobileNumber || s.phoneNumber || "",
+    gender: s.gender || "",
+    dateOfBirth: s.dateOfBirth || "",
+    status: s.status || "Active",
+    addedByAdminId: s.addedByAdminId || localAdmin || "30",
+  });
+
+  const updatedStudents = [
+    ...prev.map(normalize),
+    ...savedStudents.map(normalize),
+  ];
+
+  return updatedStudents;
+});
+
+
+    // Clear newStudents
+    setNewStudents([]);
+
+    // Prepare toast message
+    let toastMessage = message || `${savedStudents.length} student(s) added successfully.`;
+    if (whatsappSentCount > 0) {
+      toastMessage += ` Credentials sent via WhatsApp to ${whatsappSentCount} student(s).`;
+    }
+    if (existingEmails.length > 0) {
+      toastMessage += ` Skipped ${existingEmails.length} duplicate email(s): ${existingEmails.join(", ")}.`;
+    }
+    if (existingPhones.length > 0) {
+      toastMessage += ` Skipped ${existingPhones.length} duplicate phone number(s): ${existingPhones.join(", ")}.`;
+    }
+
+    toast.success(toastMessage, { duration: 10000, position: "top-center" });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    // Close modal (if applicable)
+    closeModal();
+  } catch (error) {
+    console.error("Error submitting data:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    const message = error.response?.data?.message || error.message || "Error uploading students. Please try again.";
+    toast.error(message, { duration: 5000 });
+  }
+};
+
+
 
   return (
     <div className="h-full bg-gradient-to-b from-white to-gray-50 p-6 relative max-sm:text-center overflow-x-hidden">
@@ -666,7 +816,7 @@ const handleSubmit = async (e) => {
                             ? "bg-blue-100 text-blue-800"
                             : student.gender === "Female"
                             ? "bg-pink-100 text-pink-800"
-                            : "bg-purple-100 text-purple-800"
+                            : "bg-blue-100 text-blue-800"
                         }`}
                       >
                         {student.gender || "N/A"}
