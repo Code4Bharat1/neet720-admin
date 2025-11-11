@@ -250,6 +250,7 @@ const BatchCreationForm = () => {
           <span className="text-lg font-medium text-gray-600">Back</span>
         </motion.div>
         {/* Header */}
+        
         <motion.div className="text-center mb-8" variants={itemVariants}>
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
             <BookOpen className="w-8 h-8 text-white" />

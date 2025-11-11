@@ -230,6 +230,7 @@ const UpdateBatchForm = ({ batchId }) => {
     } finally {
       setIsLoading(false);
     }
+    
   };
 
   if (isLoadingBatch) {
