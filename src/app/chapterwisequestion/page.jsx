@@ -548,7 +548,7 @@ const Page = () => {
       formData.append("image", mcqImage);
 
       const res = await fetch(
-        "https://mcq-extractor.neet720.com/api/extract-mcqs",
+        `${process.env.NEXT_PUBLIC_API_MCQ_URL}/extract-mcqs`,
         { method: "POST", body: formData }
       );
 

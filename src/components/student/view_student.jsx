@@ -415,7 +415,7 @@ const handleSubmit = async (e) => {
 
     if (response.status === 201) {
       // Send email
-      await sendEmail(email, password);
+      // await sendEmail(email, password);
 
       // Add the new student to the state (no page reload)
      setStudents((prev) => [

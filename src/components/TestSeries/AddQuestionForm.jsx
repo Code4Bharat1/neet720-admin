@@ -54,7 +54,7 @@ export default function AddQuestionForm() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/test-series/question/create`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series/question/create`,
         {
           ...formData,
           marks: Number(formData.marks),

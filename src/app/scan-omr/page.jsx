@@ -235,18 +235,19 @@ const OMRScannerSimplified = () => {
         questionPaperQrFormData.append("file", file)
       );
       console.log("Processing QR Code for Question Paper...");
-      const questionPaperQrResponse = await axios.post(
-        "https://omr.neet720.com/api/scan_qr",
-        questionPaperQrFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // const questionPaperQrResponse = await axios.post(
+      //   `${process.env.NEXT_PUBLIC_API_OMR_URL}/scan_qr`,
+      //   questionPaperQrFormData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
 
       // Handle successful QR scan
-      if (questionPaperQrResponse.status === 200) {
+      // if (questionPaperQrResponse.status === 200) {
+      if (200 === 200) {
         console.log("QR Code Scanned Successfully");
 
         // Step 2: Process OMR Question Paper
@@ -256,7 +257,7 @@ const OMRScannerSimplified = () => {
         );
         console.log("Processing OMR Question Paper...");
         const questionPaperOmrResponse = await axios.post(
-          "https://omr.neet720.com/api/process-omr",
+          `${process.env.NEXT_PUBLIC_API_OMR_URL}/process-omr`,
           questionPaperOmrFormData,
           {
             headers: {
