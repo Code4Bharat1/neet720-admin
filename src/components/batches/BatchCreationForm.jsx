@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast, Toaster } from "react-hot-toast";
 import {
   Users,
   Mail,
@@ -162,56 +163,49 @@ const BatchCreationForm = () => {
     return name.includes(q) || email.includes(q);
   });
 
+ 
+  // ✅ Fixed: Proper handleCreateBatch
   const handleCreateBatch = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccessMessage("");
     setIsLoading(true);
 
-    // Validation
-    if (!batchName) {
-      setError("Batch Name is required");
+    if (!batchName.trim()) {
+      toast.error("Batch name is required!");
       setIsLoading(false);
       return;
     }
 
     if (selectedStudents.length === 0) {
-      setError("Please select at least one student for the batch");
+      toast.error("Please select at least one student!");
       setIsLoading(false);
       return;
     }
 
     try {
-      let token = "";
-      if (typeof window !== "undefined") {
-        token = localStorage.getItem("adminAuthToken");
-      }
-
-      if (!token) {
-        setError("Authentication token not found. Please log in again.");
-        setIsLoading(false);
-        return;
-      }
-
-      const studentIds = selectedStudents.map((student) => student.id);
       const api = createAxiosInstance();
-
-      const response = await api.post("/studentdata/batch", {
+      const payload = {
         batchName: batchName.trim(),
+        status,
         no_of_students: selectedStudents.length,
-        studentIds: studentIds,
-        status: status,
-      });
+        studentIds: selectedStudents.map((s) => s.id),
+      };
 
-      setSuccessMessage(response.data.message || "Batch created successfully!");
-      setTimeout(() => resetForm(), 3000);
-    } catch (error) {
-      console.error("Error creating batch:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Error creating batch";
-      setError(errorMessage);
+      const { data } = await api.post("/studentdata/batch", payload);
+
+      // ✅ Show toast success message
+    toast.success(data.message || "Batch created successfully!", {
+  duration: 3000,
+});
+{/* ✅ Toast container */}
+      <Toaster position="top-center" reverseOrder={false} />
+      // ✅ Redirect after short delay
+      setTimeout(() => {
+        router.push("/batches");
+      }, 1200);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to create batch!");
     } finally {
       setIsLoading(false);
     }
@@ -249,8 +243,8 @@ const BatchCreationForm = () => {
           <X className="w-6 h-6 text-gray-600" />
           <span className="text-lg font-medium text-gray-600">Back</span>
         </motion.div>
-        {/* Header */}
         
+        {/* Header */}
         <motion.div className="text-center mb-8" variants={itemVariants}>
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
             <BookOpen className="w-8 h-8 text-white" />

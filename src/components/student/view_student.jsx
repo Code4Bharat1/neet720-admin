@@ -297,16 +297,33 @@ const Desktop_student = () => {
         });
       }
     } catch (error) {
-      console.error("Error updating student data:", error);
-      setIsSubmitting(false);
-      // In case of failure, revert the optimistic update
-      setStudents((prevStudents) =>
-        prevStudents.map((s) => (s.id === updatedStudent.id ? { ...s } : s))
-      );
-      toast.error("Error updating student data", {
-        duration: 5000,
+  console.error("Error uploading students:", error);
+
+  // Handle specific backend errors cleanly
+  if (error.response) {
+    if (error.response.status === 409) {
+      toast.error("Some students already exist. Please check for duplicates.", {
+        duration: 3000,
       });
+      return;
+    } else if (error.response.status === 400) {
+      toast.error("Invalid file data. Please verify and try again.", {
+        duration: 3000,
+      });
+      return;
+    } else if (error.response.status === 500) {
+      toast.error("Server error. Please try again later.", { duration: 3000 });
+      return;
     }
+  }
+
+  // Fallback for any other unexpected error
+  const message =
+    error.response?.data?.message ||
+    "Something went wrong while submitting data.";
+  toast.error(message, { duration: 3000 });
+}
+
   };
 
   // Remove literal "null"/"undefined"/"n/a" tokens, collapse spaces, fallback to "Unknown"
@@ -433,11 +450,11 @@ const handleSubmit = async (e) => {
 ]);
 
 
-      // Toast success in center
-      toast.success("Student added successfully and email sent!", {
-        duration: 5000,
-        position: "top-center",
-      });
+    toast.success(response.data.message || "Student added successfully and email sent!", {
+  duration: 3000, // stays for 3 seconds
+  position: "top-center",
+});
+
 
       closeAddStudentModal();
     } else {
@@ -516,7 +533,9 @@ const handleSubmit = async (e) => {
     XLSX.utils.book_append_sheet(wb, ws, "Template");
     // Generate the Excel file
     XLSX.writeFile(wb, "student_template.xlsx");
+
   };
+const [processedStudents, setProcessedStudents] = useState([]);
 
   const handleExport = () => {
     const headers = [
@@ -545,104 +564,48 @@ const handleSubmit = async (e) => {
     closeModal();
   };
 
-const handleFileUpload = async (e) => {
-  e.preventDefault();
-  try {
-    if (!localAdmin) {
-      console.error("localAdmin is undefined");
-      throw new Error("Admin ID is missing. Please log in again.");
-    }
+const handleFileUpload = async () => {
+  // remove any existing toasts before showing a new one
+  toast.dismiss();
 
-    if (!newStudents || newStudents.length === 0) {
-      console.error("No new students to upload");
-      throw new Error("No new students to upload. Please process an Excel file first.");
-    }
-
-    const currentCount = students.length;
-    const spaceLeft = STUDENT_LIMIT - currentCount;
-    if (newStudents.length > spaceLeft) {
-      throw new Error(
-        `Student limit of ${STUDENT_LIMIT} will be exceeded. Can only add ${spaceLeft} more student(s).`
-      );
-    }
-
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/studentdata/bulk-save`.replace(/\s+/g, "");
-    console.log("localAdmin:", localAdmin);
-    console.log("Request URL:", apiUrl);
-    console.log("Sending students to backend:", JSON.stringify(newStudents, null, 2));
-
-    const response = await axios.post(
-      apiUrl,
-      { students: newStudents },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    
-
-    const { savedStudents, existingEmails, existingPhones, whatsappSentCount, message } = response.data;
-    console.log("Backend response:", JSON.stringify(response.data, null, 2));
-
-    // Update students state
-    setStudents((prev) => {
-  const normalize = (s) => ({
-    id: s.id,
-    firstName: s.firstName || "",
-    lastName: s.lastName || "",
-    fullName: cleanName(s.firstName, s.lastName),
-    email: s.emailAddress || s.email || "",
-    phoneNumber: s.mobileNumber || s.phoneNumber || "",
-    gender: s.gender || "",
-    dateOfBirth: s.dateOfBirth || "",
-    status: s.status || "Active",
-    addedByAdminId: s.addedByAdminId || localAdmin || "30",
+  if (processedStudents.length === 0) {
+  toast.dismiss(); // remove any previous toasts
+  toast.error("No valid students found in the Excel file.", {
+    duration: 3000,
   });
-
-  const updatedStudents = [
-    ...prev.map(normalize),
-    ...savedStudents.map(normalize),
-  ];
-
-  return updatedStudents;
-});
+  return; // safely stop execution instead of th
+  // rowing
+}
 
 
-    // Clear newStudents
-    setNewStudents([]);
 
-    // Prepare toast message
-    let toastMessage = message || `${savedStudents.length} student(s) added successfully.`;
-    if (whatsappSentCount > 0) {
-      toastMessage += ` Credentials sent via WhatsApp to ${whatsappSentCount} student(s).`;
-    }
-    if (existingEmails.length > 0) {
-      toastMessage += ` Skipped ${existingEmails.length} duplicate email(s): ${existingEmails.join(", ")}.`;
-    }
-    if (existingPhones.length > 0) {
-      toastMessage += ` Skipped ${existingPhones.length} duplicate phone number(s): ${existingPhones.join(", ")}.`;
-    }
-
-    toast.success(toastMessage, { duration: 10000, position: "top-center" });
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    // Close modal (if applicable)
-    closeModal();
-  } catch (error) {
-    console.error("Error submitting data:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
+  if (!isFileValid) {
+    toast.error("Invalid Excel format. Please upload a valid student file.", {
+      duration: 3000,
     });
-    const message = error.response?.data?.message || error.message || "Error uploading students. Please try again.";
-    toast.error(message, { duration: 5000 });
+    return;
+  }
+
+  try {
+    const response = await axios.post("/api/students", processedStudents);
+
+    if (response.status === 200) {
+      toast.success("Students uploaded successfully!");
+      setProcessedStudents([]);
+      setIsFileValid(false);
+    } else {
+      toast.error("Error uploading students. Please try again.", { duration: 3000 });
+    }
+  } catch (error) {
+    console.error("Error uploading students:", error);
+    const message =
+      error.response?.data?.message ||
+      "Something went wrong while submitting data.";
+    toast.error(message, { duration: 3000 });
   }
 };
+
+
 
 
 

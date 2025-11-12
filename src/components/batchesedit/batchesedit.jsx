@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast, Toaster } from "react-hot-toast";
+
 import {
   Users,
   Search,
@@ -198,40 +200,54 @@ const UpdateBatchForm = ({ batchId }) => {
   };
 
   // Update batch with students
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-    setIsLoading(true);
-    if (!batchName.trim()) {
-      setError("Batch name is required");
-      setIsLoading(false);
-      return;
-    }
-    if (!selectedStudents.length) {
-      setError("Select at least one student");
-      setIsLoading(false);
-      return;
-    }
-    try {
-      const api = createAxios();
-      const payload = {
-        batchName: batchName.trim(),
-        status,
-        no_of_students: selectedStudents.length,
-        studentIds: selectedStudents.map((s) => s.id),
-      };
-      const { data } = await api.put(`/studentdata/batch/${batchId}`, payload);
-      setSuccessMessage(data.message || "Batch updated successfully");
-      fetchBatchDetails();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Update failed");
-    } finally {
-      setIsLoading(false);
-    }
+ const handleUpdate = async (e) => {
+  e.preventDefault();
+  setError("");
+  setSuccessMessage("");
+  setIsLoading(true);
+
+  if (!batchName.trim()) {
+    setError("Batch name is required");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!selectedStudents.length) {
+    setError("Select at least one student");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const api = createAxios();
+    const payload = {
+      batchName: batchName.trim(),
+      status,
+      no_of_students: selectedStudents.length,
+      studentIds: selectedStudents.map((s) => s.id),
+    };
     
-  };
+    const { data } = await api.put(`/studentdata/batch/${batchId}`, payload);
+        toast.success(data.message || "Batch created successfully!", {
+        duration: 3000, // stays for 3 seconds
+      });
+{/* ✅ Toast container */}
+      <Toaster position="top-center" reverseOrder={false} />
+      
+
+    // ✅ After success, redirect to batches page
+    setTimeout(() => {
+      router.push("/batches"); // change path if your route is different
+    }, 1000); // small delay to show the success message
+
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.message || "Update failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   if (isLoadingBatch) {
     return (
@@ -575,3 +591,7 @@ const UpdateBatchForm = ({ batchId }) => {
 };
 
 export default UpdateBatchForm;
+
+
+
+
