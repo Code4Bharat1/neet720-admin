@@ -333,6 +333,7 @@ export default function Batches() {
                       }
                     }}
                   >
+                    
                     {batch.active ? "Active" : "Inactive"}
                   </button>
                 </td>

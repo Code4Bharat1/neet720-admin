@@ -204,22 +204,45 @@ const handleDelete = async (id) => {
   };
 
   const handleUpdateSubmit = async (id) => {
-    setLoading(true);
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/update-notice`,
-        { id, ...editNoticeData }
-      );
-      setEditNoticeId(null);
-      setEditNoticeData({});
-      fetchNotices(formData.adminId);
-    } catch (error) {
-      console.error("Error updating notice:", error);
-      alert("Error updating notice. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/update-notice`,
+      { id, ...editNoticeData }
+    );
+
+    setEditNoticeId(null);
+    setEditNoticeData({});
+    fetchNotices(formData.adminId);
+
+    // ✅ Toastify success message
+    toast.success("Notice updated successfully!", {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+    });
+  } catch (error) {
+    console.error("Error updating notice:", error);
+
+    // ✅ Toastify error message
+    toast.error("Error updating notice. Please try again.", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Filter notices based on search and batch filter
   const filteredNotices = notices.filter((notice) => {
@@ -619,27 +642,48 @@ const handleUpdateNotice = async (id) => {
           Cancel
         </button>
         <button
-          onClick={async () => {
-            setShowDeletePopup(false);
-            if (!deleteNoticeId) return;
-            setLoading(true);
-            try {
-              await axios.post(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/delete-notice`,
-                { id: deleteNoticeId }
-              );
-              fetchNotices(formData.adminId);
-              toast.success("Notice deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting notice:", error);
-              toast.error("Error deleting notice. Please try again.");
-            } finally {
-              setLoading(false);
-              setDeleteNoticeId(null);
-            }
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-        >
+        onClick={async () => {
+  setShowDeletePopup(false);
+  if (!deleteNoticeId) return;
+  setLoading(true);
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/delete-notice`,
+      { id: deleteNoticeId }
+    );
+    fetchNotices(formData.adminId);
+
+    // ✅ Updated Toastify success
+    toast.success("Notice deleted successfully!", {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+    });
+  } catch (error) {
+    console.error("Error deleting notice:", error);
+
+    // ✅ Updated Toastify error
+    toast.error("Error deleting notice. Please try again.", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+    });
+  } finally {
+    setLoading(false);
+    setDeleteNoticeId(null);
+  }
+}}
+className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+>
+
           Delete
         </button>
       </div>
