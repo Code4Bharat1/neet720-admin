@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -13,6 +13,14 @@ const AdminLogin = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
+  // ✅ Redirect to dashboard if token already exists
+  useEffect(() => {
+    const token = localStorage.getItem("adminAuthToken");
+    if (token) {
+      router.replace("/admindashboard");
+    }
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -20,6 +28,12 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    if (!formData.AdminId.trim() || !formData.PassKey.trim()) {
+      toast.error("Please fill in all fields", { id: "admin-login-error" });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -31,11 +45,28 @@ const AdminLogin = () => {
         }
       );
 
-      localStorage.setItem("adminAuthToken", response.data.token);
-      router.push("/admindashboard");
-      toast.success("Login Successful!", { duration: 5000 });
+      const token = response?.data?.token;
+
+      if (!token || typeof token !== "string" || token.trim() === "") {
+        toast.error("Invalid Admin ID or Password");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.clear();
+      localStorage.setItem("adminAuthToken", token);
+
+      toast.success("✅ Login Successful!");
+      router.replace("/admindashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to login.");
+      const errorMessage =
+        err.response?.data?.message ||
+        (err.response?.status === 401
+          ? "Invalid Admin ID or Password"
+          : "Failed to login. Please try again.");
+
+      toast.error(errorMessage, { id: "admin-login-error" });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -43,8 +74,8 @@ const AdminLogin = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-b from-[#0077B6] to-[#ADE8F4] items-center justify-center relative">
-      {/* Mobile Logo at Top - Overlapping Login Box */}
-      <div className="md:hidden flex justify-center w-full relative top-5 left-0 z-20">
+      {/* Mobile Logo at Top */}
+      <div className="md:hidden flex justify-center w-full relative top-5 z-20">
         <Image
           src="/neet720_logo.jpg"
           alt="Neet720 Logo"
@@ -54,6 +85,7 @@ const AdminLogin = () => {
           style={{ marginBottom: "-40px" }}
         />
       </div>
+
       {/* Left Logo Section */}
       <div className="hidden md:flex w-full md:w-[40%] items-center justify-center p-6">
         <Image
@@ -66,8 +98,7 @@ const AdminLogin = () => {
       </div>
 
       {/* Right Login Section */}
-      <div className="flex flex-col items-center justify-center w-full md:w-[60%] bg-white p-8 md:rounded-l-3xl shadow-lg max-w-full relative z-10 md:mt-0">
-        {/* Mobile Nexcore Logo */}
+      <div className="flex flex-col items-center justify-center w-full md:w-[60%] bg-white p-8 md:rounded-l-3xl shadow-lg relative z-10">
         <div className="md:hidden flex justify-center mb-6">
           <Image
             src="/nexcore-logo-pc.png"
@@ -85,10 +116,7 @@ const AdminLogin = () => {
           Login to your Admin Panel
         </p>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 w-full max-w-md"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5 w-full max-w-md">
           {/* Admin ID */}
           <div>
             <label
@@ -135,7 +163,6 @@ const AdminLogin = () => {
             </span>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full py-3 bg-[#45A4CE] hover:bg-[#3e9ec7] text-white font-semibold rounded-md transition-all"
@@ -144,7 +171,6 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        {/* Error Message */}
         {error && (
           <p className="text-red-500 text-sm text-center mt-4">{error}</p>
         )}

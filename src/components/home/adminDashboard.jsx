@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IoArrowUp } from "react-icons/io5";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation"; // ✅ MUST import this here
 
 import ModeSwitcher from "@/components/desktopadmindashboard/modeswitcher";
 import StatsCards from "@/components/desktopadmindashboard/statscards";
@@ -13,15 +14,39 @@ import TestResultDownload from "@/components/desktopadmindashboard/testresultdow
 import LoginAttendance from "@/components/desktopadmindashboard/loginattendance";
 
 export default function AdminDashboard() {
+  const router = useRouter(); // ✅ defined here FIRST
   const [selectedMode, setSelectedMode] = useState("Practice");
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // ✅ Redirect to login if no valid token found
+  useEffect(() => {
+    const token = localStorage.getItem("adminAuthToken");
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    // Optional: Check token validity (decode expiry)
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem("adminAuthToken");
+        router.replace("/login");
+      }
+    } catch (err) {
+      localStorage.removeItem("adminAuthToken");
+      router.replace("/login");
+    }
+  }, [router]);
+
+  // Dashboard Loading Animation
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(timer);
   }, []);
 
+  // Scroll-To-Top Visibility
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener("scroll", handleScroll);
