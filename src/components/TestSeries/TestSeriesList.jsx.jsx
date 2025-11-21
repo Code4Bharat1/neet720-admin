@@ -14,25 +14,34 @@ export default function TestSeriesList() {
   // Replace with your API base URL
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  useEffect(() => {
+useEffect(() => {
     const fetchTestSeries = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/test-series`);
-        if (res.data.success) {
-          setTestSeries(res.data.data);
+        const token = typeof window !== "undefined" ? localStorage.getItem("adminAuthToken") : null;
+        console.log("API_BASE:", API_BASE, "token present:", !!token);
+
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        console.log("Outgoing request headers:", headers);
+
+        // if token is stored in HttpOnly cookie, use withCredentials: true and remove Authorization header
+        const res = await axios.get(`${API_BASE}/test-series`, { headers, withCredentials: true });
+        console.log("fetchTestSeries response status:", res.status, "data:", res.data);
+
+        if (res.data && res.data.success) {
+          setTestSeries(Array.isArray(res.data.data) ? res.data.data : [res.data.data]);
         } else {
-          setError(res.data.message || "Failed to load test series.");
+          setError(res.data?.message || "Failed to load test series.");
         }
       } catch (err) {
-        console.error("Error fetching test series:", err);
-        setError("Error fetching test series.");
+        console.error("Error fetching test series:", err, err?.response?.data);
+        setError(err.response?.data?.message || "Error fetching test series.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchTestSeries();
-  }, []);
+  }, [API_BASE]);
 
   if (loading) {
     return (

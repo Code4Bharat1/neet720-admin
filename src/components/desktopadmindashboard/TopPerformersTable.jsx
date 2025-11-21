@@ -23,30 +23,49 @@ const TopPerformersTable = ({ selectedMode }) => {
     return cleaned || "Unknown";
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const apiUrl =
-          selectedMode === "Practice"
-            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformance`
-            : `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformancecustomize`;
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("adminAuthToken");
 
-        const response = await axios.get(apiUrl);
-        const sanitized = (response.data.results || []).map((r) => ({
-          ...r,
-          fullName: cleanName(r.fullName, r.firstName, r.lastName),
-        }));
-        setData(sanitized);
+      if (!token) {
+        console.error("No admin token found");
+        setError("Unauthorized: Please login again.");
         setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch data");
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchData();
-    setCurrentPage(1);
-  }, [selectedMode]);
+      const apiUrl =
+        selectedMode === "Practice"
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformance`
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformancecustomize`;
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔥 Correct header
+        },
+      });
+
+      const sanitized = (response.data.results || []).map((r) => ({
+        ...r,
+        fullName: cleanName(r.fullName, r.firstName, r.lastName),
+      }));
+
+      setData(sanitized);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch data");
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+  setCurrentPage(1);
+}, [selectedMode]);
+
+
+
 
   const safeJoin = (array) => (Array.isArray(array) ? array.join(", ") : "N/A");
 

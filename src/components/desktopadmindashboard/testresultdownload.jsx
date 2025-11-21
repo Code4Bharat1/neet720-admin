@@ -25,38 +25,50 @@ const TestResultDownload = () => {
   return cleaned || "Unknown";
 };
   // Fetch the test results based on the selected mode
-  useEffect(() => {
-    const fetchTestResults = async () => {
-      setLoading(true);
-      try {
-        const apiUrl =
-          selectedMode === 'Practice'
-            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/testresult/result`
-            : `${process.env.NEXT_PUBLIC_API_BASE_URL}/testresult/customizedresult`;
+ useEffect(() => {
+  const fetchTestResults = async () => {
+    setLoading(true);
+    try {
+      const apiUrl =
+        selectedMode === 'Practice'
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/testresult/result`
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/testresult/customizedresult`;
 
-        const response = await axios.get(apiUrl); // API URL based on mode
-        if (response.data && response.data.results) {
-          const results = response.data.results.map((result) => ({
-            name: cleanName(result.fullName, result.firstName, result.lastName),
-            score: result.marksObtained,
-            totalMarks: result.totalMarks,
-            percentage: Math.round((result.marksObtained / result.totalMarks) * 100),
-            studentId: result.studentId,
-            icon: getIcon(result.marksObtained, result.totalMarks), // Dynamic icon based on score percentage
-            testName: result.testName || "Practice Test",
-            date: result.testDate || new Date().toLocaleDateString(),
-          }));
-          setTestResults(results);
-        }
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch data');
-        setLoading(false);
+      // 🔥 GET TOKEN
+const token = localStorage.getItem("adminAuthToken");
+
+      // 🔥 SEND TOKEN WITH AXIOS
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.results) {
+        const results = response.data.results.map((result) => ({
+          name: cleanName(result.fullName, result.firstName, result.lastName),
+          score: result.marksObtained,
+          totalMarks: result.totalMarks,
+          percentage: Math.round((result.marksObtained / result.totalMarks) * 100),
+          studentId: result.studentId,
+          icon: getIcon(result.marksObtained, result.totalMarks),
+          testName: result.testName || "Practice Test",
+          date: result.testDate || new Date().toLocaleDateString(),
+        }));
+        setTestResults(results);
       }
-    };
 
-    fetchTestResults();
-  }, [selectedMode]); // Dependency on selectedMode
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch data');
+      setLoading(false);
+    }
+  };
+
+  fetchTestResults();
+}, [selectedMode]);
+ // Dependency on selectedMode
 
   // Function to get the icon based on score percentage
   const getIcon = (score, totalMarks) => {

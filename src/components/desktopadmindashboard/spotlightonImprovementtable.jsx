@@ -24,33 +24,49 @@ const SpotlightOnImprovementTablemobile = ({ selectedMode }) => {
   return cleaned || "Unknown";
 };
   // Fetch the test summaries when the component is mounted
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Set the API URL based on the selected mode
-        const apiUrl =
-          selectedMode === "Practice"
-            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/newresult`
-            : `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/customresult`;
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("adminAuthToken");
 
-        const response = await axios.get(apiUrl);
-const sanitized = (response.data.results || []).map((r) => ({
-  ...r,
-  // prefer r.fullName; if it’s empty, try to build from parts if your API sends them
-  fullName: cleanName(r.fullName, r.firstName, r.lastName),
-}));
-setData(sanitized);
+      if (!token) {
+        setError("Unauthorized: Please login again.");
         setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch data"); // Handle any errors
-        setLoading(false);
+        return;
       }
-    };
 
-    // Call fetchData when selectedMode changes
-    fetchData();
-    setCurrentPage(1); // Reset to first page when mode changes
-  }, [selectedMode]);
+      const apiUrl =
+        selectedMode === "Practice"
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/newresult`
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/spotlight/customresult`;
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔥 MUST be capital A
+        },
+      });
+
+      const sanitized = (response.data.results || []).map((r) => ({
+        ...r,
+        fullName: cleanName(r.fullName, r.firstName, r.lastName),
+      }));
+
+      setData(sanitized);
+      setLoading(false);
+
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch data");
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+  setCurrentPage(1);
+
+}, [selectedMode]);
+
+
 
   // Helper function to safely join arrays or return N/A
   const safeJoin = (array) => {

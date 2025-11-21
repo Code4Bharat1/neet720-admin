@@ -13,27 +13,54 @@ const StudentActivityCard = () => {
 
   const initialsSet = ["P", "R", "S", "V", "T", "A", "B", "C", "D", "E"];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/logout/studentslogged`);
-        const data = await response.json();
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("adminAuthToken");
 
-        if (data.success) {
-          setStudentData({
-            studentCount: data.data.studentCount,
-            studentProfiles: data.data.studentProfiles,
-          });
-        }
+      if (!token) {
+        setError("Unauthorized: Please login again.");
         setLoading(false);
-      } catch (error) {
-        setError("Failed to fetch data");
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchData();
-  }, []);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/logout/studentslogged`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,  // 🔥 IMPORTANT
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStudentData({
+          studentCount: data.data.studentCount,
+          studentProfiles: data.data.studentProfiles,
+        });
+      } else {
+        throw new Error(data.message || "Failed to fetch data");
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      setError("Failed to fetch data: " + error.message);
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   const circleColors = [
     "bg-red-500", "bg-blue-600", "bg-green-600", "bg-yellow-500", "bg-purple-600",
