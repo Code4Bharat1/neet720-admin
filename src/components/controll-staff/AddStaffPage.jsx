@@ -98,8 +98,8 @@ export default function AddStaffPage() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/email`,
         {
           to: email,
-          subject: "🎉 Welcome Aboard as Admin at Exam Portal!",
-          text: `Hey there 👋,\n\n🎊 Congratulations on becoming an Admin at Exam Portal! 🎯\n\nHere are your login credentials:\n\n🆔 Admin ID: ${adminId}\n🔐 Password: ${password}\n📅 Start Date: ${startDate}\n📆 Expiry Date: ${expiryDate}\n\nPlease keep this information safe and secure. 🔒\n\nYou're now ready to manage the portal like a pro! 💪\n\nBest wishes,\nThe Exam Portal Team 🚀`,
+          subject: "🎉 Welcome Aboard as Admin at Neet 720!",
+          text: `Hey there 👋,\n\n🎊 Congratulations on becoming an Admin at Neet 720! 🎯\n\nHere are your login credentials:\n\n🆔 Admin ID: ${adminId}\n🔐 Password: ${password}\n📅 Start Date: ${startDate}\n📆 Expiry Date: ${expiryDate}\n\nPlease keep this information safe and secure. 🔒\n\nYou're now ready to manage the portal like a pro! 💪\n\nBest wishes,\nThe Neet 720 Team 🚀`,
         }
       );
       if (res.status === 200) console.log("Admin email sent successfully ✅");

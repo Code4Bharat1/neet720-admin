@@ -223,8 +223,8 @@ const Mobile_desktop_student = () => {
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/email`, {
         to: email,
-        subject: 'Congratulations, you were added to the Exam Portal',
-        text: `Hello, \n\nCongratulations! You have been successfully added to the Exam Portal.\nYour login credentials are:\n\nEmail: ${email}\nPassword: ${password}\n\nBest regards,\nThe Exam Portal Team`
+        subject: 'Congratulations, you were added to the Neet 720',
+        text: `Hello, \n\nCongratulations! You have been successfully added to the Neet 720.\nYour login credentials are:\n\nEmail: ${email}\nPassword: ${password}\n\nBest regards,\nThe Neet 720 Team`
       });
 
       if (response.status === 200) {
