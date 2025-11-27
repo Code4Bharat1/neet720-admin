@@ -475,22 +475,44 @@ const Page = () => {
   const evaluationRef = useRef(null);
 
   //--fetch test series
-  useEffect(() => {
-    const fetchSeries = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series`
-        );
-        const data = await res.json();
-        if (data.success) {
-          setTestSeriesList(data.data);
-        }
-      } catch (error) {
-        console.error("Failed to load test series", error);
+useEffect(() => {
+  const fetchSeries = async () => {
+    try {
+      const token = localStorage.getItem("adminAuthToken");
+
+      if (!token) {
+        console.error("No admin auth token found");
+        setTestSeriesList([]); // prevent undefined state
+        return;
       }
-    };
-    fetchSeries();
-  }, []);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setTestSeriesList(data.data);
+      } else {
+        console.error("Error fetching test series", data.message);
+        setTestSeriesList([]);
+      }
+    } catch (error) {
+      console.error("Failed to load test series", error);
+      setTestSeriesList([]);
+    }
+  };
+
+  fetchSeries();
+}, []);
+
 
   //--fetch tests for selected series
   useEffect(() => {
