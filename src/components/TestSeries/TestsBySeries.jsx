@@ -374,7 +374,7 @@ export default function TestsBySeries() {
                   </div>
 
                   {/* Card Footer */}
-                  <div className="px-6 pb-6">
+                  {/* <div className="px-6 pb-6">
                     <div className="bg-gray-50 rounded-lg p-3 mb-4">
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div>
@@ -434,7 +434,86 @@ export default function TestsBySeries() {
                     >
                       View Test Details
                     </button>
-                  </div>
+                  </div> */}
+
+
+                  {/* Card Footer */}
+<div className="px-6 pb-6">
+  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+    <div className="grid grid-cols-2 gap-3 text-xs">
+      <div>
+        <div className="flex items-center gap-1 text-gray-500 mb-1">
+          <svg
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          Opens
+        </div>
+        <p className="font-medium text-gray-900">
+          {test.openDate
+            ? new Date(test.openDate).toLocaleDateString()
+            : "N/A"}
+        </p>
+      </div>
+
+      <div>
+        <div className="flex items-center gap-1 text-gray-500 mb-1">
+          <svg
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          Closes
+        </div>
+        <p className="font-medium text-gray-900">
+          {test.closeDate
+            ? new Date(test.closeDate).toLocaleDateString()
+            : "N/A"}
+        </p>
+      </div>
+    </div>
+  </div>
+
+
+
+  {/* Existing View Button */}
+  <button
+    className="w-full mb-3 px-4 py-2.5 bg-slate-100 text-gray-700 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-200 font-medium group-hover:bg-green-50 group-hover:text-green-700"
+    onClick={() => {
+      router.push(`/test-series/test/${test.id}`);
+    }}
+  >
+    View Test Details
+  </button>
+
+    {/* ⭐ NEW — EDIT BUTTON */}
+  <button
+    className="w-full  px-4 py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200 font-medium"
+    onClick={() => {
+      router.push(`/test-series/test/${test.id}/edit`);
+    }}
+  >
+    Edit Test
+  </button>
+</div>
+
                 </div>
               ))}
             </div>
