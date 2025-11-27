@@ -14,40 +14,80 @@ export default function TestDetails() {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+  // useEffect(() => {
+  //   if (!testId) return;
+
+  //   const fetchTestData = async () => {
+  //     try {
+  //       // ✅ Fetch test details + questions in one call
+  //       const res = await axios.get(
+  //         `${API_BASE}/test-series/test-series-question/${testId}`
+  //       );
+  //       console.log("questions data : ", res.data);
+
+  //       if (res.data.success) {
+  //         setTest(res.data.testDetails || null);
+
+  //         // Parse options string to array
+  //         const formattedQuestions = res.data.data.map((q) => ({
+  //           ...q,
+  //           options: JSON.parse(q.options || "[]"),
+  //         }));
+
+  //         setQuestions(formattedQuestions);
+  //       } else {
+  //         setError(res.data.message || "Failed to load test details.");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching test details:", err);
+  //       setError("Error fetching test details.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchTestData();
+  // }, [testId, API_BASE]);
+
+
   useEffect(() => {
-    if (!testId) return;
+  if (!testId) return;
 
-    const fetchTestData = async () => {
-      try {
-        // ✅ Fetch test details + questions in one call
-        const res = await axios.get(
-          `${API_BASE}/test-series/test-series-question/${testId}`
-        );
-        console.log("questions data : ", res.data);
+  const fetchData = async () => {
+    try {
+      // 1️⃣ FETCH TEST DETAILS (includes openDate, closeDate, etc.)
+      const testRes = await axios.get(
+        `${API_BASE}/test-series/test-series-test/${testId}`
+      );
 
-        if (res.data.success) {
-          setTest(res.data.testDetails || null);
-
-          // Parse options string to array
-          const formattedQuestions = res.data.data.map((q) => ({
-            ...q,
-            options: JSON.parse(q.options || "[]"),
-          }));
-
-          setQuestions(formattedQuestions);
-        } else {
-          setError(res.data.message || "Failed to load test details.");
-        }
-      } catch (err) {
-        console.error("Error fetching test details:", err);
-        setError("Error fetching test details.");
-      } finally {
-        setLoading(false);
+      if (testRes.data.success) {
+        setTest(testRes.data.data); // test full data
       }
-    };
 
-    fetchTestData();
-  }, [testId, API_BASE]);
+      // 2️⃣ FETCH QUESTIONS
+      const qRes = await axios.get(
+        `${API_BASE}/test-series/test-series-question/${testId}`
+      );
+
+      if (qRes.data.success) {
+        const formattedQuestions = qRes.data.data.map((q) => ({
+          ...q,
+          options: JSON.parse(q.options || "[]"),
+        }));
+
+        setQuestions(formattedQuestions);
+      }
+
+    } catch (err) {
+      console.error("Error fetching test data", err);
+      setError("Failed to load test details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [testId]);
 
   const startEditing = (question) => {
     setEditingQuestion({ ...question }); // clone to edit safely
