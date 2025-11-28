@@ -104,8 +104,8 @@ const EvaluationStep = ({
         options: q.options.map((opt) => opt.option_text),
         correctAnswer: q.options.find((opt) => opt.is_correct)
           ? String.fromCharCode(
-              65 + q.options.findIndex((opt) => opt.is_correct)
-            )
+            65 + q.options.findIndex((opt) => opt.is_correct)
+          )
           : "",
         explanation: q.solution || "",
         marks: 4,
@@ -191,8 +191,7 @@ const EvaluationStep = ({
     }
 
     toast.success(
-      `✅ ${successCount} questions submitted successfully. ${
-        failCount > 0 ? `❌ ${failCount} failed.` : ""
+      `✅ ${successCount} questions submitted successfully. ${failCount > 0 ? `❌ ${failCount} failed.` : ""
       }`
     );
   };
@@ -231,11 +230,10 @@ const EvaluationStep = ({
         {extractedQuestions.map((q, idx) => (
           <motion.div
             key={idx}
-            className={`border rounded-xl p-5 shadow-sm transition-colors duration-300 ${
-              q.submitted
+            className={`border rounded-xl p-5 shadow-sm transition-colors duration-300 ${q.submitted
                 ? "bg-green-50 border-green-200"
                 : "bg-white border-gray-200 hover:shadow-md"
-            }`}
+              }`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
@@ -246,11 +244,10 @@ const EvaluationStep = ({
                 Question {idx + 1}
               </h4>
               <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  q.submitted
+                className={`px-2 py-1 text-xs font-medium rounded-full ${q.submitted
                     ? "bg-green-200 text-green-800"
                     : "bg-yellow-100 text-yellow-800"
-                }`}
+                  }`}
               >
                 {q.submitted ? "Submitted" : "Pending"}
               </span>
@@ -349,11 +346,10 @@ const EvaluationStep = ({
                   {q.options.map((opt, i) => (
                     <li
                       key={i}
-                      className={`flex items-center gap-2 p-2 rounded-md ${
-                        opt.is_correct
+                      className={`flex items-center gap-2 p-2 rounded-md ${opt.is_correct
                           ? "bg-green-100 text-green-800 font-medium"
                           : "text-gray-700"
-                      }`}
+                        }`}
                     >
                       <span className="font-medium">
                         {String.fromCharCode(65 + i)}.
@@ -388,11 +384,10 @@ const EvaluationStep = ({
                     <button
                       onClick={() => handleSubmitQuestion(idx)}
                       disabled={q.submitted}
-                      className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-1 ${
-                        q.submitted
+                      className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-1 ${q.submitted
                           ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                           : "bg-green-600 text-white hover:bg-green-700"
-                      }`}
+                        }`}
                     >
                       {q.submitted ? "Submitted" : "Submit"}
                     </button>
@@ -430,7 +425,7 @@ const Page = () => {
       const text = typeof message === "function" ? message() : message;
       return `${base}?text=${encodeURIComponent(
         text ||
-          "Hi, I want you to extract MCQs, review, and upload them to my test."
+        "Hi, I want you to extract MCQs, review, and upload them to my test."
       )}`;
     };
 
@@ -478,43 +473,43 @@ const Page = () => {
   const evaluationRef = useRef(null);
 
   //--fetch test series
-useEffect(() => {
-  const fetchSeries = async () => {
-    try {
-      const token = localStorage.getItem("adminAuthToken");
+  useEffect(() => {
+    const fetchSeries = async () => {
+      try {
+        const token = localStorage.getItem("adminAuthToken");
 
-      if (!token) {
-        console.error("No admin auth token found");
-        setTestSeriesList([]); // prevent undefined state
-        return;
-      }
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        if (!token) {
+          console.error("No admin auth token found");
+          setTestSeriesList([]); // prevent undefined state
+          return;
         }
-      );
 
-      const data = await res.json();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/test-series`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      if (data.success) {
-        setTestSeriesList(data.data);
-      } else {
-        console.error("Error fetching test series", data.message);
+        const data = await res.json();
+
+        if (data.success) {
+          setTestSeriesList(data.data);
+        } else {
+          console.error("Error fetching test series", data.message);
+          setTestSeriesList([]);
+        }
+      } catch (error) {
+        console.error("Failed to load test series", error);
         setTestSeriesList([]);
       }
-    } catch (error) {
-      console.error("Failed to load test series", error);
-      setTestSeriesList([]);
-    }
-  };
+    };
 
-  fetchSeries();
-}, []);
+    fetchSeries();
+  }, []);
 
 
   //--fetch tests for selected series
@@ -552,162 +547,97 @@ useEffect(() => {
   // };
 
   const handlePasteImage = (e) => {
-  const items = e.clipboardData.items;
-  let newImages = [];
+    const items = e.clipboardData.items;
+    let newImages = [];
 
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].type.indexOf("image") !== -1) {
-      const file = items[i].getAsFile();
-      if (file) newImages.push(file);
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) newImages.push(file);
+      }
     }
-  }
 
-  if (newImages.length > 0) {
-    setMcqImages((prev) => [...prev, ...newImages]);
-    setExtractError(null);
-  }
-};
-
-
-  // const handleMcqImageChange = (e) => {
-  //   if (e.target.files && e.target.files[0]) {
-  //     setMcqImage(e.target.files[0]);
-  //     setExtractError(null);
-  //   }
-  // };
-
-const handleMcqImageChange = (e) => {
-  const files = Array.from(e.target.files);
-
-  if (files.length > 0) {
-    setMcqImages((prev) => [...prev, ...files]);
-    setExtractError(null);
-  }
-};
+    if (newImages.length > 0) {
+      setMcqImages((prev) => [...prev, ...newImages]);
+      setExtractError(null);
+    }
+  };
 
 
-  // const handleExtractMcqs = async () => {
-  //   if (!mcqImages) {
-  //     toast("Please paste or upload an image first.");
-  //     return;
-  //   }
 
-  //   setExtracting(true);
-  //   setExtractError(null);
-  //   setExtractedQuestions([]);
 
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("image", mcqImage);
+  const handleMcqImageChange = (e) => {
+    const files = Array.from(e.target.files);
 
-  //     const res = await fetch(
-  //       `${process.env.NEXT_PUBLIC_API_MCQ_URL}/extract-mcqs`,
-  //       { method: "POST", body: formData }
-  //     );
+    if (files.length > 0) {
+      setMcqImages((prev) => [...prev, ...files]);
+      setExtractError(null);
+    }
+  };
 
-  //     // Parse the response
-  //     const data = await res.json();
 
-  //     console.log("Extraction response:", data); // Debug
-
-  //     // Check for API success AND that mcqs exist and are not empty
-  //     if (!res.ok) {
-  //       throw new Error(data.error || "Failed to extract MCQs");
-  //     }
-
-  //     const mcqs = data.mcqs;
-
-  //     if (Array.isArray(mcqs) && mcqs.length > 0) {
-  //       setExtractedQuestions(
-  //         mcqs.map((mcq) => ({
-  //           ...mcq,
-  //           options: (mcq.options || []).map((opt, i) => ({
-  //             option_text: opt,
-  //             is_correct: mcq.answer?.toLowerCase() === "abcd"[i],
-  //           })),
-  //           submitted: false,
-  //         }))
-  //       );
-  //     } else {
-  //       setExtractError("⚠ No MCQs found in the image.");
-  //       toast.error(
-  //         "⚠ No questions were extracted from this image. Please check the image or try another one."
-  //       );
-  //     }
-  //   } catch (err) {
-  //     console.error("MCQ extraction error:", err);
-  //     setExtractError(
-  //       "Failed to extract MCQs: " + (err.message || "Unknown error")
-  //     );
-  //     toast.error(
-  //       "❌ Failed to extract MCQs: " + (err.message || "Unknown error")
-  //     );
-  //   } finally {
-  //     setExtracting(false);
-  //   }
-  // };
 
 
   const handleExtractMcqs = async () => {
-  if (mcqImages.length === 0) {
-    toast("Please paste or upload at least one image.");
-    return;
-  }
-
-  setExtracting(true);
-  setExtractError(null);
-  setExtractedQuestions([]);
-
-  let allMCQs = [];
-
-  try {
-    for (const img of mcqImages) {
-      const formData = new FormData();
-      formData.append("image", img);
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_MCQ_URL}/extract-mcqs`,
-        { method: "POST", body: formData }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error("Failed extraction for:", img.name);
-        continue; // skip failed images
-      }
-
-      const mcqs = data.mcqs || [];
-      allMCQs = [...allMCQs, ...mcqs];
-    }
-
-    if (allMCQs.length === 0) {
-      setExtractError("⚠ No MCQs found in the images.");
-      toast.error("⚠ No MCQs extracted.");
+    if (mcqImages.length === 0) {
+      toast("Please paste or upload at least one image.");
       return;
     }
 
-    // format MCQs
-    setExtractedQuestions(
-      allMCQs.map((mcq) => ({
-        ...mcq,
-        options: (mcq.options || []).map((opt, i) => ({
-          option_text: opt,
-          is_correct: mcq.answer?.toLowerCase() === "abcd"[i],
-        })),
-        submitted: false,
-      }))
-    );
+    setExtracting(true);
+    setExtractError(null);
+    setExtractedQuestions([]);
 
-    toast.success("✅ MCQs extracted from all images!");
-  } catch (err) {
-    console.error(err);
-    setExtractError("Extraction error: " + err.message);
-    toast.error("❌ Error extracting MCQs");
-  } finally {
-    setExtracting(false);
-  }
-};
+    let allMCQs = [];
+
+    try {
+      for (const img of mcqImages) {
+        const formData = new FormData();
+        formData.append("image", img);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_MCQ_URL}/extract-mcqs`,
+          { method: "POST", body: formData }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed extraction for:", img.name);
+          continue; // skip failed images
+        }
+
+        const mcqs = data.mcqs || [];
+        allMCQs = [...allMCQs, ...mcqs];
+      }
+
+      if (allMCQs.length === 0) {
+        setExtractError("⚠ No MCQs found in the images.");
+        toast.error("⚠ No MCQs extracted.");
+        return;
+      }
+
+      // format MCQs
+      setExtractedQuestions(
+        allMCQs.map((mcq) => ({
+          ...mcq,
+          options: (mcq.options || []).map((opt, i) => ({
+            option_text: opt,
+            is_correct: mcq.answer?.toLowerCase() === "abcd"[i],
+          })),
+          submitted: false,
+        }))
+      );
+
+      toast.success("✅ MCQs extracted from all images!");
+    } catch (err) {
+      console.error(err);
+      setExtractError("Extraction error: " + err.message);
+      toast.error("❌ Error extracting MCQs");
+    } finally {
+      setExtracting(false);
+    }
+  };
 
 
   // Framer Motion Variants
@@ -726,105 +656,105 @@ const handleMcqImageChange = (e) => {
 
   return (
     <LayoutWithNav>
-        <div
+      <div
+      >
+        <div className="text-center mb-6">
+          <Toaster />
+          <h1 className="text-3xl sm:text-4xl font-bold text-blue-700 mt-2">
+            Add Questions to Test Series
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base mt-1">
+            Scan or upload question images to extract and submit MCQs
+          </p>
+        </div>
+        {/* Step 1: Dropdowns */}
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+          variants={itemVariants}
         >
-          <div className="text-center mb-6">
-            <Toaster />
-            <h1 className="text-3xl sm:text-4xl font-bold text-blue-700 mt-2">
-              Add Questions to Test Series
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base mt-1">
-              Scan or upload question images to extract and submit MCQs
-            </p>
-          </div>
-          {/* Step 1: Dropdowns */}
-          <motion.div
-            className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
-            variants={itemVariants}
-          >
-            <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-              <Book className="w-5 h-5" /> Step 1: Select Test Series & Test
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Test Series
-                </label>
-                <select
-                  value={selectedSeries}
-                  onChange={(e) => {
-                    setSelectedSeries(e.target.value);
-                    setSelectedTest("");
-                  }}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Test Series</option>
-                  {testSeriesList.map((series) => (
-                    <option key={series.id} value={series.id}>
-                      {series.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Test</label>
-                <select
-                  value={selectedTest}
-                  onChange={(e) => setSelectedTest(e.target.value)}
-                  disabled={!selectedSeries}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                >
-                  <option value="">Select Test</option>
-                  {testsList.map((test) => (
-                    <option key={test.id} value={test.id}>
-                      {test.testName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* step 2: MCQ Image Upload & Extraction */}
-          <motion.div
-            className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
-            variants={itemVariants}
-          >
-            <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ
-              Image
-            </h2>
-
-            <div className="space-y-4">
-              {/* File Upload / Paste Box */}
-              <label
-                ref={pasteBoxRef}
-                tabIndex={0}
-                onPaste={handlePasteImage}
-                htmlFor="mcq-upload"
-                className="cursor-pointer border-2 border-dashed border-blue-300 bg-blue-50 p-8 text-center rounded-lg hover:border-blue-400 transition-colors flex flex-col items-center gap-4"
-              >
-                <Clipboard className="w-12 h-12 text-blue-600" />
-                <div>
-                  <p className="text-lg font-medium text-blue-800">
-                    Paste or Upload MCQ Image
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1">
-                    Paste with Ctrl+V or click to browse files
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  id="mcq-upload"
-                  accept="image/*"
-                  onChange={handleMcqImageChange}
-                  className="hidden"
-                  multiple
-                />
+          <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
+            <Book className="w-5 h-5" /> Step 1: Select Test Series & Test
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Test Series
               </label>
+              <select
+                value={selectedSeries}
+                onChange={(e) => {
+                  setSelectedSeries(e.target.value);
+                  setSelectedTest("");
+                }}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select Test Series</option>
+                {testSeriesList.map((series) => (
+                  <option key={series.id} value={series.id}>
+                    {series.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Test</label>
+              <select
+                value={selectedTest}
+                onChange={(e) => setSelectedTest(e.target.value)}
+                disabled={!selectedSeries}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+              >
+                <option value="">Select Test</option>
+                {testsList.map((test) => (
+                  <option key={test.id} value={test.id}>
+                    {test.testName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </motion.div>
 
-              {/* Show selected file */}
-              {/* {mcqImage && (
+        {/* step 2: MCQ Image Upload & Extraction */}
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+          variants={itemVariants}
+        >
+          <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" /> Step 2: Upload & Extract MCQ
+            Image
+          </h2>
+
+          <div className="space-y-4">
+            {/* File Upload / Paste Box */}
+            <label
+              ref={pasteBoxRef}
+              tabIndex={0}
+              onPaste={handlePasteImage}
+              htmlFor="mcq-upload"
+              className="cursor-pointer border-2 border-dashed border-blue-300 bg-blue-50 p-8 text-center rounded-lg hover:border-blue-400 transition-colors flex flex-col items-center gap-4"
+            >
+              <Clipboard className="w-12 h-12 text-blue-600" />
+              <div>
+                <p className="text-lg font-medium text-blue-800">
+                  Paste or Upload MCQ Image
+                </p>
+                <p className="text-sm text-blue-600 mt-1">
+                  Paste with Ctrl+V or click to browse files
+                </p>
+              </div>
+              <input
+                type="file"
+                id="mcq-upload"
+                accept="image/*"
+                onChange={handleMcqImageChange}
+                className="hidden"
+                multiple
+              />
+            </label>
+
+            {/* Show selected file */}
+            {/* {mcqImage && (
                 <div className="flex flex-col items-center gap-2">
                   <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
                     <CheckCircle className="w-5 h-5" />
@@ -840,76 +770,76 @@ const handleMcqImageChange = (e) => {
               )} */}
 
 
-              {mcqImages.length > 0 && (
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-    {mcqImages.map((image, index) => (
-      <div key={index} className="flex flex-col items-center bg-green-50 p-3 rounded-lg border">
-        <span className="text-green-700 text-sm">{image.name}</span>
-        <img
-          src={URL.createObjectURL(image)}
-          className="max-h-48 rounded-md border mt-2 object-contain"
-        />
-      </div>
-    ))}
-  </div>
-)}
+            {mcqImages.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {mcqImages.map((image, index) => (
+                  <div key={index} className="flex flex-col items-center bg-green-50 p-3 rounded-lg border">
+                    <span className="text-green-700 text-sm">{image.name}</span>
+                    <img
+                      src={URL.createObjectURL(image)}
+                      className="max-h-48 rounded-md border mt-2 object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
 
-              {/* Extract button */}
-              <button
-                onClick={handleExtractMcqs}
-                disabled={extracting || !mcqImages}
-                className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {extracting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Extracting MCQs...
-                  </>
-                ) : (
-                  <>
-                    <PlusCircle className="w-4 h-4" />
-                    Extract MCQs
-                  </>
-                )}
-              </button>
-
-              {extractError && (
-                <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
-                  <XCircle className="w-5 h-5" />
-                  <span>{extractError}</span>
-                </div>
+            {/* Extract button */}
+            <button
+              onClick={handleExtractMcqs}
+              disabled={extracting || !mcqImages}
+              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {extracting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Extracting MCQs...
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="w-4 h-4" />
+                  Extract MCQs
+                </>
               )}
+            </button>
+
+            {extractError && (
+              <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
+                <XCircle className="w-5 h-5" />
+                <span>{extractError}</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Step 3: Evaluation Step (Separate Component) */}
+        <motion.div ref={evaluationRef}>
+          <EvaluationStep
+            extractedQuestions={extractedQuestions}
+            setExtractedQuestions={setExtractedQuestions}
+            selectedTest={selectedTest}
+            submittedCount={submittedCount}
+            setSubmittedCount={setSubmittedCount}
+          />
+        </motion.div>
+
+        {/* Stats */}
+        {submittedCount > 0 && (
+          <motion.div
+            className="bg-green-50 border border-green-200 p-4 rounded-lg"
+            variants={itemVariants}
+          >
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">
+                Total Questions Submitted: {submittedCount}
+              </span>
             </div>
           </motion.div>
-
-          {/* Step 3: Evaluation Step (Separate Component) */}
-          <motion.div ref={evaluationRef}>
-            <EvaluationStep
-              extractedQuestions={extractedQuestions}
-              setExtractedQuestions={setExtractedQuestions}
-              selectedTest={selectedTest}
-              submittedCount={submittedCount}
-              setSubmittedCount={setSubmittedCount}
-            />
-          </motion.div>
-
-          {/* Stats */}
-          {submittedCount > 0 && (
-            <motion.div
-              className="bg-green-50 border border-green-200 p-4 rounded-lg"
-              variants={itemVariants}
-            >
-              <div className="flex items-center gap-2 text-green-800">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">
-                  Total Questions Submitted: {submittedCount}
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </div>
-        {/* <FloatingWhatsAppCTA
+        )}
+      </div>
+      {/* <FloatingWhatsAppCTA
         phone="+91XXXXXXXXXX" // <- replace with your business number
         message={() => {
           // Build a helpful, contextual message
