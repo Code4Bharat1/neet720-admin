@@ -324,7 +324,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
 import { AiOutlineEye, AiOutlineFileText } from "react-icons/ai";
@@ -332,15 +331,17 @@ import { BiSolidDashboard } from "react-icons/bi";
 import { GiTestTubes } from "react-icons/gi";
 import { LuFileInput } from "react-icons/lu";
 import { PiStudent, PiBook } from "react-icons/pi";
-import { Scan, Layers, ChevronRight } from "lucide-react";
+import { Scan, Layers, UserCircle } from "lucide-react";
 import { LuScanText } from "react-icons/lu";
 import { IoIosPeople } from "react-icons/io";
+
 
 const Sidebar = () => {
   const pathname = usePathname();
 
   const [adminId, setAdminId] = useState(null);
   const [role, setRole] = useState(null);
+  const [userName, setUserName] = useState("");
   const [permissions, setPermissions] = useState([]);
   const [sidebarColor, setSidebarColor] = useState("#0096c7");
   const [textColor, setTextColor] = useState("#fcfeff");
@@ -359,9 +360,11 @@ const Sidebar = () => {
         const id = decoded?.adminId;
         const tokenRole = decoded?.role || decoded?.userRole || null;
         const tokenPerms = decoded?.permissions || [];
+        const name = decoded?.name || decoded?.username || "";
 
         if (id) setAdminId(id);
         if (tokenRole) setRole(tokenRole);
+        if (name) setUserName(name);
         if (Array.isArray(tokenPerms)) setPermissions(tokenPerms);
 
         // 🎨 Optional: Fetch theme colors
@@ -406,25 +409,27 @@ const Sidebar = () => {
   const menuItems = useMemo(
     () => [
       {
-        label: "Dashboard",
-        icon: <BiSolidDashboard className="text-xl" />,
-        href: "/admindashboard",
-        allowedRoles: ["admin", "teacher", "content_manager", "batchmanager"],
-        description: "Overview & Analytics",
-      },
-      {
-        label: "View Students",
-        icon: <AiOutlineEye className="text-xl" />,
-        href: "/view_student",
-        allowedRoles: ["admin", "teacher", "batchmanager"],
-        description: "Student Management",
-      },
-      {
-        label: "Batches",
-        icon: <PiStudent className="text-xl" />,
-        href: "/batches",
-        allowedRoles: ["batchmanager", "admin", "teacher"],
-        description: "Batch Operations",
+        section: "Main",
+        items: [
+          {
+            label: "Dashboard",
+            icon: <BiSolidDashboard className="text-xl" />,
+            href: "/admindashboard",
+            allowedRoles: ["admin", "teacher", "content_manager", "batchmanager"],
+          },
+          {
+            label: "View Students",
+            icon: <AiOutlineEye className="text-xl" />,
+            href: "/view_student",
+            allowedRoles: ["admin", "teacher", "batchmanager"],
+          },
+          {
+            label: "Batches",
+            icon: <PiStudent className="text-xl" />,
+            href: "/batches",
+            allowedRoles: ["batchmanager", "admin", "teacher"],
+          },
+        ],
       },
       {
         label: "Practice Test",
@@ -469,24 +474,28 @@ const Sidebar = () => {
         description: "Add questions via scan",
       },
       {
-        label: "Test Series",
-        icon: <Layers className="text-xl" />,
-        href: "/test-series",
-        allowedRoles: ["admin", "teacher", "content_manager"],
-        description: "Series Management",
-      },
-      {
-        label: "Manage Staff",
-        icon: <IoIosPeople className="text-2xl" />,
-        href: "/add-staff",
-        allowedRoles: ["admin"],
-        description: "Staff Administration",
+        section: "Management",
+        items: [
+          {
+            label: "Manage Staff",
+            icon: <IoIosPeople className="text-xl" />,
+            href: "/add-staff",
+            allowedRoles: ["admin"],
+          },
+        ],
       },
     ],
     [role, permissions]
   );
 
-  const visibleItems = useMemo(() => menuItems.filter(hasAccess), [menuItems]);
+  const getInitials = (name) => {
+    if (!name) return "AD";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <div
@@ -513,12 +522,8 @@ const Sidebar = () => {
           </div>
 
           <div className="text-center">
-            <h2 className="text-lg font-bold" style={{ color: textColor }}>
-              NEET720
-            </h2>
-            <p className="text-xs opacity-75" style={{ color: textColor }}>
-              Admin Panel
-            </p>
+            <h2 className="text-base font-bold text-gray-800">NEET720</h2>
+            <p className="text-xs text-gray-500">Admin Panel</p>
           </div>
         </div>
       </div>
