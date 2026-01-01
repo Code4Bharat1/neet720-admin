@@ -37,8 +37,8 @@ const TopPerformersTable = ({ selectedMode }) => {
 
       const apiUrl =
         selectedMode === "Practice"
-          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformance`
-          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/topperformancecustomize`;
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboards/topperformance`
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboards/topperformancecustomize`;
 
       const response = await axios.get(apiUrl, {
         headers: {
